@@ -5,17 +5,17 @@ const globalForRedis = globalThis as unknown as {
   redis: Redis | undefined
 }
 
-const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379'
-export const redis = globalForRedis.redis || new Redis(redisUrl)
+const redisUrl = process.env.REDIS_URL
+export const redis = globalForRedis.redis || (redisUrl ? new Redis(redisUrl) : undefined)
 
-if (process.env.NODE_ENV !== 'production') globalForRedis.redis = redis
+if (process.env.NODE_ENV !== 'production' && redis) globalForRedis.redis = redis
 
-// Fallback if Redis is down
+// Fallback if Redis is down or not configured
 const memoryFallback = new Map<string, { count: number, resetAt: number }>()
 
 /**
  * Checks if a specific key has exceeded its rate limit.
- * Uses a fixed-window algorithm backed by Redis.
+ * Uses a fixed-window algorithm backed by Redis (or memory fallback).
  *
  * @param key - The unique identifier for the limit (e.g., "login:192.168.1.1")
  * @param limit - Maximum allowed requests in the window
@@ -24,13 +24,17 @@ const memoryFallback = new Map<string, { count: number, resetAt: number }>()
  */
 export async function isRateLimited(key: string, limit = 5, windowMs = 60000): Promise<boolean> {
   try {
-    const currentCount = await redis.incr(key)
-    
-    if (currentCount === 1) {
-      await redis.pexpire(key, windowMs)
-    }
+    if (redis) {
+      const currentCount = await redis.incr(key)
+      
+      if (currentCount === 1) {
+        await redis.pexpire(key, windowMs)
+      }
 
-    return currentCount > limit
+      return currentCount > limit
+    }
+    // If no redis, intentionally throw to trigger fallback
+    throw new Error('Redis not configured')
   } catch (error) {
     console.error('Redis Rate Limiter Error, using memory fallback:', error)
     
