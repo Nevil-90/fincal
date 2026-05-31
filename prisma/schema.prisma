@@ -1,0 +1,384 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Transaction {
+  id                     String                @id @default(cuid())
+  type                   String
+  amount                 Decimal
+  category               String
+  description            String?
+  paymentMethod          String?
+  source                 String?
+  recurringTransactionId String?
+  date                   DateTime              @default(now())
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @updatedAt
+  userId                 String
+  user                   User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deletedAt              DateTime?
+  goalContribution       GoalContribution?
+  recurringTransaction   RecurringTransaction? @relation(fields: [recurringTransactionId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, deletedAt])
+  @@index([userId, date])
+  @@index([userId, category])
+  @@index([userId, type])
+  @@index([userId, amount])
+  @@map("transactions")
+}
+
+model SavingsGoal {
+  id            String             @id @default(cuid())
+  name          String
+  targetAmount  Decimal
+  currentAmount Decimal            @default(0)
+  priority      Int                @default(1)
+  deadline      DateTime?
+  isCompleted   Boolean            @default(false)
+  completedAt   DateTime?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  userId        String
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deletedAt     DateTime?
+  contributions GoalContribution[]
+
+  @@index([userId])
+  @@index([userId, deletedAt])
+  @@map("savings_goals")
+}
+
+model GoalContribution {
+  id            String       @id @default(cuid())
+  goalId        String
+  amount        Decimal
+  transactionId String?      @unique
+  description   String?
+  date          DateTime     @default(now())
+  createdAt     DateTime     @default(now())
+  transaction   Transaction? @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  goal          SavingsGoal  @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  deletedAt     DateTime?
+
+  @@index([goalId])
+  @@index([transactionId])
+  @@map("goal_contributions")
+}
+
+model RecurringTransaction {
+  id            String                            @id @default(cuid())
+  type          String
+  amount        Decimal
+  category      String
+  description   String?
+  paymentMethod String?
+  source        String?
+  frequency     String
+  splitType     String                            @default("personal")
+  startDate     DateTime                          @default(now())
+  nextDue       DateTime
+  isActive      Boolean                           @default(true)
+  isPaused      Boolean                           @default(false)
+  pauseDate     DateTime?
+  createdAt     DateTime                          @default(now())
+  updatedAt     DateTime                          @updatedAt
+  userId        String
+  user          User                              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deletedAt     DateTime?
+  priceChanges  RecurringTransactionPriceChange[]
+  transactions  Transaction[]
+
+  @@index([userId])
+  @@index([userId, deletedAt])
+  @@map("recurring_transactions")
+}
+
+model RecurringTransactionPriceChange {
+  id                     String               @id @default(cuid())
+  recurringTransactionId String
+  oldAmount              Decimal
+  newAmount              Decimal
+  effectiveDate          DateTime
+  reason                 String?
+  createdAt              DateTime             @default(now())
+  recurringTransaction   RecurringTransaction @relation(fields: [recurringTransactionId], references: [id], onDelete: Cascade)
+
+  @@index([recurringTransactionId])
+  @@map("recurring_transaction_price_changes")
+}
+
+model MonthlyBudget {
+  id           String    @id @default(cuid())
+  month        Int
+  year         Int
+  totalIncome  Decimal   @default(0)
+  totalExpense Decimal   @default(0)
+  carryOver    Decimal   @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deletedAt    DateTime?
+
+  @@unique([month, year, userId])
+  @@index([userId])
+  @@index([userId, deletedAt])
+  @@map("monthly_budgets")
+}
+
+model Participant {
+  id                       String                    @id @default(cuid())
+  name                     String
+  email                    String?
+  phone                    String?
+  isActive                 Boolean                   @default(true)
+  createdAt                DateTime                  @default(now())
+  updatedAt                DateTime                  @updatedAt
+  userId                   String
+  user                     User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deletedAt                DateTime?
+  payments                 SplitPayment[]
+  subscriptionParticipants SubscriptionParticipant[]
+
+  @@index([userId])
+  @@index([userId, deletedAt])
+  @@map("participants")
+}
+
+model SharedSubscription {
+  id           String                    @id @default(cuid())
+  name         String
+  description  String?
+  amount       Decimal
+  currency     String                    @default("INR")
+  billingDate  Int
+  frequency    String                    @default("monthly")
+  startDate    DateTime                  @default(now())
+  isActive     Boolean                   @default(true)
+  createdAt    DateTime                  @default(now())
+  updatedAt    DateTime                  @updatedAt
+  userId       String
+  user         User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deletedAt    DateTime?
+  payments     SplitPayment[]
+  participants SubscriptionParticipant[]
+  priceChanges SubscriptionPriceChange[]
+
+  @@index([userId])
+  @@index([userId, deletedAt])
+  @@map("shared_subscriptions")
+}
+
+model SubscriptionParticipant {
+  id             String             @id @default(cuid())
+  subscriptionId String
+  participantId  String
+  shareAmount    Decimal
+  joinDate       DateTime           @default(now())
+  leaveDate      DateTime?
+  isActive       Boolean            @default(true)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  participant    Participant        @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  subscription   SharedSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@unique([subscriptionId, participantId])
+  @@map("subscription_participants")
+}
+
+model SplitPayment {
+  id             String             @id @default(cuid())
+  subscriptionId String
+  participantId  String
+  amount         Decimal
+  dueDate        DateTime
+  paidDate       DateTime?
+  status         String             @default("pending")
+  billingMonth   Int
+  billingYear    Int
+  advanceMonths  Int                @default(0)
+  proRatedAmount Decimal?
+  notes          String?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  participant    Participant        @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  subscription   SharedSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@unique([subscriptionId, participantId, billingMonth, billingYear])
+  @@map("split_payments")
+}
+
+model SubscriptionPriceChange {
+  id             String             @id @default(cuid())
+  subscriptionId String
+  oldAmount      Decimal
+  newAmount      Decimal
+  effectiveDate  DateTime
+  reason         String?
+  createdAt      DateTime           @default(now())
+  subscription   SharedSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@map("subscription_price_changes")
+}
+
+model TravelEntry {
+  id          String    @id @default(cuid())
+  startDate   DateTime
+  endDate     DateTime
+  startKm     Decimal
+  endKm       Decimal
+  amount      Decimal
+  liters      Decimal
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deletedAt   DateTime?
+
+  @@index([userId])
+  @@index([userId, deletedAt])
+  @@map("travel_entries")
+}
+
+model StaticDataCategory {
+  id        String   @id @default(cuid())
+  type      String
+  name      String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([type, name, userId])
+  @@map("static_data_categories")
+}
+
+model BudgetAmount {
+  id        String   @id @default(cuid())
+  name      String
+  amount    Decimal
+  period    String
+  category  String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([name, category, userId])
+  @@map("budget_amounts")
+}
+
+model User {
+  id                     String   @id @default(cuid())
+  firstName              String
+  lastName               String
+  email                  String   @unique
+  reason                 String?
+  passwordHash           String?
+  isActive               Boolean  @default(false)
+  role                   String   @default("USER")
+  navPreferences         String? // JSON string of user's bottom nav configuration
+  hasCompletedOnboarding Boolean  @default(false)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  // Relations
+  transactions          Transaction[]
+  savingsGoals          SavingsGoal[]
+  recurringTransactions RecurringTransaction[]
+  monthlyBudgets        MonthlyBudget[]
+  travelEntries         TravelEntry[]
+  staticDataCategories  StaticDataCategory[]
+  budgetAmounts         BudgetAmount[]
+  sharedSubscriptions   SharedSubscription[]
+  participants          Participant[]
+  sessions              UserSession[]
+  adminLogs             AdminAuditLog[]
+  autoCategorizeRules   AutoCategorizeRule[]
+  userSettings          UserSetting[]
+
+  @@index([email])
+  @@map("users")
+}
+
+model UserSetting {
+  id        String   @id @default(cuid())
+  key       String
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([key, userId])
+  @@map("user_settings")
+}
+
+model AutoCategorizeRule {
+  id        String   @id @default(cuid())
+  userId    String
+  keyword   String
+  category  String
+  type      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, keyword])
+  @@map("auto_categorize_rules")
+}
+
+model UserSession {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_sessions")
+}
+
+model OtpVerification {
+  id        String   @id @default(cuid())
+  email     String
+  otp       String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("otp_verifications")
+}
+
+model PasswordReset {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("password_resets")
+}
+
+model AdminAuditLog {
+  id           String   @id @default(cuid())
+  adminId      String
+  action       String // e.g. "USER_SUSPEND", "ROLE_PROMOTION", "DB_BACKUP"
+  details      String? // JSON string detailing target, status, change parameters
+  targetUserId String?
+  ipAddress    String
+  createdAt    DateTime @default(now())
+  admin        User     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@map("admin_audit_logs")
+}

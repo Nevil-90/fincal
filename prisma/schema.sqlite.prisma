@@ -1,0 +1,328 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/sqlite-client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Transaction {
+  id                     String                @id @default(cuid())
+  type                   String
+  amount                 Float
+  category               String
+  description            String?
+  paymentMethod          String?
+  source                 String?
+  recurringTransactionId String?
+  date                   DateTime              @default(now())
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @updatedAt
+  userId                 String?
+  user                   User?                 @relation(fields: [userId], references: [id])
+  goalContribution       GoalContribution?
+  recurringTransaction   RecurringTransaction? @relation(fields: [recurringTransactionId], references: [id])
+
+  @@map("transactions")
+}
+
+model SavingsGoal {
+  id            String             @id @default(cuid())
+  name          String
+  targetAmount  Float
+  currentAmount Float              @default(0)
+  priority      Int                @default(1)
+  deadline      DateTime?
+  isCompleted   Boolean            @default(false)
+  completedAt   DateTime?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  userId        String?
+  user          User?              @relation(fields: [userId], references: [id])
+  contributions GoalContribution[]
+
+  @@map("savings_goals")
+}
+
+model GoalContribution {
+  id            String       @id @default(cuid())
+  goalId        String
+  amount        Float
+  transactionId String?      @unique
+  description   String?
+  date          DateTime     @default(now())
+  createdAt     DateTime     @default(now())
+  transaction   Transaction? @relation(fields: [transactionId], references: [id])
+  goal          SavingsGoal  @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  @@map("goal_contributions")
+}
+
+model RecurringTransaction {
+  id            String                            @id @default(cuid())
+  type          String
+  amount        Float
+  category      String
+  description   String?
+  paymentMethod String?
+  source        String?
+  frequency     String
+  splitType     String                            @default("personal")
+  startDate     DateTime                          @default(now())
+  nextDue       DateTime
+  isActive      Boolean                           @default(true)
+  isPaused      Boolean                           @default(false)
+  pauseDate     DateTime?
+  createdAt     DateTime                          @default(now())
+  updatedAt     DateTime                          @updatedAt
+  userId        String?
+  user          User?                             @relation(fields: [userId], references: [id])
+  priceChanges  RecurringTransactionPriceChange[]
+  transactions  Transaction[]
+
+  @@map("recurring_transactions")
+}
+
+model RecurringTransactionPriceChange {
+  id                     String               @id @default(cuid())
+  recurringTransactionId String
+  oldAmount              Float
+  newAmount              Float
+  effectiveDate          DateTime
+  reason                 String?
+  createdAt              DateTime             @default(now())
+  recurringTransaction   RecurringTransaction @relation(fields: [recurringTransactionId], references: [id], onDelete: Cascade)
+
+  @@map("recurring_transaction_price_changes")
+}
+
+model MonthlyBudget {
+  id           String   @id @default(cuid())
+  month        Int
+  year         Int
+  totalIncome  Float    @default(0)
+  totalExpense Float    @default(0)
+  carryOver    Float    @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id])
+  deletedAt    DateTime?
+
+  @@unique([month, year, userId])
+  @@map("monthly_budgets")
+}
+
+model Participant {
+  id                       String                    @id @default(cuid())
+  name                     String
+  email                    String?
+  phone                    String?
+  isActive                 Boolean                   @default(true)
+  createdAt                DateTime                  @default(now())
+  updatedAt                DateTime                  @updatedAt
+  userId                   String?
+  user                     User?                     @relation(fields: [userId], references: [id])
+  deletedAt                DateTime?
+  payments                 SplitPayment[]
+  subscriptionParticipants SubscriptionParticipant[]
+
+  @@map("participants")
+}
+
+model SharedSubscription {
+  id           String                    @id @default(cuid())
+  name         String
+  description  String?
+  amount       Float
+  currency     String                    @default("INR")
+  billingDate  Int
+  frequency    String                    @default("monthly")
+  startDate    DateTime                  @default(now())
+  isActive     Boolean                   @default(true)
+  createdAt    DateTime                  @default(now())
+  updatedAt    DateTime                  @updatedAt
+  userId       String?
+  user         User?                     @relation(fields: [userId], references: [id])
+  deletedAt    DateTime?
+  payments     SplitPayment[]
+  participants SubscriptionParticipant[]
+  priceChanges SubscriptionPriceChange[]
+
+  @@map("shared_subscriptions")
+}
+
+model SubscriptionParticipant {
+  id             String             @id @default(cuid())
+  subscriptionId String
+  participantId  String
+  shareAmount    Float
+  joinDate       DateTime           @default(now())
+  leaveDate      DateTime?
+  isActive       Boolean            @default(true)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  participant    Participant        @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  subscription   SharedSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@unique([subscriptionId, participantId])
+  @@map("subscription_participants")
+}
+
+model SplitPayment {
+  id             String             @id @default(cuid())
+  subscriptionId String
+  participantId  String
+  amount         Float
+  dueDate        DateTime
+  paidDate       DateTime?
+  status         String             @default("pending")
+  billingMonth   Int
+  billingYear    Int
+  advanceMonths  Int                @default(0)
+  proRatedAmount Float?
+  notes          String?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  participant    Participant        @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  subscription   SharedSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@unique([subscriptionId, participantId, billingMonth, billingYear])
+  @@map("split_payments")
+}
+
+model SubscriptionPriceChange {
+  id             String             @id @default(cuid())
+  subscriptionId String
+  oldAmount      Float
+  newAmount      Float
+  effectiveDate  DateTime
+  reason         String?
+  createdAt      DateTime           @default(now())
+  subscription   SharedSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@map("subscription_price_changes")
+}
+
+model TravelEntry {
+  id          String   @id @default(cuid())
+  startDate   DateTime
+  endDate     DateTime
+  startKm     Float
+  endKm       Float
+  amount      Float
+  liters      Float
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+
+  @@map("travel_entries")
+}
+
+model StaticDataCategory {
+  id        String   @id @default(cuid())
+  type      String
+  name      String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@unique([type, name, userId])
+  @@map("static_data_categories")
+}
+
+model BudgetAmount {
+  id        String   @id @default(cuid())
+  name      String
+  amount    Float
+  period    String
+  category  String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@unique([name, category, userId])
+  @@map("budget_amounts")
+}
+
+model User {
+  id           String        @id @default(cuid())
+  firstName    String
+  lastName     String
+  email        String        @unique
+  reason       String?
+  passwordHash String?
+  isActive     Boolean       @default(false)
+  role         String        @default("USER")
+  navPreferences String?     // JSON string of user's bottom nav configuration
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  
+  // Relations
+  transactions          Transaction[]
+  savingsGoals          SavingsGoal[]
+  recurringTransactions RecurringTransaction[]
+  monthlyBudgets        MonthlyBudget[]
+  travelEntries         TravelEntry[]
+  staticDataCategories  StaticDataCategory[]
+  budgetAmounts         BudgetAmount[]
+  sharedSubscriptions   SharedSubscription[]
+  participants          Participant[]
+  sessions              UserSession[]
+  adminLogs             AdminAuditLog[]
+
+  @@map("users")
+}
+
+model UserSession {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_sessions")
+}
+
+model OtpVerification {
+  id        String   @id @default(cuid())
+  email     String
+  otp       String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("otp_verifications")
+}
+
+model PasswordReset {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("password_resets")
+}
+
+model AdminAuditLog {
+  id           String   @id @default(cuid())
+  adminId      String
+  action       String   // e.g. "USER_SUSPEND", "ROLE_PROMOTION", "DB_BACKUP"
+  details      String?  // JSON string detailing target, status, change parameters
+  targetUserId String?
+  ipAddress    String
+  createdAt    DateTime @default(now())
+  admin        User     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@map("admin_audit_logs")
+}
+

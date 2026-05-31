@@ -1,0 +1,539 @@
+'use client'
+
+import React, { useState, useMemo, useEffect, useCallback } from 'react'
+import { Plus, BarChart2, BarChart3, Calendar, Target, AlertCircle, TrendingUp, TrendingDown, DollarSign, Wallet, CreditCard, ArrowRight, ArrowUpRight, ArrowDownRight, ArrowDownLeft, Activity, PieChart, ShieldAlert, Zap, AlertTriangle, CheckCircle, ClipboardList, Banknote, Clock } from 'lucide-react'
+import { formatCurrency } from '@/lib/financial-utils'
+import { useEnhancedStaticData } from '@/lib/enhanced-static-data-manager'
+import MonthlyInsights from './MonthlyInsights'
+
+interface Transaction {
+  id: string
+  type: 'income' | 'expense'
+  amount: number
+  category: string
+  description: string | null
+  paymentMethod: string | null
+  source: string | null
+  date: string
+}
+
+interface BalanceInfo {
+  periodIncome: number
+  periodExpenses: number
+  periodBalance: number
+  totalBalance: number
+  transactionCount: number
+}
+
+interface OverviewPeriod {
+  year: number
+  month?: number
+}
+
+interface OverviewTabProps {
+  periodTxns: Transaction[]
+  summary: Record<string, any>
+  overviewPeriod: OverviewPeriod
+  onPeriodChange: (period: OverviewPeriod) => void
+  onTabChange: (tab: 'overview' | 'analytics' | 'transactions' | 'goals' | 'recurring' | 'calendar' | 'traveling' | 'settings') => void
+  onShowAddTransaction: () => void
+}
+
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+const SpendGauge = React.memo(function SpendGauge({ pct }: { pct: number }) {
+  const clamped = Math.min(pct, 100)
+  const r = 66
+  const circ = 2 * Math.PI * r
+  const stroke = circ * (1 - clamped / 100)
+  const color = clamped >= 100 ? '#ef4444' : clamped >= 80 ? '#f97316' : clamped >= 60 ? '#eab308' : '#22c55e'
+  return (
+    <svg width="160" height="160" viewBox="0 0 160 160" className="shrink-0 drop-shadow-sm">
+      <circle cx="80" cy="80" r={r} fill="none" stroke="#f1f5f9" strokeWidth="14" />
+      <circle
+        cx="80" cy="80" r={r} fill="none"
+        stroke={color} strokeWidth="14"
+        strokeDasharray={circ}
+        strokeDashoffset={stroke}
+        strokeLinecap="round"
+        transform="rotate(-90 80 80)"
+        style={{ transition: 'stroke-dashoffset 0.8s ease, stroke 0.4s ease' }}
+      />
+      <text x="80" y="74" textAnchor="middle" fontSize="24" fontWeight="900" fill="#0f172a">{Math.round(clamped)}%</text>
+      <text x="80" y="96" textAnchor="middle" fontSize="12" fontWeight="700" fill="#94a3b8">of budget</text>
+    </svg>
+  )
+})
+
+export default React.memo(function OverviewTab({
+  periodTxns,
+  summary,
+  overviewPeriod,
+  onPeriodChange,
+  onTabChange,
+  onShowAddTransaction,
+}: OverviewTabProps) {
+  const { data: staticData } = useEnhancedStaticData()
+  const now = new Date()
+
+  // Default to current month/year if not set
+  const activeYear = overviewPeriod.year
+  const activeMonth = overviewPeriod.month ?? (now.getMonth() + 1)
+
+  // Days progress through current month
+  const daysInMonth = new Date(activeYear, activeMonth, 0).getDate()
+  const dayOfMonth = overviewPeriod.month === (now.getMonth() + 1) && activeYear === now.getFullYear()
+    ? now.getDate()
+    : daysInMonth
+  const monthProgress = Math.round((dayOfMonth / daysInMonth) * 100)
+
+  // Use server-calculated category spend
+  const categorySpend = (summary?.categorySpend || {}) as Record<string, number>
+
+  // Budget vs Actual rows
+  const budgetRows = useMemo(() => {
+    return staticData.budgetAmounts
+      .filter(b => b.isActive && !['travelSettings', 'global'].includes(b.category))
+      .map(b => {
+        const spent = categorySpend[b.category] || 0
+        const limit = b.period === 'yearly' ? b.amount / 12 : b.amount
+        const pct = limit > 0 ? (spent / limit) * 100 : 0
+        const remaining = limit - spent
+        const status: 'over' | 'warn' | 'ok' | 'safe' =
+          pct >= 100 ? 'over' : pct >= 80 ? 'warn' : pct >= 50 ? 'ok' : 'safe'
+        return { ...b, spent, limit, pct, remaining, status }
+      })
+      .sort((a, b) => b.pct - a.pct)
+  }, [staticData.budgetAmounts, categorySpend])
+
+  // Overall budget health
+  const totalBudgeted = budgetRows.reduce((s, r) => s + r.limit, 0)
+  const totalSpentOnBudgeted = budgetRows.reduce((s, r) => s + r.spent, 0)
+  const overallBudgetPct = totalBudgeted > 0 ? (totalSpentOnBudgeted / totalBudgeted) * 100 : 0
+  const overCount = budgetRows.filter(r => r.status === 'over').length
+  const warnCount = budgetRows.filter(r => r.status === 'warn').length
+
+  // Unbudgeted categories (spending but no budget set)
+  const unbudgetedSpend = useMemo(() => {
+    const budgetedCats = new Set(staticData.budgetAmounts.filter(b => b.isActive).map(b => b.category))
+    return Object.entries(categorySpend)
+      .filter(([cat]) => !budgetedCats.has(cat))
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+  }, [categorySpend, staticData.budgetAmounts])
+
+  const balanceInfo = {
+    periodIncome: summary?.period?.income || 0,
+    periodExpenses: summary?.period?.expense || 0,
+    periodBalance: summary?.period?.balance || 0,
+  }
+
+  // Savings rate
+  const savingsRate = balanceInfo.periodIncome > 0
+    ? Math.round((balanceInfo.periodBalance / balanceInfo.periodIncome) * 100)
+    : 0
+
+  // Daily burn rate vs expected
+  const actualDailyBurn = dayOfMonth > 0 ? balanceInfo.periodExpenses / dayOfMonth : 0
+  const expectedDailyBurn = daysInMonth > 0 ? totalBudgeted / daysInMonth : 0
+
+  // Monthly Spending Goal (Global)
+  const monthlySpendingGoal = Number(staticData.userSettings?.monthlySpendingGoal) || 0
+  const monthlySpendingGoalPct = monthlySpendingGoal > 0 ? (balanceInfo.periodExpenses / monthlySpendingGoal) * 100 : 0
+  const monthlySpendingGoalStatus = monthlySpendingGoalPct >= 100 ? 'over' : monthlySpendingGoalPct >= 80 ? 'warn' : monthlySpendingGoalPct >= 50 ? 'ok' : 'safe'
+
+  const availableYears = (summary?.availableYears || [now.getFullYear()]) as number[]
+
+  const STATUS_CONFIG = {
+    over:  { bar: 'bg-red-500',    label: 'Over budget',   badge: 'bg-red-50 text-red-700 border-red-200' },
+    warn:  { bar: 'bg-orange-500', label: 'Near limit',    badge: 'bg-orange-50 text-orange-700 border-orange-200' },
+    ok:    { bar: 'bg-yellow-400', label: 'On track',      badge: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
+    safe:  { bar: 'bg-emerald-500',label: 'Under control', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  }
+
+  const [showInsights, setShowInsights] = useState(false)
+
+  const [rolloverAmount, setRolloverAmount] = useState(0)
+
+  const fetchRollover = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/budgets/rollover?month=${activeMonth}&year=${activeYear}`)
+      if (res.ok) {
+        const data = await res.json()
+        setRolloverAmount(data.carryOver || 0)
+      }
+    } catch (err) {
+      console.error('Failed to fetch rollover', err)
+    }
+  }, [activeMonth, activeYear])
+
+  // Recalculate rollover when month changes
+  useEffect(() => {
+    fetch('/api/budgets/rollover', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ month: activeMonth, year: activeYear })
+    }).then(() => fetchRollover())
+  }, [activeMonth, activeYear, fetchRollover])
+
+  const carryOver = rolloverAmount
+
+  return (
+    <div className="space-y-4 sm:space-y-5 pb-24 md:pb-6">
+
+      {/* ── PERIOD SELECTOR BAR ── */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900">Budget Command Center</h1>
+          <p className="text-xs text-slate-500 mt-0.5">Track real spending against your budget limits in real time.</p>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <select
+            value={activeYear}
+            onChange={e => onPeriodChange({ year: Number(e.target.value), month: overviewPeriod.month })}
+            className="bg-white border border-slate-200 text-slate-800 text-xs font-bold rounded-xl px-2.5 py-2 outline-none cursor-pointer shadow-sm"
+          >
+            {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
+          <select
+            value={activeMonth}
+            onChange={e => onPeriodChange({ year: activeYear, month: Number(e.target.value) })}
+            className="bg-white border border-slate-200 text-slate-800 text-xs font-bold rounded-xl px-2.5 py-2 outline-none cursor-pointer shadow-sm"
+          >
+            {MONTH_NAMES.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
+          </select>
+          <button
+            onClick={onShowAddTransaction}
+            className="flex items-center gap-1.5 bg-slate-900 text-white text-xs font-bold px-3.5 py-2 rounded-xl cursor-pointer hover:bg-slate-800 transition-colors shadow-sm"
+          >
+            <Plus className="h-3.5 w-3.5" /> Add
+          </button>
+        </div>
+      </div>
+
+      {/* ── MAIN GRID ── */}
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-4 sm:gap-5">
+
+        {/* LEFT: Budget Tracker */}
+        <div className="space-y-4 sm:space-y-5">
+
+          {/* Overall Gauge Card */}
+          <div className="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+              {/* Gauge */}
+              <div className="flex flex-col items-center gap-2 shrink-0 w-full sm:w-auto">
+                <SpendGauge pct={overallBudgetPct} />
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Overall Budget Usage</p>
+              </div>
+
+              {/* Stats */}
+              <div className="flex-1 space-y-3 w-full">
+                {/* Month progress bar */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <Clock className="h-3.5 w-3.5 text-slate-400" />
+                      <span className="text-xs font-bold text-slate-500">Month Progress</span>
+                    </div>
+                    <span className="text-xs font-black text-slate-700">Day {dayOfMonth} / {daysInMonth}</span>
+                  </div>
+                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-slate-400 rounded-full transition-all duration-700" style={{ width: `${monthProgress}%` }} />
+                  </div>
+                </div>
+
+                {/* Key numbers */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 [&>*:last-child:nth-child(odd)]:col-span-2 sm:[&>*:last-child:nth-child(odd)]:col-span-1">
+                  <div className="rounded-xl bg-rose-50 border border-rose-100 p-3">
+                    <p className="text-[10px] font-bold text-rose-500 uppercase tracking-wider">Spent</p>
+                    <p className="text-base font-black text-rose-700 mt-0.5 tabular-nums">{formatCurrency(balanceInfo.periodExpenses)}</p>
+                  </div>
+                  <div className="rounded-xl bg-emerald-50 border border-emerald-100 p-3">
+                    <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Income</p>
+                    <p className="text-base font-black text-emerald-700 mt-0.5 tabular-nums">{formatCurrency(balanceInfo.periodIncome)}</p>
+                  </div>
+                  <div className="rounded-xl bg-blue-50 border border-blue-100 p-3">
+                    <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Rollover</p>
+                    <p className="text-base font-black text-blue-700 mt-0.5 tabular-nums">+{formatCurrency(carryOver)}</p>
+                  </div>
+                  <div className="rounded-xl bg-slate-50 border border-slate-100 p-3">
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Daily Burn</p>
+                    <p className="text-base font-black text-slate-800 mt-0.5 tabular-nums">{formatCurrency(actualDailyBurn)}/d</p>
+                    {expectedDailyBurn > 0 && (
+                      <p className={`text-[10px] font-bold mt-0.5 ${actualDailyBurn > expectedDailyBurn ? 'text-rose-500' : 'text-emerald-600'}`}>
+                        {actualDailyBurn > expectedDailyBurn ? '▲' : '▼'} Budget: {formatCurrency(expectedDailyBurn)}/d
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Alert pills */}
+                {(overCount > 0 || warnCount > 0) && (
+                  <div className="flex flex-wrap gap-2">
+                    {overCount > 0 && (
+                      <span className="flex items-center gap-1 text-[10px] font-bold bg-red-50 text-red-700 border border-red-200 px-2.5 py-1 rounded-full">
+                        <AlertTriangle className="h-3 w-3" /> {overCount} over budget
+                      </span>
+                    )}
+                    {warnCount > 0 && (
+                      <span className="flex items-center gap-1 text-[10px] font-bold bg-orange-50 text-orange-700 border border-orange-200 px-2.5 py-1 rounded-full">
+                        <Zap className="h-3 w-3" /> {warnCount} near limit
+                      </span>
+                    )}
+                  </div>
+                )}
+                {overCount === 0 && warnCount === 0 && budgetRows.length > 0 && (
+                  <span className="flex items-center gap-1 text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-full w-fit">
+                    <CheckCircle className="h-3 w-3" /> All budgets on track
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Monthly Spending Goal (Global) */}
+          {monthlySpendingGoal > 0 && (
+            <div className="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Target className="h-4 w-4 text-indigo-600" />
+                  <h3 className="text-sm font-bold text-slate-800">Monthly Spending Goal</h3>
+                </div>
+                <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${STATUS_CONFIG[monthlySpendingGoalStatus].badge}`}>
+                  {STATUS_CONFIG[monthlySpendingGoalStatus].label}
+                </span>
+              </div>
+              
+              <div className="flex items-end justify-between mb-2">
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Spent so far</p>
+                  <p className="text-lg font-black text-slate-900 leading-none mt-1">
+                    {formatCurrency(balanceInfo.periodExpenses)}
+                    <span className="text-sm font-medium text-slate-400 ml-1">/ {formatCurrency(monthlySpendingGoal)}</span>
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Remaining</p>
+                  <p className={`text-sm font-bold mt-1 ${monthlySpendingGoalStatus === 'over' ? 'text-red-600' : 'text-emerald-600'}`}>
+                    {monthlySpendingGoalStatus === 'over' 
+                      ? `-${formatCurrency(balanceInfo.periodExpenses - monthlySpendingGoal)}` 
+                      : formatCurrency(monthlySpendingGoal - balanceInfo.periodExpenses)}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden mt-3">
+                <div 
+                  className={`h-full rounded-full transition-all duration-700 ${STATUS_CONFIG[monthlySpendingGoalStatus].bar}`} 
+                  style={{ width: `${Math.min(100, monthlySpendingGoalPct)}%` }} 
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Budget Rows */}
+          {budgetRows.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
+              <ClipboardList className="h-8 w-8 text-slate-400 mx-auto mb-3" />
+              <h3 className="text-sm font-bold text-slate-700">No budgets configured</h3>
+              <p className="text-xs text-slate-500 mt-1 mb-4">Set budget limits in Settings to track spending here.</p>
+              <button
+                onClick={() => onTabChange('settings')}
+                className="text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-xl transition-colors cursor-pointer"
+              >
+                Go to Settings →
+              </button>
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-slate-200/80 bg-white shadow-sm overflow-hidden">
+              <div className="px-4 sm:px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Budget vs Actual</p>
+                  <h3 className="text-base font-black text-slate-900 mt-0.5">Category Breakdown</h3>
+                </div>
+                <button
+                  onClick={() => onTabChange('settings')}
+                  className="text-[10px] font-bold text-slate-500 hover:text-slate-800 bg-slate-50 hover:bg-slate-100 px-2.5 py-1.5 rounded-xl cursor-pointer transition-colors"
+                >
+                  Edit Budgets →
+                </button>
+              </div>
+
+              <div className="divide-y divide-slate-100 max-h-[420px] overflow-y-auto overscroll-contain">
+                {budgetRows.map(row => {
+                  const cfg = STATUS_CONFIG[row.status]
+                  return (
+                    <div key={row.id} className="px-4 sm:px-5 py-3.5 hover:bg-slate-50/60 transition-colors">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <span className={`text-[9px] font-black px-1.5 py-0.5 rounded border ${cfg.badge} shrink-0`}>
+                            {cfg.label}
+                          </span>
+                          <span className="text-xs sm:text-sm font-semibold text-slate-800 truncate">{row.category}</span>
+                        </div>
+                        <div className="text-right shrink-0 ml-3">
+                          <span className="text-xs font-black text-slate-900 tabular-nums">{formatCurrency(row.spent)}</span>
+                          <span className="text-[10px] text-slate-400 font-medium"> / {formatCurrency(row.limit)}</span>
+                        </div>
+                      </div>
+                      <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-700 ${cfg.bar}`}
+                          style={{ width: `${Math.min(row.pct, 100)}%` }}
+                        />
+                      </div>
+                      <div className="flex justify-between mt-1">
+                        <span className="text-[10px] text-slate-400 font-medium">{Math.round(row.pct)}% used</span>
+                        <span className={`text-[10px] font-bold ${row.remaining < 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                          {row.remaining < 0 ? `${formatCurrency(Math.abs(row.remaining))} over` : `${formatCurrency(row.remaining)} left`}
+                        </span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* RIGHT PANEL */}
+        <div className="space-y-4 sm:space-y-5">
+
+          {/* Savings & Burn Rate Card */}
+          <div className="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm space-y-4">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">This Month's Health</p>
+              <h3 className="text-base font-black text-slate-900 mt-0.5">Financial Pulse</h3>
+            </div>
+
+            {/* Savings Rate ring */}
+            <div className="flex items-center gap-4">
+              <div className="relative shrink-0">
+                <svg width="64" height="64" viewBox="0 0 64 64">
+                  <circle cx="32" cy="32" r="26" fill="none" stroke="#f1f5f9" strokeWidth="7" />
+                  <circle
+                    cx="32" cy="32" r="26" fill="none"
+                    stroke={savingsRate >= 20 ? '#22c55e' : savingsRate >= 10 ? '#eab308' : savingsRate >= 0 ? '#f97316' : '#ef4444'}
+                    strokeWidth="7"
+                    strokeDasharray={`${2 * Math.PI * 26}`}
+                    strokeDashoffset={`${2 * Math.PI * 26 * (1 - Math.max(Math.min(savingsRate, 100), 0) / 100)}`}
+                    strokeLinecap="round"
+                    transform="rotate(-90 32 32)"
+                  />
+                </svg>
+                <span className="absolute inset-0 flex items-center justify-center text-[11px] font-black text-slate-800">{savingsRate}%</span>
+              </div>
+              <div>
+                <p className="text-sm font-black text-slate-900">Savings Rate</p>
+                <p className={`text-xs font-bold mt-0.5 ${savingsRate >= 20 ? 'text-emerald-600' : savingsRate >= 10 ? 'text-yellow-600' : 'text-red-600'}`}>
+                  {savingsRate >= 20 ? '✓ Excellent — above 20% target' : savingsRate >= 10 ? '~ Good — near target' : savingsRate >= 0 ? '↓ Low — aim for 20%' : '✗ Overspending this month'}
+                </p>
+              </div>
+            </div>
+
+            <div className="border-t border-slate-100 pt-3 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="flex items-center gap-1.5 text-slate-500 font-medium"><TrendingUp className="h-3.5 w-3.5 text-emerald-500" /> Period Income</span>
+                <span className="font-black text-slate-900 tabular-nums">{formatCurrency(balanceInfo.periodIncome)}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="flex items-center gap-1.5 text-slate-500 font-medium"><TrendingDown className="h-3.5 w-3.5 text-rose-500" /> Period Expenses</span>
+                <span className="font-black text-slate-900 tabular-nums">{formatCurrency(balanceInfo.periodExpenses)}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs border-t border-slate-100 pt-2 mt-1">
+                <span className="font-bold text-slate-700">Net Saved</span>
+                <span className={`font-black tabular-nums ${balanceInfo.periodBalance >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>{formatCurrency(balanceInfo.periodBalance)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Unbudgeted Spending */}
+          {unbudgetedSpend.length > 0 && (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
+              <div className="flex items-start gap-2 mb-3">
+                <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-xs font-black text-amber-800">Unbudgeted Categories</p>
+                  <p className="text-[10px] text-amber-600 font-medium mt-0.5">Spending without budget limits set</p>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                {unbudgetedSpend.map(([cat, amount]) => (
+                  <div key={cat} className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-amber-900 truncate">{cat}</span>
+                    <span className="text-xs font-black text-amber-800 tabular-nums ml-2 shrink-0">{formatCurrency(amount)}</span>
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={() => onTabChange('settings')}
+                className="mt-3 w-full text-[10px] font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 border border-amber-200 px-3 py-2 rounded-xl cursor-pointer transition-colors"
+              >
+                Set Budget Limits →
+              </button>
+            </div>
+          )}
+
+          {/* Recent 5 transactions */}
+          <div className="rounded-2xl border border-slate-200/80 bg-white shadow-sm overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3.5 border-b border-slate-100">
+              <p className="text-xs font-black text-slate-900">Recent Activity</p>
+              <button
+                onClick={() => onTabChange('transactions')}
+                className="text-[10px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1.5 rounded-xl cursor-pointer transition-colors"
+              >
+                All →
+              </button>
+            </div>
+            <div className="divide-y divide-slate-100 max-h-[240px] overflow-y-auto overscroll-contain">
+              {periodTxns.slice(0, 8).map(t => (
+                <div key={t.id} className="flex items-center gap-2.5 px-4 py-2.5">
+                  <div className={`h-7 w-7 rounded-xl flex items-center justify-center text-xs shrink-0 ${t.type === 'income' ? 'bg-emerald-50' : 'bg-rose-50'}`}>
+                    {t.type === 'income' ? <ArrowDownLeft className="h-4 w-4 text-emerald-600" /> : <ArrowUpRight className="h-4 w-4 text-rose-600" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-slate-900 truncate">{t.description || t.category}</p>
+                    <p className="text-[10px] text-slate-400 font-medium">{t.category}</p>
+                  </div>
+                  <span className={`text-xs font-black tabular-nums shrink-0 ${t.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                    {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
+                  </span>
+                </div>
+              ))}
+              {periodTxns.length === 0 && (
+                <div className="px-4 py-6 text-center text-xs text-slate-400 font-semibold">No transactions this period</div>
+              )}
+            </div>
+          </div>
+
+          {/* Monthly Insights Card */}
+          <div className="bg-white border border-slate-200/70 rounded-3xl shadow-sm overflow-hidden">
+            <button
+              onClick={() => setShowInsights(v => !v)}
+              className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-blue-500" />
+                <span className="text-sm font-bold text-slate-800">Monthly Insights Report</span>
+              </div>
+              <span className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-xl">
+                {showInsights ? 'Hide ↑' : 'View →'}
+              </span>
+            </button>
+            {showInsights && (
+              <div className="border-t border-slate-100 p-5">
+                <MonthlyInsights
+                  periodTxns={periodTxns}
+                  categorySpend={categorySpend}
+                  prevExpense={summary?.period?.prevExpense || 0}
+                  month={activeMonth}
+                  year={activeYear}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+})

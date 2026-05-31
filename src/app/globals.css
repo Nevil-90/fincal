@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f8fafc;
+  --foreground: #1e293b;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+
+
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Ensure card text is always visible - but only for dark gradient cards */
+.bg-gradient-to-br.from-emerald-500,
+.bg-gradient-to-br.from-rose-500,
+.bg-gradient-to-br.from-blue-500,
+.bg-gradient-to-br.from-orange-500,
+.bg-gradient-to-br.from-indigo-500,
+.bg-gradient-to-br.from-red-500,
+.bg-gradient-to-br.from-purple-500 {
+  color: white !important;
+}
+
+.bg-gradient-to-br.from-emerald-500 *,
+.bg-gradient-to-br.from-rose-500 *,
+.bg-gradient-to-br.from-blue-500 *,
+.bg-gradient-to-br.from-orange-500 *,
+.bg-gradient-to-br.from-indigo-500 *,
+.bg-gradient-to-br.from-red-500 *,
+.bg-gradient-to-br.from-purple-500 * {
+  color: inherit;
+}
+
+/* Custom scrollbar utility for a clean SaaS layout */
+.custom-scrollbar::-webkit-scrollbar {
+  height: 5px;
+  width: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Animation utilities */
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slide-in {
+  from { opacity: 0; transform: translateX(-10px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slide-left {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+.animate-slide-up  { animation: slide-up 0.25s ease both; }
+.animate-fade-in   { animation: fade-in 0.2s ease both; }
+.animate-slide-in  { animation: slide-in 0.2s ease both; }
+.animate-slide-left { animation: slide-left 0.3s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* Bottom safe area support for mobile notch phones */
+.pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+/* Force 16px font-size on form inputs for iOS to prevent auto-zooming */
+@media screen and (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}

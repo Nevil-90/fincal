@@ -1,0 +1,1008 @@
+'use client'
+
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import { createPortal } from 'react-dom'
+import { Search, Filter, Plus, RefreshCw, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Repeat, X, ArrowDownLeft, ArrowUpRight, History, Pause, Play, Trash2, FileText, BarChart2 } from 'lucide-react'
+import RecurringForm from './RecurringForm'
+import PriceHistoryModal from './PriceHistoryModal'
+import { formatCurrency } from '@/lib/financial-utils'
+import type { RecurringTransaction, RecurringFormData } from './types'
+
+interface PaginatedRecurringResponse {
+  data: (RecurringTransaction & {
+    _count?: {
+      transactions: number
+    }
+    priceChanges?: Array<{
+      id: string
+      oldAmount: number
+      newAmount: number
+      effectiveDate: string
+      reason?: string
+    }>
+    totalSpent?: number
+  })[]
+  pagination: {
+    currentPage: number
+    totalPages: number
+    totalCount: number
+    limit: number
+    hasNextPage: boolean
+    hasPrevPage: boolean
+  }
+  filters: {
+    categories: string[]
+    frequencies: string[]
+  }
+}
+
+interface Filters {
+  status: 'all' | 'active' | 'inactive'
+  type: 'all' | 'income' | 'expense'
+  category: string
+  frequency: string
+}
+
+export default function PaginatedRecurringTransactions() {
+  // Data state
+  const [recurringData, setRecurringData] = useState<PaginatedRecurringResponse | null>(null)
+  const [loading, setLoading] = useState(true)
+  
+  // Transaction history state
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
+  const [transactionHistory, setTransactionHistory] = useState<{ 
+    [key: string]: {
+      transactions: Array<{
+        id: string
+        date: string
+        amount: number
+        description: string
+        paymentMethod?: string
+      }>
+      pagination?: {
+        currentPage: number
+        totalPages: number
+        totalCount: number
+        hasNextPage: boolean
+        hasPrevPage: boolean
+      }
+      totalCount?: number
+    }
+  }>({})
+  const [loadingHistory, setLoadingHistory] = useState<{ [key: string]: boolean }>({})
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize] = useState(10)
+  
+  // Filter state
+  const [filters, setFilters] = useState<Filters>({
+    status: 'all',
+    type: 'all',
+    category: '',
+    frequency: ''
+  })
+  const [showFilters, setShowFilters] = useState(false)
+  
+  // Form state
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [formLoading, setFormLoading] = useState(false)
+  
+  // Price history modal state
+  const [priceHistoryModal, setPriceHistoryModal] = useState<{
+    isOpen: boolean;
+    recurringTransaction: PaginatedRecurringResponse['data'][0] | null;
+  }>({
+    isOpen: false,
+    recurringTransaction: null
+  })
+  
+  const [analyticsRecurring, setAnalyticsRecurring] = useState<PaginatedRecurringResponse['data'][0] | null>(null)
+  
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type })
+    setTimeout(() => setToast(null), 4000)
+  }
+  
+  // Form data
+  const [formData, setFormData] = useState<RecurringFormData>({
+    type: 'expense',
+    amount: '',
+    category: '',
+    description: '',
+    paymentMethod: '',
+    source: '',
+    frequency: 'monthly',
+    startDate: new Date().toISOString().split('T')[0],
+    splitType: 'personal',
+  })
+
+  // Fetch data with pagination and filters
+  const fetchRecurringTransactions = useCallback(async (page: number = 1) => {
+    setLoading(true)
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: pageSize.toString(),
+        ...Object.fromEntries(
+          Object.entries(filters).filter(([, value]) => value && value !== 'all')
+        )
+      })
+
+      const response = await fetch(`/api/recurring/paginated?${params}`)
+      if (response.ok) {
+        const data = await response.json()
+        setRecurringData(data)
+        setCurrentPage(page)
+      } else {
+        console.error('Failed to fetch recurring transactions')
+      }
+    } catch (error) {
+      console.error('Error fetching recurring transactions:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [pageSize, filters]) // Include filters dependency
+
+  // Effect to fetch data when filters change (reset to page 1) - but skip on initial load
+  const [isInitialLoad, setIsInitialLoad] = useState(true)
+  
+  useEffect(() => {
+    if (!isInitialLoad) {
+      // Create params inside useEffect to avoid dependency issues
+      const page = 1
+      setLoading(true)
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: pageSize.toString(),
+        ...Object.fromEntries(
+          Object.entries(filters).filter(([, value]) => value && value !== 'all')
+        )
+      })
+
+      fetch(`/api/recurring/paginated?${params}`)
+        .then(response => response.json())
+        .then(data => {
+          setRecurringData(data)
+          setCurrentPage(page)
+        })
+        .catch(error => console.error('Error fetching recurring transactions:', error))
+        .finally(() => setLoading(false))
+    }
+  }, [filters, pageSize, isInitialLoad]) // Keep filters and pageSize but avoid function dependency
+
+  // Initial data fetch only once on mount
+  useEffect(() => {
+    fetchRecurringTransactions(1).then(() => {
+      setIsInitialLoad(false)
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Empty dependency array for initial load only
+
+  // Filter handlers
+  const handleFilterChange = (key: keyof Filters, value: string) => {
+    setFilters(prev => ({ ...prev, [key]: value }))
+  }
+
+  const clearFilters = () => {
+    setFilters({
+      status: 'all',
+      type: 'all',
+      category: '',
+      frequency: ''
+    })
+  }
+
+  // Pagination handlers
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= (recurringData?.pagination.totalPages || 1)) {
+      fetchRecurringTransactions(page)
+    }
+  }
+
+  // Transaction history handlers
+  const toggleRowExpansion = async (recurringId: string) => {
+    const newExpanded = new Set(expandedRows)
+    
+    if (expandedRows.has(recurringId)) {
+      // Collapse row
+      newExpanded.delete(recurringId)
+    } else {
+      // Expand row and fetch history if not already loaded
+      newExpanded.add(recurringId)
+      
+      if (!transactionHistory[recurringId]) {
+        await fetchTransactionHistory(recurringId)
+      }
+    }
+    
+    setExpandedRows(newExpanded)
+  }
+
+  const fetchTransactionHistory = async (recurringId: string, page: number = 1, limit: number = 10) => {
+    setLoadingHistory(prev => ({ ...prev, [recurringId]: true }))
+    
+    try {
+      const response = await fetch(`/api/transactions?recurringId=${recurringId}&page=${page}&limit=${limit}`)
+      if (response.ok) {
+        const data = await response.json()
+        
+        // Handle both paginated and non-paginated responses
+        const transactions = data.transactions || data
+        const pagination = data.pagination || null
+        
+        setTransactionHistory(prev => ({
+          ...prev,
+          [recurringId]: {
+            transactions: Array.isArray(transactions) ? transactions.sort((a, b) => 
+              new Date(b.date).getTime() - new Date(a.date).getTime()
+            ) : [],
+            pagination,
+            totalCount: data.totalCount || transactions.length
+          }
+        }))
+      }
+    } catch (error) {
+      console.error('Error fetching transaction history:', error)
+    } finally {
+      setLoadingHistory(prev => ({ ...prev, [recurringId]: false }))
+    }
+  }
+
+  // CRUD handlers
+  const toggleRecurringStatus = async (id: string, currentStatus: boolean) => {
+    try {
+      const response = await fetch('/api/recurring', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, isPaused: currentStatus }), // If currently active, pause it
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        console.log(`[SUCCESS] ${currentStatus ? 'Paused' : 'Resumed'} recurring transaction:`, result)
+        fetchRecurringTransactions(currentPage) // Refresh current page
+      } else {
+        const error = await response.json()
+        showToast(`Failed to ${currentStatus ? 'pause' : 'resume'} transaction: ${error.error || 'Unknown error'}`, 'error')
+      }
+    } catch (error) {
+      console.error('Error updating recurring transaction:', error)
+      showToast(`Error ${currentStatus ? 'pausing' : 'resuming'} transaction. Please try again.`, 'error')
+    }
+  }
+
+  const deleteRecurring = async (id: string) => {
+    if (!confirm('[WARNING] Delete Recurring Transaction\n\nThis will permanently delete this recurring transaction and stop future automatic transactions. Existing transaction history will be preserved.\n\nContinue?')) return
+
+    try {
+      const response = await fetch(`/api/recurring?id=${id}`, {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        showToast('Recurring transaction deleted successfully!', 'success')
+        fetchRecurringTransactions(currentPage) // Refresh current page
+      } else {
+        const result = await response.json()
+        showToast(`Failed to delete recurring transaction\n\n${result.error || 'Unknown error occurred'}`, 'error')
+      }
+    } catch (error) {
+      console.error('Error deleting recurring transaction:', error)
+      showToast('Error deleting recurring transaction. Please try again.', 'error')
+    }
+  }
+
+  const showPriceHistory = (recurring: RecurringTransaction) => {
+    setPriceHistoryModal({
+      isOpen: true,
+      recurringTransaction: recurring
+    })
+  }
+
+  const closePriceHistory = () => {
+    setPriceHistoryModal({
+      isOpen: false,
+      recurringTransaction: null
+    })
+  }
+
+  const calculateMonthlyEquivalent = (recurring: RecurringTransaction) => {
+    switch (recurring.frequency.toLowerCase()) {
+      case 'daily':
+        return recurring.amount * 30
+      case 'weekly':
+        return recurring.amount * 4.33
+      case 'monthly':
+        return recurring.amount
+      case 'quarterly':
+        return recurring.amount / 3
+      case 'yearly':
+        return recurring.amount / 12
+      default:
+        return recurring.amount
+    }
+  }
+
+  const calculateYearlyEquivalent = (recurring: RecurringTransaction) => {
+    switch (recurring.frequency.toLowerCase()) {
+      case 'daily':
+        return recurring.amount * 365
+      case 'weekly':
+        return recurring.amount * 52
+      case 'monthly':
+        return recurring.amount * 12
+      case 'quarterly':
+        return recurring.amount * 4
+      case 'yearly':
+        return recurring.amount
+      default:
+        return recurring.amount * 12
+    }
+  }
+
+  const handlePriceChangeAdded = async () => {
+    // Refresh the current page data to show updated price changes
+    await fetchRecurringTransactions(currentPage)
+    
+    // Also refresh any expanded transaction history to show new amounts
+    const expandedRecurringIds = Array.from(expandedRows)
+    for (const recurringId of expandedRecurringIds) {
+      await fetchTransactionHistory(recurringId, 1, 10)
+    }
+  }
+
+  const deleteTransaction = async (transactionId: string) => {
+    if (!confirm('[WARNING] Delete Transaction\n\nThis will permanently delete this transaction from your records. This action cannot be undone.\n\nContinue?')) return
+
+    try {
+      const response = await fetch(`/api/transactions?id=${transactionId}`, {
+        method: 'DELETE',
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        showToast('Transaction deleted successfully!', 'success')
+        
+        // Refresh both recurring data and clear transaction history cache
+        fetchRecurringTransactions(currentPage)
+        setTransactionHistory({})
+        setExpandedRows(new Set()) // Collapse all expanded rows
+      } else {
+        showToast(`Failed to delete transaction\n\n${result.error || 'Unknown error occurred'}`, 'error')
+      }
+    } catch (error) {
+      console.error('Error deleting transaction:', error)
+      showToast('Error deleting transaction. Please try again.', 'error')
+    }
+  }
+
+  const handleAddRecurring = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!formData.amount || !formData.category) {
+      showToast('Please fill in all required fields (Amount and Category)', 'error')
+      return
+    }
+
+    const amount = parseFloat(formData.amount)
+    if (amount <= 0) {
+      showToast('Amount must be greater than 0', 'error')
+      return
+    }
+
+    if (amount > 1000000) {
+      showToast('Amount seems too large. Please check the value.', 'error')
+      return
+    }
+
+    setFormLoading(true)
+    try {
+      const response = await fetch('/api/recurring', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        showToast(`Recurring transaction created successfully!\n\n${result.message || 'Transaction will be processed automatically.'}`, 'success')
+        
+        // Reset form
+        setFormData({
+          type: 'expense',
+          amount: '',
+          category: '',
+          description: '',
+          paymentMethod: '',
+          source: '',
+          frequency: 'monthly',
+          startDate: new Date().toISOString().split('T')[0],
+          splitType: 'personal',
+        })
+        
+        setShowAddForm(false)
+        fetchRecurringTransactions(1) // Go to first page to see new transaction
+      } else {
+        const result = await response.json()
+        showToast(`Failed to create recurring transaction\n\n${result.error || 'Unknown error occurred'}`, 'error')
+      }
+    } catch (error) {
+      console.error('Error creating recurring transaction:', error)
+      showToast('Error creating recurring transaction. Please try again.', 'error')
+    } finally {
+      setFormLoading(false)
+    }
+  }
+
+  const { activeSubscriptions, inactiveCount, monthlyCost, totalSpent } = useMemo(() => {
+    if (!recurringData || !recurringData.data.length) {
+      return { activeSubscriptions: [], inactiveCount: 0, monthlyCost: 0, totalSpent: 0 }
+    }
+    const active = recurringData.data.filter(r => r.isActive)
+    const inactive = recurringData.data.filter(r => !r.isActive).length
+    
+    let totalMonthlyCost = 0
+    active.forEach(subscription => {
+      let cost = 0
+      if (subscription.frequency.toLowerCase() === 'daily') {
+        cost = subscription.amount * 30
+      } else {
+        let monthlyMultiplier = 1
+        switch (subscription.frequency.toLowerCase()) {
+          case 'weekly': monthlyMultiplier = 4.33; break;
+          case 'monthly': monthlyMultiplier = 1; break;
+          case 'quarterly': monthlyMultiplier = 1/3; break;
+          case 'yearly': monthlyMultiplier = 1/12; break;
+        }
+        cost = subscription.amount * monthlyMultiplier
+      }
+      totalMonthlyCost += cost
+    })
+
+    let totalSpentAmount = 0
+    recurringData.data.forEach(recurring => {
+      totalSpentAmount += recurring.totalSpent || 0
+    })
+
+    return { activeSubscriptions: active, inactiveCount: inactive, monthlyCost: totalMonthlyCost, totalSpent: totalSpentAmount }
+  }, [recurringData])
+
+  if (loading && !recurringData) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header with Search and Filters */}
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div className="flex items-center gap-4">
+          <h2 className="text-2xl font-bold text-gray-900">Recurring Transactions</h2>
+          <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
+            {recurringData?.pagination.totalCount || 0} total
+          </span>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+          >
+            <Filter className="w-4 h-4" />
+            Filters
+          </button>
+          
+          <button
+            onClick={() => {
+              fetchRecurringTransactions()
+            }}
+            disabled={loading}
+            className="flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+          
+          <button
+            onClick={() => setShowAddForm(true)}
+            className="flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+          >
+            <Plus className="w-4 h-4" />
+            Add Recurring
+          </button>
+        </div>
+      </div>
+
+      {/* Filters Panel */}
+      {showFilters && (
+        <div className="bg-white p-4 rounded-xl shadow-sm ring-1 ring-gray-100">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:[&>*:last-child:nth-child(odd)]:col-span-2 lg:[&>*:last-child:nth-child(odd)]:col-span-1">
+            {/* Status Filter */}
+            <select
+              value={filters.status}
+              onChange={(e) => handleFilterChange('status', e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+            
+            {/* Type Filter */}
+            <select
+              value={filters.type}
+              onChange={(e) => handleFilterChange('type', e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">All Types</option>
+              <option value="income">Income</option>
+              <option value="expense">Expense</option>
+            </select>
+            
+            {/* Category Filter */}
+            <select
+              value={filters.category}
+              onChange={(e) => handleFilterChange('category', e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All Categories</option>
+              {recurringData?.filters.categories.map(category => (
+                <option key={category} value={category}>{category}</option>
+              ))}
+            </select>
+            
+            {/* Frequency Filter */}
+            <select
+              value={filters.frequency}
+              onChange={(e) => handleFilterChange('frequency', e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All Frequencies</option>
+              {recurringData?.filters.frequencies.map(frequency => (
+                <option key={frequency} value={frequency}>{frequency}</option>
+              ))}
+            </select>
+          </div>
+          
+          {/* Clear Filters */}
+          <div className="mt-4 flex justify-end">
+            <button
+              onClick={clearFilters}
+              className="text-sm text-gray-600 hover:text-gray-800"
+            >
+              Clear all filters
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Summary Cards */}
+      {recurringData && recurringData.data.length > 0 && (
+        <div className="grid gap-4 mb-6 grid-cols-2 lg:grid-cols-3 [&>*:last-child:nth-child(odd)]:col-span-2 lg:[&>*:last-child:nth-child(odd)]:col-span-1">
+              <>
+                <div className="bg-white rounded-2xl shadow-sm ring-1 ring-gray-100 p-3 sm:p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-100 rounded-xl text-blue-600">
+                      <Repeat className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Active Subscriptions</p>
+                      <p className="text-lg font-bold text-blue-600">{activeSubscriptions.length}</p>
+                      {inactiveCount > 0 && (
+                        <p className="text-[11px] text-slate-500">Paused {inactiveCount}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white rounded-2xl shadow-sm ring-1 ring-gray-100 p-3 sm:p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-green-100 rounded-xl">
+                      <ArrowDownLeft className="h-5 w-5 text-emerald-600" />
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Monthly Cost</p>
+                      <p className="text-lg font-bold text-green-600">{formatCurrency(monthlyCost)}</p>
+                      <p className="text-[11px] text-slate-500 hidden sm:block">Estimated based on active subscriptions</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white rounded-2xl shadow-sm ring-1 ring-gray-100 p-3 sm:p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-purple-100 rounded-xl">
+                      <ArrowUpRight className="h-5 w-5 text-rose-600" />
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Total Amount Spent</p>
+                      <p className="text-lg font-bold text-purple-600">{formatCurrency(totalSpent)}</p>
+                      <p className="text-[11px] text-slate-500 hidden sm:block">Sum of all actual spending</p>
+                    </div>
+                  </div>
+                </div>
+              </>
+        </div>
+      )}
+
+      {/* Recurring Transactions List */}
+      <div className="space-y-4">
+        {recurringData?.data.length === 0 ? (
+          <div className="text-center py-16 bg-white rounded-2xl shadow-sm ring-1 ring-gray-100">
+            <RefreshCw className="h-12 w-12 text-slate-300 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Recurring Transactions</h3>
+            <p className="text-gray-600">Add your first recurring transaction to get started</p>
+          </div>
+        ) : (
+          recurringData?.data.map((recurring) => (
+            <div key={recurring.id} className="bg-white rounded-2xl shadow-sm ring-1 ring-gray-100 overflow-hidden">
+              <div className="flex flex-col">
+                {/* Compact Transaction Header */}
+                <div className="p-4 sm:p-5 bg-slate-50/70">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <span className={`inline-flex px-2.5 py-1.5 text-xs font-medium rounded-full shrink-0 ${
+                        recurring.type === 'income' 
+                          ? 'bg-green-50 text-green-700 border border-green-200/50' 
+                          : 'bg-red-50 text-red-700 border border-red-200/50'
+                      }`}>
+                        {recurring.type === 'income' ? <ArrowDownLeft className="h-4 w-4 text-emerald-600" /> : <ArrowUpRight className="h-4 w-4 text-rose-600" />}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setAnalyticsRecurring(recurring)}
+                        className="flex-1 text-left group min-w-0 cursor-pointer"
+                      >
+                        <h3 className="text-sm sm:text-base font-semibold text-gray-900 group-hover:text-blue-600 transition-colors truncate">
+                          {recurring.description || recurring.category}
+                        </h3>
+                        <p className="text-xs text-gray-500 truncate">{recurring.category}</p>
+                      </button>
+                    </div>
+                    
+                    <div className="flex items-center justify-between md:justify-end gap-4 border-t border-slate-200/60 pt-3 md:border-t-0 md:pt-0">
+                      <div className="text-left md:text-right">
+                        <div className="text-base sm:text-lg font-black text-gray-900">
+                          {formatCurrency(recurring.amount)}
+                        </div>
+                        <div className="text-[10px] sm:text-xs text-gray-500 capitalize font-medium">
+                          {recurring.frequency}
+                        </div>
+                      </div>
+                      
+                      {/* Individual Total Spent */}
+                      <div className="text-left md:text-right border-l border-gray-200 pl-4">
+                        <span className={`text-sm font-semibold mt-1 ${recurring.type === 'income' ? 'text-emerald-700' : 'text-slate-900'}`}>
+                          {formatCurrency(recurring.totalSpent || 0)}
+                        </span>
+                        <div className="text-[10px] sm:text-xs text-gray-500 font-medium">
+                          Total Spent
+                        </div>
+                      </div>
+                      
+                      <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-full ${
+                        (recurring.isActive && !recurring.isPaused)
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/30' 
+                          : 'bg-slate-50 text-slate-600 border border-slate-200/50'
+                      }`}>
+                        {(recurring.isActive && !recurring.isPaused) ? 'Active' : 'Paused'}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Compact Info Row */}
+                  <div className="mt-4 pt-3 border-t border-slate-200/60 md:border-t-0 md:pt-0 md:mt-3.5 flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between text-xs text-gray-500 font-medium">
+                    <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+                      <span>Start: {new Date(recurring.startDate || recurring.nextDue).toLocaleDateString()}</span>
+                      <span className="hidden sm:inline text-gray-300">•</span>
+                      <span>Next: {new Date(recurring.nextDue).toLocaleDateString()}</span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between sm:justify-end gap-1 sm:gap-1.5 mt-3 sm:mt-0 w-full sm:w-auto">
+                      <button
+                        onClick={() => showPriceHistory(recurring)}
+                        className="text-indigo-600 hover:text-indigo-900 px-1.5 sm:px-2.5 py-1.5 sm:py-1 bg-indigo-50 border border-indigo-100 hover:bg-indigo-100 rounded-lg text-[11px] sm:text-xs transition-colors"
+                        title="Price History"
+                      >
+                        <span className="flex items-center justify-center gap-1 sm:gap-1.5 whitespace-nowrap"><BarChart2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> History</span>
+                      </button>
+                      <button
+                        onClick={() => toggleRecurringStatus(recurring.id, recurring.isActive && !recurring.isPaused)}
+                        className={`px-1.5 sm:px-2.5 py-1.5 sm:py-1 rounded-lg text-[11px] sm:text-xs transition-colors border ${
+                          (recurring.isActive && !recurring.isPaused)
+                            ? 'text-amber-700 bg-amber-50 border-amber-200 hover:bg-amber-100'
+                            : 'text-emerald-700 bg-emerald-50 border-emerald-200 hover:bg-emerald-100'
+                        }`}
+                      >
+                        {(recurring.isActive && !recurring.isPaused) ? <span className="flex items-center justify-center gap-1 sm:gap-1.5 whitespace-nowrap"><Pause className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Pause</span> : <span className="flex items-center justify-center gap-1 sm:gap-1.5 whitespace-nowrap"><Play className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Resume</span>}
+                      </button>
+                      <button
+                        onClick={() => deleteRecurring(recurring.id)}
+                        className="text-rose-600 hover:text-rose-900 px-1.5 sm:px-2.5 py-1.5 sm:py-1 bg-rose-50 border border-rose-100 hover:bg-rose-100 rounded-lg text-[11px] sm:text-xs transition-colors"
+                        title="Delete"
+                      >
+                        <span className="flex items-center justify-center gap-1 sm:gap-1.5 whitespace-nowrap"><Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Del</span>
+                      </button>
+                      <button
+                        onClick={() => toggleRowExpansion(recurring.id)}
+                        className="text-blue-600 hover:text-blue-900 px-1.5 sm:px-2.5 py-1.5 sm:py-1 bg-blue-50 border border-blue-100 hover:bg-blue-100 rounded-lg text-[11px] sm:text-xs font-semibold transition-colors flex items-center justify-center gap-1 sm:gap-1.5 whitespace-nowrap"
+                      >
+                        {expandedRows.has(recurring.id) ? (
+                          <><ChevronUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Hide ({recurring._count?.transactions || 0})</>
+                        ) : (
+                          <><ChevronDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> View ({recurring._count?.transactions || 0})</>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Expanded Transaction History */}
+                {expandedRows.has(recurring.id) && (
+                  <div className="p-4 border-t border-gray-100 bg-white">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-sm font-semibold text-gray-900">Transaction History</h4>
+                      <div className="text-xs text-gray-500">
+                        {transactionHistory[recurring.id]?.transactions?.length || 0} transactions
+                      </div>
+                    </div>
+                    
+                    <div className="relative min-h-[100px]">
+                      {loadingHistory[recurring.id] && transactionHistory[recurring.id]?.transactions ? (
+                        <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-10 flex items-center justify-center rounded-xl">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        </div>
+                      ) : null}
+
+                      {!transactionHistory[recurring.id] && loadingHistory[recurring.id] ? (
+                        <div className="flex items-center justify-center py-12">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                        </div>
+                      ) : transactionHistory[recurring.id]?.transactions?.length > 0 ? (
+                        <div className="space-y-3">
+                          {/* Compact Transaction List */}
+                          <div className="space-y-1 rounded-xl ring-1 ring-gray-100 overflow-hidden">
+                            {transactionHistory[recurring.id].transactions.map((transaction) => (
+                              <div key={`tx-${transaction.id}`} className="flex items-center justify-between p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors">
+                                <div className="flex items-center gap-3">
+                                  <div className="text-sm font-semibold text-gray-900">
+                                    {new Date(transaction.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                  </div>
+                                  <div className="px-2 py-0.5 rounded-md bg-slate-100 text-[10px] font-bold text-slate-600 uppercase tracking-wider">
+                                    {transaction.paymentMethod || 'N/A'}
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                  <div className="text-sm font-black text-gray-900">
+                                    {formatCurrency(transaction.amount)}
+                                  </div>
+                                  <button
+                                    onClick={() => deleteTransaction(transaction.id)}
+                                    className="text-red-500 hover:text-red-700 p-1.5 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
+                                    title="Delete transaction"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Compact Pagination */}
+                          {transactionHistory[recurring.id]?.pagination && transactionHistory[recurring.id].pagination!.totalPages > 1 && (
+                            <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+                              <div className="text-xs text-gray-500">
+                                Page {transactionHistory[recurring.id].pagination!.currentPage} of {transactionHistory[recurring.id].pagination!.totalPages}
+                              </div>
+                              <div className="flex gap-1">
+                                <button
+                                  onClick={() => fetchTransactionHistory(recurring.id, transactionHistory[recurring.id].pagination!.currentPage - 1)}
+                                  disabled={!transactionHistory[recurring.id].pagination!.hasPrevPage}
+                                  className="px-2 py-1 text-xs bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50"
+                                >
+                                  ‹
+                                </button>
+                                <button
+                                  onClick={() => fetchTransactionHistory(recurring.id, transactionHistory[recurring.id].pagination!.currentPage + 1)}
+                                  disabled={!transactionHistory[recurring.id].pagination!.hasNextPage}
+                                  className="px-2 py-1 text-xs bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50"
+                                >
+                                  ›
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-center py-6 text-gray-500 bg-gray-50 rounded">
+                          <FileText className="h-8 w-8 text-slate-300 mx-auto mb-2" />
+                          <p className="text-sm">No transaction history yet</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Pagination */}
+      {recurringData && recurringData.pagination.totalPages > 1 && (
+        <div className="flex items-center justify-between bg-white px-4 py-3 rounded-xl shadow-sm ring-1 ring-gray-100">
+          <div className="flex items-center text-sm text-gray-700">
+            Showing {((recurringData.pagination.currentPage - 1) * recurringData.pagination.limit) + 1} to{' '}
+            {Math.min(recurringData.pagination.currentPage * recurringData.pagination.limit, recurringData.pagination.totalCount)} of{' '}
+            {recurringData.pagination.totalCount} results
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => goToPage(recurringData.pagination.currentPage - 1)}
+              disabled={!recurringData.pagination.hasPrevPage}
+              className="flex items-center gap-1 px-3 py-1 text-sm text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Previous
+            </button>
+            
+            <span className="text-sm text-gray-700">
+              Page {recurringData.pagination.currentPage} of {recurringData.pagination.totalPages}
+            </span>
+            
+            <button
+              onClick={() => goToPage(recurringData.pagination.currentPage + 1)}
+              disabled={!recurringData.pagination.hasNextPage}
+              className="flex items-center gap-1 px-3 py-1 text-sm text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Add Recurring Form Modal */}
+      {showAddForm && typeof document !== 'undefined' && createPortal(
+        <RecurringForm
+          formData={formData}
+          setFormData={setFormData}
+          onSubmit={handleAddRecurring}
+          onCancel={() => setShowAddForm(false)}
+          formLoading={formLoading}
+        />,
+        document.body
+      )}
+
+      {/* Price History Modal */}
+      {priceHistoryModal.isOpen && priceHistoryModal.recurringTransaction && typeof document !== 'undefined' && createPortal(
+        <PriceHistoryModal
+          isOpen={priceHistoryModal.isOpen}
+          recurringTransaction={priceHistoryModal.recurringTransaction}
+          onClose={closePriceHistory}
+          onPriceChangeAdded={handlePriceChangeAdded}
+        />,
+        document.body
+      )}
+
+      {/* Recurring Analytics Modal */}
+      {analyticsRecurring && recurringData && typeof document !== 'undefined' && createPortal(
+        (() => {
+          const totalSpent = analyticsRecurring.totalSpent || 0
+          const monthlyEquivalent = calculateMonthlyEquivalent(analyticsRecurring)
+          const yearlyEquivalent = calculateYearlyEquivalent(analyticsRecurring)
+          const allRecurringSpent = recurringData.data.reduce((sum, item) => sum + (item.totalSpent || 0), 0)
+          const shareOfRecurringSpend = allRecurringSpent > 0 ? (totalSpent / allRecurringSpent) * 100 : 0
+          const transactionCount = analyticsRecurring._count?.transactions || 0
+          const averageTransaction = transactionCount > 0 ? totalSpent / transactionCount : 0
+          const startDate = new Date(analyticsRecurring.startDate || analyticsRecurring.nextDue)
+          const nextDueDate = new Date(analyticsRecurring.nextDue)
+          const activeDays = Math.max(1, Math.ceil((Date.now() - startDate.getTime()) / (1000 * 60 * 60 * 24)))
+          const dailyAverage = totalSpent / activeDays
+
+          return (
+            <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/20 backdrop-blur-[1px] p-4">
+              <div className="w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-2xl ring-1 ring-gray-200">
+                <div className="sticky top-0 z-10 flex items-start justify-between border-b border-gray-100 bg-white/95 p-6 backdrop-blur">
+                  <div>
+                    <p className="text-sm font-medium text-blue-600">Recurring Analytics</p>
+                    <h3 className="text-2xl font-bold text-gray-900">{analyticsRecurring.description || analyticsRecurring.category}</h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      {analyticsRecurring.category} · {analyticsRecurring.frequency} · Next due {nextDueDate.toLocaleDateString()}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setAnalyticsRecurring(null)}
+                    className="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-6 p-6">
+                  <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+                    <div className="rounded-2xl bg-blue-50 p-3 sm:p-4 ring-1 ring-blue-100">
+                      <p className="text-xs sm:text-sm text-blue-700">Total Spent</p>
+                      <p className="mt-1 text-lg sm:text-2xl font-bold text-blue-900">{formatCurrency(totalSpent)}</p>
+                    </div>
+                    <div className="rounded-2xl bg-green-50 p-3 sm:p-4 ring-1 ring-green-100">
+                      <p className="text-xs sm:text-sm text-green-700">Monthly Impact</p>
+                      <p className="mt-1 text-lg sm:text-2xl font-bold text-green-900">{formatCurrency(monthlyEquivalent)}</p>
+                    </div>
+                    <div className="rounded-2xl bg-purple-50 p-3 sm:p-4 ring-1 ring-purple-100">
+                      <p className="text-xs sm:text-sm text-purple-700">Yearly Impact</p>
+                      <p className="mt-1 text-lg sm:text-2xl font-bold text-purple-900">{formatCurrency(yearlyEquivalent)}</p>
+                    </div>
+                    <div className="rounded-2xl bg-orange-50 p-3 sm:p-4 ring-1 ring-orange-100">
+                      <p className="text-xs sm:text-sm text-orange-700">Share of Recurring</p>
+                      <p className="mt-1 text-lg sm:text-2xl font-bold text-orange-900">{shareOfRecurringSpend.toFixed(1)}%</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
+                    <div className="rounded-2xl bg-white p-3 sm:p-4 ring-1 ring-gray-100">
+                      <p className="text-xs text-gray-500">Transactions Created</p>
+                      <p className="mt-1 text-base sm:text-xl font-semibold text-gray-900">{transactionCount}</p>
+                    </div>
+                    <div className="rounded-2xl bg-white p-3 sm:p-4 ring-1 ring-gray-100">
+                      <p className="text-xs text-gray-500">Average Transaction</p>
+                      <p className="mt-1 text-base sm:text-xl font-semibold text-gray-900">{formatCurrency(averageTransaction)}</p>
+                    </div>
+                    <div className="rounded-2xl bg-white p-3 sm:p-4 ring-1 ring-gray-100 col-span-2 md:col-span-1">
+                      <p className="text-xs text-gray-500">Daily Average Since Start</p>
+                      <p className="mt-1 text-base sm:text-xl font-semibold text-gray-900">{formatCurrency(dailyAverage)}</p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl bg-white p-5 ring-1 ring-gray-100">
+                    <h4 className="text-base font-semibold text-gray-900">Subscription Details</h4>
+                    <div className="mt-4 grid grid-cols-1 gap-3 text-sm md:grid-cols-2">
+                      <div className="flex justify-between rounded-xl bg-gray-50 p-3">
+                        <span className="text-gray-500">Current amount</span>
+                        <span className="font-medium text-gray-900">{formatCurrency(analyticsRecurring.amount)}</span>
+                      </div>
+                      <div className="flex justify-between rounded-xl bg-gray-50 p-3">
+                        <span className="text-gray-500">Frequency</span>
+                        <span className="font-medium capitalize text-gray-900">{analyticsRecurring.frequency}</span>
+                      </div>
+                      <div className="flex justify-between rounded-xl bg-gray-50 p-3">
+                        <span className="text-gray-500">Start date</span>
+                        <span className="font-medium text-gray-900">{startDate.toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex justify-between rounded-xl bg-gray-50 p-3">
+                        <span className="text-gray-500">Status</span>
+                        <span className="font-medium text-gray-900">{analyticsRecurring.isActive && !analyticsRecurring.isPaused ? 'Active' : 'Paused'}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )
+        })(),
+        document.body
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <div className="fixed bottom-24 md:bottom-6 left-1/2 -translate-x-1/2 z-[200] animate-slide-up">
+          <div className={`flex items-center gap-2 px-4 py-3 rounded-2xl shadow-xl text-sm font-bold border ${
+            toast.type === 'success' 
+              ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+              : 'bg-rose-50 text-rose-700 border-rose-200'
+          }`}>
+            <span>{toast.message}</span>
+            <button onClick={() => setToast(null)} className="ml-2 opacity-70 hover:opacity-100">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
