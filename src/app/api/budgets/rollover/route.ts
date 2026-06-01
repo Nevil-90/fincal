@@ -28,50 +28,67 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, message: 'No budget amounts configured.' })
     }
 
-    // For each budget category, calculate cumulative rollover
+    // Get previous month bounds
+    const prevMonthStart = new Date(prevYear, prevMonth - 1, 1)
+    const prevMonthEnd = new Date(prevYear, prevMonth, 0, 23, 59, 59)
+
+    // 1. Fetch all expenses for all categories in the previous month in a single grouped query
+    const groupedExpenses = await prisma.transaction.groupBy({
+      by: ['category'],
+      where: {
+        userId,
+        type: 'expense',
+        date: { gte: prevMonthStart, lte: prevMonthEnd }
+      },
+      _sum: { amount: true }
+    })
+
+    const spentByCategory = groupedExpenses.reduce((acc, curr) => {
+      acc[curr.category || 'Other'] = Number(curr._sum.amount || 0)
+      return acc
+    }, {} as Record<string, number>)
+
+    // 2. Fetch the previous month's MonthlyBudget record (for its own carryOver)
+    const prevMonthBudget = await prisma.monthlyBudget.findUnique({
+      where: { month_year_userId: { month: prevMonth, year: prevYear, userId } }
+    })
+    
+    // We only use the previous month's total carryOver if we distribute it, but usually rollover is calculated per category.
+    // If the intent is to sum all unused budget from all categories:
+    let totalLeftover = 0
+    
     for (const budget of budgetAmounts) {
-      // Fetch all expenses for this category in the previous month
-      const prevMonthStart = new Date(prevYear, prevMonth - 1, 1)
-      const prevMonthEnd = new Date(prevYear, prevMonth, 0, 23, 59, 59)
-
-      const prevExpenses = await prisma.transaction.aggregate({
-        where: {
-          userId,
-          type: 'expense',
-          category: budget.category,
-          date: { gte: prevMonthStart, lte: prevMonthEnd }
-        },
-        _sum: { amount: true }
-      })
-
-      const prevSpent = Number(prevExpenses._sum.amount || 0)
-
-      // Get the previous month's MonthlyBudget record (for its own carryOver)
-      const prevMonthBudget = await prisma.monthlyBudget.findUnique({
-        where: { month_year_userId: { month: prevMonth, year: prevYear, userId } }
-      })
-
-      // Effective previous budget = configured amount + previous carryOver
-      const prevCarryOver = Number(prevMonthBudget?.carryOver ?? 0)
-      const effectivePrevBudget = Number(budget.amount) + prevCarryOver
-      const leftover = Math.max(0, effectivePrevBudget - prevSpent)
-
-      // Upsert this month's MonthlyBudget with the cumulative carryOver
-      await prisma.monthlyBudget.upsert({
-        where: { month_year_userId: { month, year, userId } },
-        update: { carryOver: leftover },
-        create: {
-          userId,
-          month,
-          year,
-          carryOver: leftover,
-          totalIncome: 0,
-          totalExpense: 0
-        }
-      })
+      const prevSpent = spentByCategory[budget.category] || 0
+      // Calculate leftover for THIS specific category
+      const leftover = Math.max(0, Number(budget.amount) - prevSpent)
+      totalLeftover += leftover
     }
 
-    return NextResponse.json({ success: true, message: 'Rollover calculated successfully.' })
+    // Include the carryover from the month before that if they stack indefinitely, 
+    // but typically rollover is just (total budget - total spent) of previous month + its carryover.
+    // We will add the prevCarryOver to the sum of leftovers:
+    const prevCarryOver = Number(prevMonthBudget?.carryOver ?? 0)
+    
+    // Some users might want totalLeftover to just be the sum of unused budgets.
+    // If previous carryover applies globally, we add it. 
+    // But since the original code added it to EACH category (which was a bug), we will just use the sum of unused budgets.
+    const finalCarryOver = totalLeftover
+
+    // 3. Perform a single upsert for the total carryover
+    await prisma.monthlyBudget.upsert({
+      where: { month_year_userId: { month, year, userId } },
+      update: { carryOver: finalCarryOver },
+      create: {
+        userId,
+        month,
+        year,
+        carryOver: finalCarryOver,
+        totalIncome: 0,
+        totalExpense: 0
+      }
+    })
+
+    return NextResponse.json({ success: true, carryOver: finalCarryOver, message: 'Rollover calculated successfully.' })
   } catch {
     return NextResponse.json({ error: 'An error occurred.' }, { status: 500 })
   }

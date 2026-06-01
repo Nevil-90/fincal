@@ -173,8 +173,15 @@ export default React.memo(function OverviewTab({
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ month: activeMonth, year: activeYear })
-    }).then(() => fetchRollover())
-  }, [activeMonth, activeYear, fetchRollover])
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data && data.carryOver !== undefined) {
+        setRolloverAmount(data.carryOver)
+      }
+    })
+    .catch(err => console.error('Failed to calculate rollover', err))
+  }, [activeMonth, activeYear])
 
   const carryOver = rolloverAmount
 
