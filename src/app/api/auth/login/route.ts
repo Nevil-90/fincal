@@ -117,6 +117,7 @@ export async function POST(request: NextRequest) {
     return response
 
   } catch (error) {
+    console.error('Login error:', error)
     return NextResponse.json({ error: 'An error occurred.' }, { status: 500 })
   }
 }

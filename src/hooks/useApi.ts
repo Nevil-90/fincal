@@ -37,7 +37,10 @@ export function useTransactions(page: number = 1, limit: number = 50, filters: R
       url += `&${key}=${value}`
     }
   }
-  const { data, error, isLoading, mutate } = useSWR(url, fetcher, { keepPreviousData: true })
+  const { data, error, isLoading, mutate } = useSWR(url, fetcher, { 
+    keepPreviousData: true,
+    shouldRetryOnError: false 
+  })
   
   return {
     transactions: (data?.transactions || []) as any[],
@@ -50,7 +53,9 @@ export function useTransactions(page: number = 1, limit: number = 50, filters: R
 }
 
 export function useAllTransactions() {
-  const { data, error, isLoading, mutate } = useSWR('/api/transactions?limit=10000', fetcher)
+  const { data, error, isLoading, mutate } = useSWR('/api/transactions?limit=10000', fetcher, {
+    shouldRetryOnError: false
+  })
   
   return {
     transactions: (data?.transactions || []) as any[],
@@ -66,7 +71,9 @@ export function useTransactionSummary(month?: number, year?: number) {
   if (month && year) {
     url += `?month=${month}&year=${year}`
   }
-  const { data, error, isLoading, mutate } = useSWR(url, fetcher)
+  const { data, error, isLoading, mutate } = useSWR(url, fetcher, {
+    shouldRetryOnError: false
+  })
   
   return {
     summary: data,
@@ -80,7 +87,9 @@ export function useTransactionSummary(month?: number, year?: number) {
 // Goal Hooks
 // ----------------------------------------
 export function useGoals() {
-  const { data, error, isLoading, mutate } = useSWR('/api/goals', fetcher)
+  const { data, error, isLoading, mutate } = useSWR('/api/goals', fetcher, {
+    shouldRetryOnError: false
+  })
   return {
     goals: data || [],
     isLoading,
@@ -93,7 +102,9 @@ export function useGoals() {
 // Travel Hooks
 // ----------------------------------------
 export function useTravelEntries(page: number = 1, limit: number = 10) {
-  const { data, error, isLoading, mutate } = useSWR(`/api/travel?page=${page}&limit=${limit}`, fetcher)
+  const { data, error, isLoading, mutate } = useSWR(`/api/travel?page=${page}&limit=${limit}`, fetcher, {
+    shouldRetryOnError: false
+  })
   return {
     entries: data?.entries || [],
     pagination: data?.pagination,
@@ -104,7 +115,9 @@ export function useTravelEntries(page: number = 1, limit: number = 10) {
 }
 
 export function useTravelAnalytics(year: number) {
-  const { data, error, isLoading, mutate } = useSWR(`/api/travel/analytics?type=overview&year=${year}`, fetcher)
+  const { data, error, isLoading, mutate } = useSWR(`/api/travel/analytics?type=overview&year=${year}`, fetcher, {
+    shouldRetryOnError: false
+  })
   return {
     analytics: data,
     isLoading,
@@ -121,7 +134,9 @@ export function useAnalytics(dateFilter: string = 'this_month', compareYear?: nu
   if (compareYear) url += `&compareYear=${compareYear}`
   if (compareMonth) url += `&compareMonth=${compareMonth}`
   
-  const { data, error, isLoading, mutate } = useSWR(url, fetcher)
+  const { data, error, isLoading, mutate } = useSWR(url, fetcher, {
+    shouldRetryOnError: false
+  })
   
   return {
     analyticsData: data,

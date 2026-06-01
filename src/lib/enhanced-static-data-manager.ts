@@ -99,6 +99,7 @@ class EnhancedStaticDataManager {
   private data: StaticDataCollection = DEFAULT_DATA
   private listeners = new Set<() => void>()
   private isInitialized = false
+  private initPromise: Promise<StaticDataCollection> | null = null
 
   // Initialize by fetching from database first, then localStorage as fallback
   async initialize(): Promise<StaticDataCollection> {
@@ -106,45 +107,55 @@ class EnhancedStaticDataManager {
       return this.data
     }
 
-    try {
-      // Try to fetch from database first
+    if (this.initPromise) {
+      return this.initPromise
+    }
 
-      const response = await fetch('/api/static-data')
-      
-      if (response.ok) {
-        const dbData = await response.json()
+    this.initPromise = (async () => {
+      try {
+        // Try to fetch from database first
 
-        this.data = dbData
+        const response = await fetch('/api/static-data')
+        
+        if (response.ok) {
+          const dbData = await response.json()
+
+          this.data = dbData
+          this.saveToStorage(this.data)
+          this.isInitialized = true
+          return this.data
+        } else {
+          throw new Error('Database fetch failed')
+        }
+      } catch (error) {
+        console.warn('⚠️ Database fetch failed, trying localStorage...', error)
+        
+        // Fallback to localStorage
+        try {
+          const stored = this.loadFromStorage()
+          if (stored) {
+
+            this.data = stored
+            this.isInitialized = true
+            return this.data
+          }
+        } catch (storageError) {
+          console.warn('⚠️ localStorage load failed:', storageError)
+        }
+
+        // Final fallback to default data and seed database
+
+        this.data = DEFAULT_DATA
+        await this.seedDatabase()
         this.saveToStorage(this.data)
         this.isInitialized = true
         return this.data
-      } else {
-        throw new Error('Database fetch failed')
+      } finally {
+        this.initPromise = null
       }
-    } catch (error) {
-      console.warn('⚠️ Database fetch failed, trying localStorage...', error)
-      
-      // Fallback to localStorage
-      try {
-        const stored = this.loadFromStorage()
-        if (stored) {
+    })();
 
-          this.data = stored
-          this.isInitialized = true
-          return this.data
-        }
-      } catch (storageError) {
-        console.warn('⚠️ localStorage load failed:', storageError)
-      }
-
-      // Final fallback to default data and seed database
-
-      this.data = DEFAULT_DATA
-      await this.seedDatabase()
-      this.saveToStorage(this.data)
-      this.isInitialized = true
-      return this.data
-    }
+    return this.initPromise;
   }
 
   // Seed database with default data
