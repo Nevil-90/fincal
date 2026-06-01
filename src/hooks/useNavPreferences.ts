@@ -5,6 +5,8 @@ const DEFAULT_SLOTS = ['overview', 'transactions', 'goals', 'recurring']
 
 const filterValidSlots = (slots: string[]) => slots.filter(s => VALID_NAV_TABS.includes(s))
 
+let fetchPromise: Promise<string[]> | null = null;
+
 export function useNavPreferences() {
   const [slots, setSlots] = useState<string[]>(DEFAULT_SLOTS)
   const [isLoading, setIsLoading] = useState(true)
@@ -14,12 +16,23 @@ export function useNavPreferences() {
 
     const fetchPreferences = async () => {
       try {
-        const response = await fetch('/api/user/preferences')
-        if (response.ok) {
-          const data = await response.json()
-          if (mounted && data.preferences) {
-            setSlots(filterValidSlots(data.preferences))
-          }
+        if (!fetchPromise) {
+          fetchPromise = fetch('/api/user/preferences').then(async (response) => {
+            if (response.ok) {
+              const data = await response.json()
+              return data.preferences ? filterValidSlots(data.preferences) : DEFAULT_SLOTS
+            }
+            throw new Error('Failed to fetch preferences')
+          }).finally(() => {
+            // keep the cached promise for a while or just clear it?
+            // clear it so future refetches can happen if needed
+            setTimeout(() => { fetchPromise = null }, 1000)
+          })
+        }
+        
+        const validSlots = await fetchPromise
+        if (mounted && validSlots) {
+          setSlots(validSlots)
         }
       } catch (error) {
         console.error('Failed to fetch nav preferences:', error)
