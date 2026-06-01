@@ -6,9 +6,18 @@ const globalForRedis = globalThis as unknown as {
 }
 
 const redisUrl = process.env.REDIS_URL
-export const redis = globalForRedis.redis || (redisUrl ? new Redis(redisUrl) : undefined)
+export let redis: Redis | undefined = globalForRedis.redis
 
-if (process.env.NODE_ENV !== 'production' && redis) globalForRedis.redis = redis
+function getRedis() {
+  if (!redisUrl) return undefined
+  if (!redis) {
+    redis = new Redis(redisUrl)
+    if (process.env.NODE_ENV !== 'production') {
+      globalForRedis.redis = redis
+    }
+  }
+  return redis
+}
 
 // Fallback if Redis is down or not configured
 const memoryFallback = new Map<string, { count: number, resetAt: number }>()
@@ -24,11 +33,12 @@ const memoryFallback = new Map<string, { count: number, resetAt: number }>()
  */
 export async function isRateLimited(key: string, limit = 5, windowMs = 60000): Promise<boolean> {
   try {
-    if (redis) {
-      const currentCount = await redis.incr(key)
+    const activeRedis = getRedis()
+    if (activeRedis) {
+      const currentCount = await activeRedis.incr(key)
       
       if (currentCount === 1) {
-        await redis.pexpire(key, windowMs)
+        await activeRedis.pexpire(key, windowMs)
       }
 
       return currentCount > limit
