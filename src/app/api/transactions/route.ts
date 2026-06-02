@@ -126,50 +126,61 @@ export async function GET(request: NextRequest) {
       ]
     }
     
-    // Get total count for pagination
-    const totalCount = await prisma.transaction.count({
-      where: whereClause
-    })
-    
-    // Get transactions with pagination and include recurring transaction info
-    const transactions = await prisma.transaction.findMany({
-      where: whereClause,
-      include: {
-        recurringTransaction: {
-          select: {
-            id: true,
-            description: true,
-            frequency: true,
-            isActive: true,
-            isPaused: true
+    // Prepare queries to run concurrently
+    const queries: Promise<any>[] = [
+      prisma.transaction.count({ where: whereClause }),
+      prisma.transaction.findMany({
+        where: whereClause,
+        include: {
+          recurringTransaction: {
+            select: {
+              id: true,
+              description: true,
+              frequency: true,
+              isActive: true,
+              isPaused: true
+            }
           }
-        }
-      },
-      orderBy: {
-        date: 'desc'
-      },
-      skip: offset,
-      take: limit
-    })
+        },
+        orderBy: { date: 'desc' },
+        skip: offset,
+        take: limit
+      })
+    ]
+
+    // Add opening balance queries if needed
+    const calculateOpening = includeOpeningBalance && whereClause.date?.gte
+    if (calculateOpening) {
+      queries.push(
+        prisma.transaction.aggregate({
+          where: { userId: currentUserId, deletedAt: null, date: { lt: whereClause.date?.gte }, type: 'income' },
+          _sum: { amount: true }
+        }),
+        prisma.transaction.aggregate({
+          where: { userId: currentUserId, deletedAt: null, date: { lt: whereClause.date?.gte }, type: 'expense' },
+          _sum: { amount: true }
+        })
+      )
+    }
+
+    // Execute all database queries concurrently
+    const results = await Promise.all(queries)
+    
+    const totalCount = results[0]
+    const transactions = results[1]
+    
+    // Calculate opening balance
+    let openingBalance = 0
+    if (calculateOpening) {
+      const priorIncome = results[2]
+      const priorExpense = results[3]
+      openingBalance = Number(priorIncome._sum.amount || 0) - Number(priorExpense._sum.amount || 0)
+    }
     
     // Calculate pagination info
     const totalPages = Math.ceil(totalCount / limit)
     const hasNextPage = page < totalPages
     const hasPrevPage = page > 1
-    
-    // Calculate opening balance if requested and date.gte is available
-    let openingBalance = 0
-    if (includeOpeningBalance && whereClause.date?.gte) {
-      const priorIncome = await prisma.transaction.aggregate({
-        where: { userId: currentUserId, deletedAt: null, date: { lt: whereClause.date.gte }, type: 'income' },
-        _sum: { amount: true }
-      })
-      const priorExpense = await prisma.transaction.aggregate({
-        where: { userId: currentUserId, deletedAt: null, date: { lt: whereClause.date.gte }, type: 'expense' },
-        _sum: { amount: true }
-      })
-      openingBalance = Number(priorIncome._sum.amount || 0) - Number(priorExpense._sum.amount || 0)
-    }
     
     return NextResponse.json({
       transactions,
