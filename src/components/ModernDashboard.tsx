@@ -170,6 +170,35 @@ export default function ModernDashboard() {
     }
   }, [user])
 
+  // Automatically process overdue recurring transactions once per day
+  useEffect(() => {
+    if (!user) return
+    
+    const processRecurringTransactions = async () => {
+      try {
+        const lastProcessDate = localStorage.getItem('lastRecurringProcessDate')
+        const today = new Date().toISOString().split('T')[0] // e.g., '2023-10-25'
+        
+        if (lastProcessDate !== today) {
+          console.log('Checking for overdue recurring transactions...')
+          const response = await fetch('/api/recurring/process', { method: 'POST' })
+          
+          if (response.ok) {
+            localStorage.setItem('lastRecurringProcessDate', today)
+            const result = await response.json()
+            if (result.processed > 0) {
+              refreshAll() // Refresh dashboard data if new transactions were created
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Failed to process recurring transactions:', error)
+      }
+    }
+
+    processRecurringTransactions()
+  }, [user])
+
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 768) {

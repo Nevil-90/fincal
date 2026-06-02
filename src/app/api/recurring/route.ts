@@ -108,10 +108,14 @@ export async function POST(request: NextRequest) {
     const currentDate = new Date(start)
     
     while (currentDate <= now) {
-      // Convert to IST 00:00 (stored as UTC 18:30 previous day)
-      const istDate = new Date(currentDate)
-      istDate.setUTCDate(istDate.getUTCDate() - 1)
-      istDate.setUTCHours(18, 30, 0, 0) // IST 00:00 = UTC 18:30 previous day
+      // Store date as UTC midnight to align with summary routes
+      const finalDate = new Date(Date.UTC(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        currentDate.getDate(),
+        0, 0, 0, 0
+      ))
+
       
       transactionsToCreate.push({
         type,
@@ -121,7 +125,7 @@ export async function POST(request: NextRequest) {
         paymentMethod,
         source,
         recurringTransactionId: recurringTransaction.id, // Link to parent recurring transaction
-        date: istDate, // Use IST 00:00 timing
+        date: finalDate, // Use UTC midnight
         userId: currentUserId // Assign to current user
       })
 
