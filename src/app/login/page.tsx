@@ -315,6 +315,7 @@ function LoginForm() {
                   </label>
                   <Link
                     href={`/forgot-password?email=${encodeURIComponent(email.toLowerCase().trim())}`}
+                    prefetch={false}
                     className="text-xs font-bold text-blue-400 hover:text-blue-300 transition-colors"
                   >
                     Forgot Password?
