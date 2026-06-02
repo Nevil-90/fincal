@@ -30,10 +30,40 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch static data categories for this user
-    const categories = await prisma.staticDataCategory.findMany({
+    let categories = await prisma.staticDataCategory.findMany({
       where: { userId: currentUserId },
       orderBy: { name: 'asc' }
     })
+
+    // Auto-seed default categories for new users
+    if (categories.length === 0) {
+      const defaultData = [
+        ...['Food & Dining', 'Groceries', 'Transportation', 'Petrol/Fuel', 'Auto Rickshaw/Taxi',
+        'Public Transport', 'Shopping', 'Clothing', 'Entertainment', 'Movies/OTT',
+        'Bills & Utilities', 'Electricity', 'Mobile Recharge', 'Internet', 'LPG/Gas',
+        'Water Bill', 'Healthcare', 'Medicine', 'Doctor Consultation', 'Education',
+        'Books/Courses', 'School/College Fees', 'Travel', 'Train/Flight', 'Hotel/Accommodation',
+        'Rent', 'House Maintenance', 'Domestic Help', 'Religious/Charity', 'Temple/Gurudwara',
+        'Donations', 'Investment', 'SIP/Mutual Fund', 'Fixed Deposit', 'Other'].map(name => ({ type: 'expense_categories', name, userId: currentUserId, isActive: true })),
+        ...['Salary', 'Freelance', 'Business Income', 'Investment Returns', 'Rental Income',
+        'Interest', 'Dividends', 'Capital Gains', 'Bonus', 'Commission', 'Gifts', 'Other'].map(name => ({ type: 'income_categories', name, userId: currentUserId, isActive: true })),
+        ...['Cash', 'UPI', 'Credit Card', 'Debit Card', 'Bank Transfer', 'Net Banking', 'Other'].map(name => ({ type: 'payment_methods', name, userId: currentUserId, isActive: true })),
+        ...['Primary Job', 'Secondary Job', 'Freelance Work', 'Business', 'Investments',
+        'Rental Property', 'Side Hustle', 'Consulting', 'Other'].map(name => ({ type: 'income_sources', name, userId: currentUserId, isActive: true })),
+        ...['Personal', 'Business', 'Family', 'Medical', 'Emergency', 'Investment',
+        'Education', 'Travel', 'Entertainment', 'Gift', 'Charity', 'Other'].map(name => ({ type: 'expense_purposes', name, userId: currentUserId, isActive: true }))
+      ];
+
+      await prisma.staticDataCategory.createMany({
+        data: defaultData,
+        skipDuplicates: true
+      })
+
+      categories = await prisma.staticDataCategory.findMany({
+        where: { userId: currentUserId },
+        orderBy: { name: 'asc' }
+      })
+    }
 
     // Fetch budget amounts for this user
     const budgetAmounts = await prisma.budgetAmount.findMany({
