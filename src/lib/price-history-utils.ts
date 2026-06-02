@@ -37,8 +37,8 @@ export async function getPriceForDate(
       }
     }
 
-    // If no price change was effective before the target date, return the default amount
-    return defaultAmount
+    // If no price change was effective before the target date, return the oldAmount of the oldest price change
+    return Number(priceChanges[priceChanges.length - 1].oldAmount)
   } catch (error) {
     console.error('Error getting price for date:', error)
     return defaultAmount
@@ -70,7 +70,9 @@ export async function calculateAmountsForDates(
     const sortedDates = dates.sort((a, b) => a.getTime() - b.getTime())
 
     const result: { date: Date; amount: number }[] = []
-    let currentAmount = defaultAmount
+    
+    // The initial amount before the first price change was oldAmount
+    let currentAmount = Number(priceChanges[0].oldAmount)
     let priceChangeIndex = 0
 
     for (const date of sortedDates) {
