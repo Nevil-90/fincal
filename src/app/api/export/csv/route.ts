@@ -89,15 +89,16 @@ export async function GET(request: NextRequest) {
         date: { lt: where.date.gte }
       }
       
-      const priorIncome = await prisma.transaction.aggregate({
-        where: { ...openingBalanceCondition, type: 'income' },
-        _sum: { amount: true }
-      })
-      
-      const priorExpense = await prisma.transaction.aggregate({
-        where: { ...openingBalanceCondition, type: 'expense' },
-        _sum: { amount: true }
-      })
+      const [priorIncome, priorExpense] = await Promise.all([
+        prisma.transaction.aggregate({
+          where: { ...openingBalanceCondition, type: 'income' },
+          _sum: { amount: true }
+        }),
+        prisma.transaction.aggregate({
+          where: { ...openingBalanceCondition, type: 'expense' },
+          _sum: { amount: true }
+        })
+      ])
       
       runningBalance = Number(priorIncome._sum.amount || 0) - Number(priorExpense._sum.amount || 0)
     }

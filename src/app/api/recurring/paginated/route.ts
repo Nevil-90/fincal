@@ -60,53 +60,64 @@ export async function GET(request: NextRequest) {
       ]
     }
 
-    // Get total count for pagination
-    const totalCount = await prisma.recurringTransaction.count({ where })
-    
-    // Get paginated results
-    const recurringTransactions = await prisma.recurringTransaction.findMany({
-      where,
-      orderBy: [
-        { isActive: 'desc' }, // Active first
-        { nextDue: 'asc' }     // Then by next due date
-      ],
-      skip,
-      take: limit,
-      include: {
-        _count: {
-          select: {
-            transactions: true // Count of related transactions
+    // Parallelize metadata fetches and initial paginated query
+    const [totalCount, categories, frequencies, recurringTransactions] = await Promise.all([
+      prisma.recurringTransaction.count({ where }),
+      prisma.recurringTransaction.findMany({
+        where: { userId: currentUserId },
+        select: { category: true },
+        distinct: ['category'],
+        orderBy: { category: 'asc' }
+      }),
+      prisma.recurringTransaction.findMany({
+        where: { userId: currentUserId },
+        select: { frequency: true },
+        distinct: ['frequency'],
+        orderBy: { frequency: 'asc' }
+      }),
+      prisma.recurringTransaction.findMany({
+        where,
+        orderBy: [
+          { isActive: 'desc' }, // Active first
+          { nextDue: 'asc' }     // Then by next due date
+        ],
+        skip,
+        take: limit,
+        include: {
+          _count: {
+            select: {
+              transactions: true // Count of related transactions
+            }
+          },
+          priceChanges: {
+            orderBy: { effectiveDate: 'asc' }
           }
-        },
-        transactions: {
-          select: { amount: true }
-        },
-        priceChanges: {
-          orderBy: { effectiveDate: 'asc' }
         }
-      }
-    })
+      })
+    ])
+
+    // Get aggregate sums for transaction amounts to avoid N+1 loading all transactions into memory
+    const recurringIds = recurringTransactions.map(rt => rt.id)
+    let groupedTotals: Record<string, number> = {}
+    
+    if (recurringIds.length > 0) {
+      const totals = await prisma.transaction.groupBy({
+        by: ['recurringTransactionId'],
+        where: { recurringTransactionId: { in: recurringIds } },
+        _sum: { amount: true }
+      })
+      
+      groupedTotals = totals.reduce((acc, curr) => {
+        if (curr.recurringTransactionId) {
+          acc[curr.recurringTransactionId] = Number(curr._sum.amount || 0)
+        }
+        return acc
+      }, {} as Record<string, number>)
+    }
 
     // Compute the total spent for each recurring transaction
     const formattedData = recurringTransactions.map(rt => {
-      const totalSpent = rt.transactions.reduce((sum, t) => sum + Number(t.amount), 0)
-      const { transactions, ...rest } = rt
-      return { ...rest, totalSpent }
-    })
-
-    // Get unique categories and frequencies for filter options of this user
-    const categories = await prisma.recurringTransaction.findMany({
-      where: { userId: currentUserId },
-      select: { category: true },
-      distinct: ['category'],
-      orderBy: { category: 'asc' }
-    })
-
-    const frequencies = await prisma.recurringTransaction.findMany({
-      where: { userId: currentUserId },
-      select: { frequency: true },
-      distinct: ['frequency'],
-      orderBy: { frequency: 'asc' }
+      return { ...rt, totalSpent: groupedTotals[rt.id] || 0 }
     })
 
     const totalPages = Math.ceil(totalCount / limit)

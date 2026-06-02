@@ -12,35 +12,32 @@ export async function GET(request: NextRequest) {
     const monthParam = searchParams.get('month')
     const yearParam = searchParams.get('year')
 
-    // 1. Global (All-time) Summary
-    const allTimeAgg = await prisma.transaction.aggregate({
-      where: { userId: currentUserId, deletedAt: null },
-      _sum: { amount: true },
-      _count: { id: true }
-    })
-
-    const allTimeIncomeAgg = await prisma.transaction.aggregate({
-      where: { userId: currentUserId, deletedAt: null, type: 'income' },
-      _sum: { amount: true }
-    })
-
-    const allTimeExpenseAgg = await prisma.transaction.aggregate({
-      where: { userId: currentUserId, deletedAt: null, type: 'expense' },
-      _sum: { amount: true }
-    })
+    // 1. Global (All-time) Summary and 2. Available Years
+    // We can get distinct years by fetching the min and max date to figure out the range of years.
+    const [allTimeAgg, allTimeIncomeAgg, allTimeExpenseAgg, dateAgg] = await Promise.all([
+      prisma.transaction.aggregate({
+        where: { userId: currentUserId, deletedAt: null },
+        _sum: { amount: true },
+        _count: { id: true }
+      }),
+      prisma.transaction.aggregate({
+        where: { userId: currentUserId, deletedAt: null, type: 'income' },
+        _sum: { amount: true }
+      }),
+      prisma.transaction.aggregate({
+        where: { userId: currentUserId, deletedAt: null, type: 'expense' },
+        _sum: { amount: true }
+      }),
+      prisma.transaction.aggregate({
+        where: { userId: currentUserId, deletedAt: null },
+        _min: { date: true },
+        _max: { date: true }
+      })
+    ])
 
     const globalIncome = Number(allTimeIncomeAgg._sum.amount || 0)
     const globalExpense = Number(allTimeExpenseAgg._sum.amount || 0)
     const globalBalance = globalIncome - globalExpense
-
-    // 2. Available Years
-    // We can get distinct years by grouping or raw query. Since Prisma doesn't support Date formatting in groupBy easily,
-    // we'll fetch the min and max date to figure out the range of years.
-    const dateAgg = await prisma.transaction.aggregate({
-      where: { userId: currentUserId, deletedAt: null },
-      _min: { date: true },
-      _max: { date: true }
-    })
 
     const availableYears: number[] = []
     if (dateAgg._min.date && dateAgg._max.date) {
@@ -67,45 +64,54 @@ export async function GET(request: NextRequest) {
       const startDate = new Date(year, month - 1, 1)
       const endDate = new Date(year, month, 0, 23, 59, 59, 999)
 
-      const periodIncomeAgg = await prisma.transaction.aggregate({
-        where: {
-          userId: currentUserId,
-          deletedAt: null,
-          type: 'income',
-          date: { gte: startDate, lte: endDate }
-        },
-        _sum: { amount: true }
-      })
-
-      const periodExpenseAgg = await prisma.transaction.aggregate({
-        where: {
-          userId: currentUserId,
-          deletedAt: null,
-          type: 'expense',
-          date: { gte: startDate, lte: endDate }
-        },
-        _sum: { amount: true }
-      })
-
-      const periodIncome = Number(periodIncomeAgg._sum.amount || 0)
-      const periodExpense = Number(periodExpenseAgg._sum.amount || 0)
-
       // Previous Month
       const prevMonth = month === 1 ? 12 : month - 1
       const prevYear = month === 1 ? year - 1 : year
       const prevStartDate = new Date(prevYear, prevMonth - 1, 1)
       const prevEndDate = new Date(prevYear, prevMonth, 0, 23, 59, 59, 999)
 
-      const prevExpenseAgg = await prisma.transaction.aggregate({
-        where: {
-          userId: currentUserId,
-          deletedAt: null,
-          type: 'expense',
-          date: { gte: prevStartDate, lte: prevEndDate }
-        },
-        _sum: { amount: true }
-      })
+      const [periodIncomeAgg, periodExpenseAgg, prevExpenseAgg, categoryAgg] = await Promise.all([
+        prisma.transaction.aggregate({
+          where: {
+            userId: currentUserId,
+            deletedAt: null,
+            type: 'income',
+            date: { gte: startDate, lte: endDate }
+          },
+          _sum: { amount: true }
+        }),
+        prisma.transaction.aggregate({
+          where: {
+            userId: currentUserId,
+            deletedAt: null,
+            type: 'expense',
+            date: { gte: startDate, lte: endDate }
+          },
+          _sum: { amount: true }
+        }),
+        prisma.transaction.aggregate({
+          where: {
+            userId: currentUserId,
+            deletedAt: null,
+            type: 'expense',
+            date: { gte: prevStartDate, lte: prevEndDate }
+          },
+          _sum: { amount: true }
+        }),
+        prisma.transaction.groupBy({
+          by: ['category'],
+          where: {
+            userId: currentUserId,
+            deletedAt: null,
+            type: 'expense',
+            date: { gte: startDate, lte: endDate }
+          },
+          _sum: { amount: true }
+        })
+      ])
 
+      const periodIncome = Number(periodIncomeAgg._sum.amount || 0)
+      const periodExpense = Number(periodExpenseAgg._sum.amount || 0)
       const prevExpense = Number(prevExpenseAgg._sum.amount || 0)
 
       periodInfo = {
@@ -116,17 +122,6 @@ export async function GET(request: NextRequest) {
       }
 
       // 4. Category Spend for the period
-      const categoryAgg = await prisma.transaction.groupBy({
-        by: ['category'],
-        where: {
-          userId: currentUserId,
-          deletedAt: null,
-          type: 'expense',
-          date: { gte: startDate, lte: endDate }
-        },
-        _sum: { amount: true }
-      })
-
       categoryAgg.forEach(item => {
         categorySpend[item.category || 'Other'] = Number(item._sum.amount || 0)
       })

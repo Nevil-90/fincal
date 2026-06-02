@@ -1,12 +1,10 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@/generated/prisma'
+import { prisma } from '@/lib/prisma'
 import { 
   format, subDays, subMonths, startOfMonth, endOfMonth, 
   startOfYear, isAfter, isBefore, differenceInDays, 
   addDays, eachDayOfInterval 
 } from 'date-fns'
-
-const prisma = new PrismaClient()
 
 export async function GET(request: Request) {
   try {
@@ -26,26 +24,27 @@ export async function GET(request: Request) {
 
     // 1. Fetch all transactions (Node can handle 100k rows in memory easily)
     // We only select the fields needed for math to reduce memory footprint
-    const allTransactions = await prisma.transaction.findMany({
-      where: {
-        userId,
-        deletedAt: null
-      },
-      select: {
-        id: true,
-        type: true,
-        amount: true,
-        category: true,
-        description: true,
-        date: true,
-        paymentMethod: true
-      },
-      orderBy: { date: 'asc' }
-    })
-
-    const goals = await prisma.savingsGoal.findMany({
-      where: { userId }
-    })
+    const [allTransactions, goals] = await Promise.all([
+      prisma.transaction.findMany({
+        where: {
+          userId,
+          deletedAt: null
+        },
+        select: {
+          id: true,
+          type: true,
+          amount: true,
+          category: true,
+          description: true,
+          date: true,
+          paymentMethod: true
+        },
+        orderBy: { date: 'asc' }
+      }),
+      prisma.savingsGoal.findMany({
+        where: { userId }
+      })
+    ])
 
     // --- TRANSLATING useAnalyticsData LOGIC TO SERVER ---
     const now = new Date()
