@@ -21,35 +21,10 @@ export async function GET(request: Request) {
     const compareYear = compareYearStr ? parseInt(compareYearStr) : new Date().getFullYear()
     const compareMonth = compareMonthStr ? parseInt(compareMonthStr) : new Date().getMonth() + 1
 
-
-    // 1. Fetch all transactions (Node can handle 100k rows in memory easily)
-    // We only select the fields needed for math to reduce memory footprint
-    const [allTransactions, goals] = await Promise.all([
-      prisma.transaction.findMany({
-        where: {
-          userId,
-          deletedAt: null
-        },
-        select: {
-          id: true,
-          type: true,
-          amount: true,
-          category: true,
-          description: true,
-          date: true,
-          paymentMethod: true
-        },
-        orderBy: { date: 'asc' }
-      }),
-      prisma.savingsGoal.findMany({
-        where: { userId }
-      })
-    ])
-
     // --- TRANSLATING useAnalyticsData LOGIC TO SERVER ---
     const now = new Date()
 
-    // ─── Filtered Transactions ───
+    // ─── Compute the selected dateFilter window first ───
     let startDate: Date
     let endDate: Date = now
 
@@ -76,6 +51,46 @@ export async function GET(request: Request) {
         break
     }
 
+    // ─── Compute the widest date window needed across ALL features ───
+    // Heatmap needs last 365 days
+    const heatmapStart = subDays(now, 364)
+    // Compare tab may need "same month last year", so up to compareYear - 1
+    const compareStart = new Date(compareYear - 1, compareMonth - 2, 1)
+
+    // Take the earliest of all windows so every feature has its data
+    const globalStart = new Date(
+      Math.min(
+        startDate.getTime(),
+        heatmapStart.getTime(),
+        compareStart.getTime()
+      )
+    )
+
+    // 1. Fetch transactions within the computed window (not ALL rows ever)
+    const [allTransactions, goals] = await Promise.all([
+      prisma.transaction.findMany({
+        where: {
+          userId,
+          deletedAt: null,
+          date: { gte: globalStart }
+        },
+        select: {
+          id: true,
+          type: true,
+          amount: true,
+          category: true,
+          description: true,
+          date: true,
+          paymentMethod: true
+        },
+        orderBy: { date: 'asc' }
+      }),
+      prisma.savingsGoal.findMany({
+        where: { userId }
+      })
+    ])
+
+    // ─── Filtered Transactions (apply the selected dateFilter window) ───
     const filteredTransactions = allTransactions.filter(t => {
       const d = new Date(t.date)
       return isAfter(d, startDate) && isBefore(d, addDays(endDate, 1))

@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     
     // Pagination parameters
     const page = parseInt(searchParams.get('page') || '1', 10)
-    const limit = parseInt(searchParams.get('limit') || '50', 10)
+    const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 200)
     const offset = (page - 1) * limit
     
     // Filter parameters

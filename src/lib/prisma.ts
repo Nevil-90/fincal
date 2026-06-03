@@ -13,19 +13,16 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
 
-let activePrisma: PrismaClient
+// Use globalThis singleton in both dev and production.
+// In dev it prevents "too many connections" during hot-reload.
+// In production it reuses the connection across requests within a container.
+const staleInstance = globalForPrisma.prisma
+const isStale = staleInstance && !('userSetting' in staleInstance)
 
-if (process.env.NODE_ENV === 'production') {
-  activePrisma = new PrismaClient()
-} else {
-  const staleInstance = globalForPrisma.prisma
-  const isStale = staleInstance && !('userSetting' in staleInstance)
-
-  if (!staleInstance || isStale) {
-    globalForPrisma.prisma = new PrismaClient()
-  }
-  activePrisma = globalForPrisma.prisma!
+if (!staleInstance || isStale) {
+  globalForPrisma.prisma = new PrismaClient()
 }
+const activePrisma = globalForPrisma.prisma!
 
 const softDeleteExtension = Prisma.defineExtension({
   query: {

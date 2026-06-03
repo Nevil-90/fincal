@@ -32,6 +32,7 @@ model Transaction {
   @@index([userId, category])
   @@index([userId, type])
   @@index([userId, amount])
+  @@index([userId, deletedAt, date])
   @@map("transactions")
 }
 

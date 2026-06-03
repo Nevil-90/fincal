@@ -52,20 +52,6 @@ export function useTransactions(page: number = 1, limit: number = 50, filters: R
   }
 }
 
-export function useAllTransactions() {
-  const { data, error, isLoading, mutate } = useSWR('/api/transactions?limit=10000', fetcher, {
-    shouldRetryOnError: false
-  })
-  
-  return {
-    transactions: (data?.transactions || []) as any[],
-    monthlyBudget: data?.monthlyBudget,
-    isLoading,
-    isError: error,
-    mutate
-  }
-}
-
 export function useTransactionSummary(month?: number, year?: number) {
   let url = '/api/transactions/summary'
   if (month && year) {
