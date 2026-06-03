@@ -25,6 +25,7 @@ export const viewport: Viewport = {
 };
 
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { SwrProvider } from "@/components/providers/SwrProvider";
 
 export default function RootLayout({
   children,
@@ -36,9 +37,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased overflow-x-hidden`}
       >
-        <ErrorBoundary>
-          {children}
-        </ErrorBoundary>
+        <SwrProvider>
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
+        </SwrProvider>
       </body>
     </html>
   );

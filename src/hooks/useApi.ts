@@ -16,7 +16,6 @@ export const fetcher = async (url: string) => {
 // ----------------------------------------
 export function useUser() {
   const { data, error, isLoading, mutate } = useSWR('/api/auth/me', fetcher, {
-    revalidateOnFocus: false,
     shouldRetryOnError: false
   })
   return {
@@ -52,9 +51,10 @@ export function useTransactions(page: number = 1, limit: number = 50, filters: R
   }
 }
 
-export function useTransactionSummary(month?: number, year?: number) {
-  let url = '/api/transactions/summary'
-  if (month && year) {
+export function useTransactionSummary(month?: number | null, year?: number | null) {
+  const shouldFetch = month !== null && year !== null
+  let url = shouldFetch ? '/api/transactions/summary' : null
+  if (shouldFetch && month && year) {
     url += `?month=${month}&year=${year}`
   }
   const { data, error, isLoading, mutate } = useSWR(url, fetcher, {

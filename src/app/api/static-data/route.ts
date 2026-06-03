@@ -65,11 +65,16 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Fetch budget amounts for this user
-    const budgetAmounts = await prisma.budgetAmount.findMany({
-      where: { userId: currentUserId },
-      orderBy: { name: 'asc' }
-    })
+    // Fetch budget amounts and user settings concurrently for this user
+    const [budgetAmounts, settings] = await Promise.all([
+      prisma.budgetAmount.findMany({
+        where: { userId: currentUserId },
+        orderBy: { name: 'asc' }
+      }),
+      prisma.userSetting.findMany({
+        where: { userId: currentUserId }
+      })
+    ])
 
     // Group categories by type
     const groupedData = categories.reduce((acc: Record<string, StaticDataItem[]>, category) => {
@@ -85,11 +90,6 @@ export async function GET(request: NextRequest) {
       })
       return acc
     }, {})
-
-    // Fetch user settings for this user
-    const settings = await prisma.userSetting.findMany({
-      where: { userId: currentUserId }
-    })
     
     // Convert to a key-value object
     const userSettings = settings.reduce((acc, curr) => {

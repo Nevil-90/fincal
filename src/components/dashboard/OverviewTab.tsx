@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo, useEffect, useCallback } from 'react'
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { Plus, BarChart2, BarChart3, Calendar, Target, AlertCircle, TrendingUp, TrendingDown, DollarSign, Wallet, CreditCard, ArrowRight, ArrowUpRight, ArrowDownRight, ArrowDownLeft, Activity, PieChart, ShieldAlert, Zap, AlertTriangle, CheckCircle, ClipboardList, Banknote, Clock } from 'lucide-react'
 import { formatCurrency } from '@/lib/financial-utils'
 import { useEnhancedStaticData } from '@/lib/enhanced-static-data-manager'
@@ -167,8 +167,14 @@ export default React.memo(function OverviewTab({
     }
   }, [activeMonth, activeYear])
 
+  const rolloverCalculatedRef = useRef<string | null>(null)
+  const thisMonthKey = `${activeMonth}-${activeYear}`
+
   // Recalculate rollover when month changes
   useEffect(() => {
+    if (rolloverCalculatedRef.current === thisMonthKey) return // already done
+    rolloverCalculatedRef.current = thisMonthKey
+
     fetch('/api/budgets/rollover', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -181,7 +187,7 @@ export default React.memo(function OverviewTab({
       }
     })
     .catch(err => console.error('Failed to calculate rollover', err))
-  }, [activeMonth, activeYear])
+  }, [activeMonth, activeYear, thisMonthKey])
 
   const carryOver = rolloverAmount
 

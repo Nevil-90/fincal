@@ -108,9 +108,10 @@ export default function ModernDashboard() {
     type?: 'income' | 'expense'
   }>({})
 
+  const hasAdvancedFilter = advancedFilters.year !== undefined
   const { summary: txSummary, isLoading: loadingTxSummary } = useTransactionSummary(
-    advancedFilters.month !== undefined ? advancedFilters.month + 1 : undefined,
-    advancedFilters.year
+    hasAdvancedFilter ? (advancedFilters.month !== undefined ? advancedFilters.month + 1 : undefined) : null,
+    hasAdvancedFilter ? advancedFilters.year : null
   )
 
   const { goals, isLoading: isLoadingGoals, mutate: mutateGoals } = useGoals()
