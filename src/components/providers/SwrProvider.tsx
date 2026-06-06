@@ -8,7 +8,8 @@ export function SwrProvider({ children }: { children: ReactNode }) {
     <SWRConfig 
       value={{
         revalidateOnFocus: false,
-        dedupingInterval: 5000,
+        revalidateOnReconnect: false, // Prevents cascade of API calls on network reconnect
+        dedupingInterval: 60000,      // 60s: prevents redundant re-fetches on page navigation
       }}
     >
       {children}

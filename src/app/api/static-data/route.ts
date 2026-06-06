@@ -119,7 +119,14 @@ export async function GET(request: NextRequest) {
       userSettings
     }
 
-    return NextResponse.json(staticData)
+    return NextResponse.json(staticData, {
+      headers: {
+        // Cache for 5 min, serve stale for up to 10 min while revalidating in background.
+        // 'private' ensures this is only cached by the browser (not a shared CDN cache)
+        // since the data is user-specific.
+        'Cache-Control': 'private, max-age=300, stale-while-revalidate=600',
+      }
+    })
   } catch (error) {
     console.error('Error fetching static data:', error)
     return NextResponse.json({ error: 'Failed to fetch static data' }, { status: 500 })

@@ -20,7 +20,10 @@ const staleInstance = globalForPrisma.prisma
 const isStale = staleInstance && !('userSetting' in staleInstance)
 
 if (!staleInstance || isStale) {
-  globalForPrisma.prisma = new PrismaClient()
+  globalForPrisma.prisma = new PrismaClient({
+    // Disable query logging in production — reduces overhead per request
+    log: process.env.NODE_ENV === 'development' ? ['warn', 'error'] : [],
+  })
 }
 const activePrisma = globalForPrisma.prisma!
 
