@@ -694,7 +694,7 @@ export default function TravelingTab() {
 
       {activeSubTab === 'charts' && (
         <div className="space-y-6">
-          <div className="rounded-none border-0 bg-transparent p-0 shadow-none sm:rounded-2xl sm:border sm:border-slate-200 dark:border-neutral-700 sm:bg-white dark:bg-neutral-900 sm:p-5 sm:shadow-sm">
+          <div className="rounded-2xl border border-slate-200 dark:border-neutral-700/80 bg-white dark:bg-neutral-900 p-4 sm:p-5 shadow-sm">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400 dark:text-neutral-500">
@@ -731,7 +731,7 @@ export default function TravelingTab() {
 
             {/* Month Multi-Selector */}
             <div className="mt-5 border-t border-slate-100 dark:border-neutral-800/60 pt-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+              <div className="flex items-center justify-between mb-4">
                 <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-neutral-500">
                   Toggle Months
                 </label>
@@ -739,7 +739,7 @@ export default function TravelingTab() {
                   <button
                     type="button"
                     onClick={handleSelectAllMonths}
-                    className="text-indigo-600 hover:text-indigo-800 transition-colors"
+                    className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors"
                   >
                     Select All
                   </button>
@@ -754,7 +754,7 @@ export default function TravelingTab() {
                 </div>
               </div>
               
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-2">
                 {Array.from({ length: 12 }, (_, i) => {
                   const m = i + 1
                   const mName = new Date(2024, i, 1).toLocaleDateString('en-US', { month: 'short' })
@@ -764,10 +764,10 @@ export default function TravelingTab() {
                       key={m}
                       type="button"
                       onClick={() => toggleChartMonth(m)}
-                      className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all ${
+                      className={`px-4 py-2 text-xs font-semibold rounded-xl transition-all ${
                         isSelected
-                          ? 'bg-slate-900 text-white shadow-sm ring-1 ring-slate-950'
-                          : 'bg-slate-50 dark:bg-neutral-800/50 text-slate-500 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-800 dark:bg-neutral-800 ring-1 ring-slate-200/40'
+                          ? 'bg-slate-900 dark:bg-white text-white dark:text-neutral-900 shadow-sm shadow-black/5 dark:shadow-white/10'
+                          : 'bg-slate-50 dark:bg-neutral-800/50 text-slate-500 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-700 ring-1 ring-slate-200/40 dark:ring-neutral-700'
                       }`}
                     >
                       {mName}
