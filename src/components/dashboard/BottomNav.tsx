@@ -51,7 +51,7 @@ export default React.memo(function BottomNav({
 
       {/* Bottom Navigation Bar */}
       <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
-        <div className="bg-white border-t border-slate-200 shadow-[0_-4px_24px_-4px_rgba(15,23,42,0.12)]">
+        <div className="bg-white dark:bg-neutral-900 border-t border-slate-200 dark:border-neutral-800 shadow-[0_-4px_24px_-4px_rgba(15,23,42,0.12)] dark:shadow-none">
           <div className={`grid ${gridColsClass} items-end`} style={{ paddingBottom: 'env(safe-area-inset-bottom, 8px)' }}>
             {slots.map((tabStr, index) => {
               const tabDef = TAB_MAPPING[tabStr]
@@ -66,15 +66,15 @@ export default React.memo(function BottomNav({
                   key={`${tab}-${index}`}
                   onClick={() => onTabChange(tab)}
                   className={`flex flex-col items-center justify-end gap-1 pt-2 pb-2 w-full transition-colors ${
-                    activeTab === tab ? 'text-blue-600' : 'text-slate-400'
+                    activeTab === tab ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-neutral-500'
                   }`}
                 >
                   <div className={`relative flex items-center justify-center w-8 h-8 rounded-xl transition-all ${
-                    activeTab === tab ? 'bg-blue-50' : ''
+                    activeTab === tab ? 'bg-blue-50 dark:bg-blue-900/30' : ''
                   }`}>
                     <Icon className="h-5 w-5" />
                     {activeTab === tab && (
-                      <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-blue-600" />
+                      <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-blue-600 dark:bg-blue-400" />
                     )}
                   </div>
                   <span className="text-[9px] font-bold leading-none truncate w-full px-0.5">{label}</span>

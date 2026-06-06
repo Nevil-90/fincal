@@ -133,6 +133,22 @@ export async function POST(request: NextRequest) {
           ipAddress: clientIp
         }
       })
+    } else if (action === 'DELETE') {
+      await prisma.adminAuditLog.create({
+        data: {
+          adminId: currentUserId,
+          action: 'USER_DELETE',
+          details: JSON.stringify({ email: targetUser.email }),
+          targetUserId,
+          ipAddress: clientIp
+        }
+      })
+
+      // The cascade delete in Prisma schema will automatically remove all related records
+      // (transactions, goals, recurring transactions, etc.)
+      updatedUser = await prisma.user.delete({
+        where: { id: targetUserId }
+      })
     } else {
       return NextResponse.json({ error: 'Invalid parameter' }, { status: 400 })
     }

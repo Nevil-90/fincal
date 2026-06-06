@@ -64,26 +64,26 @@ export default function FinancialInsights({
 
   return (
     <aside className="space-y-4">
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <section className="rounded-2xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-5 shadow-sm">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Health</p>
-            <h3 className="mt-1 text-xl font-bold text-slate-950">Financial Health</h3>
+            <h3 className="mt-1 text-xl font-bold text-slate-950 dark:text-white">Financial Health</h3>
           </div>
           <span className={`shrink-0 rounded-full border px-3 py-1 text-xs font-bold ${savingsStatus.tone}`}>
             {savingsStatus.label}
           </span>
         </div>
 
-        <div className="rounded-2xl bg-slate-50 p-4">
+        <div className="rounded-2xl bg-slate-50 dark:bg-neutral-900 p-4">
           <div className="flex items-end justify-between gap-4">
             <div>
-              <p className="text-sm font-medium text-slate-500">Savings Rate</p>
-              <p className="mt-1 text-3xl font-black tracking-tight text-slate-950">{Math.round(savingsRate)}%</p>
+              <p className="text-sm font-medium text-slate-500 dark:text-neutral-400">Savings Rate</p>
+              <p className="mt-1 text-3xl font-black tracking-tight text-slate-950 dark:text-white">{Math.round(savingsRate)}%</p>
             </div>
             <div className="text-right">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Transactions</p>
-              <p className="mt-1 text-lg font-bold text-slate-900">{balanceInfo.transactionCount}</p>
+              <p className="mt-1 text-lg font-bold text-slate-900 dark:text-white">{balanceInfo.transactionCount}</p>
             </div>
           </div>
 
@@ -95,11 +95,11 @@ export default function FinancialInsights({
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <section className="rounded-2xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-5 shadow-sm">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Spending</p>
-            <h3 className="mt-1 text-xl font-bold text-slate-950">Top Categories</h3>
+            <h3 className="mt-1 text-xl font-bold text-slate-950 dark:text-white">Top Categories</h3>
           </div>
         </div>
 
@@ -112,11 +112,11 @@ export default function FinancialInsights({
                   <div className="mb-2 flex items-start justify-between gap-3">
                     <div className="flex min-w-0 flex-1 items-center gap-2">
                       <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${categoryColors[index]}`} />
-                      <span className="truncate text-sm font-semibold text-slate-700">{category}</span>
+                      <span className="truncate text-sm font-semibold text-slate-700 dark:text-neutral-300">{category}</span>
                     </div>
                     <div className="shrink-0 text-right">
-                      <p className="text-sm font-bold text-slate-950">{formatCurrency(amount)}</p>
-                      <p className="text-xs text-slate-500">{Math.round(percentage)}%</p>
+                      <p className="text-sm font-bold text-slate-950 dark:text-white">{formatCurrency(amount)}</p>
+                      <p className="text-xs text-slate-500 dark:text-neutral-400">{Math.round(percentage)}%</p>
                     </div>
                   </div>
                   <div className="h-1.5 rounded-full bg-slate-100">
@@ -129,9 +129,9 @@ export default function FinancialInsights({
               )
             })
           ) : (
-            <div className="rounded-2xl bg-slate-50 px-4 py-6 text-center">
-              <p className="text-sm font-semibold text-slate-700">No expense categories yet</p>
-              <p className="mt-1 text-xs text-slate-500">Add expenses to view category insights.</p>
+            <div className="rounded-2xl bg-slate-50 dark:bg-neutral-900 px-4 py-6 text-center">
+              <p className="text-sm font-semibold text-slate-700 dark:text-neutral-300">No expense categories yet</p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-neutral-400">Add expenses to view category insights.</p>
             </div>
           )}
         </div>
@@ -148,36 +148,36 @@ export default function FinancialInsights({
           <button
             type="button"
             onClick={onShowAddTransaction}
-            className="flex w-full items-center gap-3 rounded-2xl bg-white px-4 py-3 text-left text-slate-950 transition hover:bg-blue-50"
+            className="flex w-full items-center gap-3 rounded-2xl bg-white dark:bg-neutral-900 px-4 py-3 text-left text-slate-950 dark:text-white transition hover:bg-blue-50"
           >
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-lg"><CreditCard className="h-5 w-5 text-blue-600" /></span>
             <span className="min-w-0">
               <span className="block font-bold">Add Transaction</span>
-              <span className="block text-sm text-slate-500">Record income or expense</span>
+              <span className="block text-sm text-slate-500 dark:text-neutral-400">Record income or expense</span>
             </span>
           </button>
 
           <button
             type="button"
             onClick={() => onTabChange('goals')}
-            className="flex w-full items-center gap-3 rounded-2xl bg-white px-4 py-3 text-left text-slate-950 transition hover:bg-violet-50"
+            className="flex w-full items-center gap-3 rounded-2xl bg-white dark:bg-neutral-900 px-4 py-3 text-left text-slate-950 dark:text-white transition hover:bg-violet-50"
           >
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-100 text-lg"><Target className="h-5 w-5 text-violet-600" /></span>
             <span className="min-w-0">
               <span className="block font-bold">Manage Goals</span>
-              <span className="block text-sm text-slate-500">Track savings targets</span>
+              <span className="block text-sm text-slate-500 dark:text-neutral-400">Track savings targets</span>
             </span>
           </button>
 
           <button
             type="button"
             onClick={() => onTabChange('recurring')}
-            className="flex w-full items-center gap-3 rounded-2xl bg-white px-4 py-3 text-left text-slate-950 transition hover:bg-emerald-50"
+            className="flex w-full items-center gap-3 rounded-2xl bg-white dark:bg-neutral-900 px-4 py-3 text-left text-slate-950 dark:text-white transition hover:bg-emerald-50"
           >
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-lg"><RefreshCw className="h-5 w-5 text-emerald-600" /></span>
             <span className="min-w-0">
               <span className="block font-bold">Setup Recurring</span>
-              <span className="block text-sm text-slate-500">Automate repeated entries</span>
+              <span className="block text-sm text-slate-500 dark:text-neutral-400">Automate repeated entries</span>
             </span>
           </button>
         </div>

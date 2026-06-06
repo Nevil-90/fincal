@@ -65,7 +65,7 @@ function SortableItem({ id, tab, isFull, isActive, moveSlot, removeSlot, addSlot
         style={style} 
         {...attributes} 
         {...listeners}
-        className="shrink-0 flex flex-col items-center justify-center gap-1 w-12 h-12 md:w-14 md:h-14 bg-white border-2 border-indigo-100 rounded-xl shadow-sm cursor-grab active:cursor-grabbing hover:border-indigo-300 transition-colors relative group touch-none"
+        className="shrink-0 flex flex-col items-center justify-center gap-1 w-12 h-12 md:w-14 md:h-14 bg-white dark:bg-neutral-800 border-2 border-indigo-100 dark:border-indigo-700 rounded-xl shadow-sm cursor-grab active:cursor-grabbing hover:border-indigo-300 dark:hover:border-indigo-500 transition-colors relative group touch-none"
       >
         <div className="absolute -top-1.5 -right-1.5 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity z-10">
           <button 
@@ -77,8 +77,8 @@ function SortableItem({ id, tab, isFull, isActive, moveSlot, removeSlot, addSlot
           </button>
         </div>
         
-        <Icon className="h-4 w-4 md:h-5 md:w-5 text-indigo-600 mt-0.5 md:mt-1" />
-        <span className="text-[7px] md:text-[8px] font-bold text-slate-700 truncate w-full text-center px-0.5">{tab.label}</span>
+        <Icon className="h-4 w-4 md:h-5 md:w-5 text-indigo-600 dark:text-indigo-400 mt-0.5 md:mt-1" />
+        <span className="text-[7px] md:text-[8px] font-bold text-slate-700 dark:text-neutral-300 truncate w-full text-center px-0.5">{tab.label}</span>
       </div>
     );
   }
@@ -91,12 +91,12 @@ function SortableItem({ id, tab, isFull, isActive, moveSlot, removeSlot, addSlot
       {...listeners}
       className={`relative flex items-center gap-2 px-3 py-2 rounded-xl border transition-all touch-none group ${
         isFull 
-          ? 'bg-slate-50 border-slate-200 opacity-50 cursor-not-allowed' 
-          : 'bg-white border-slate-200 shadow-sm cursor-grab active:cursor-grabbing hover:border-slate-300 active:scale-95'
+          ? 'bg-slate-50 dark:bg-neutral-800/50 border-slate-200 dark:border-neutral-700 opacity-50 cursor-not-allowed' 
+          : 'bg-white dark:bg-neutral-800 border-slate-200 dark:border-neutral-700 shadow-sm cursor-grab active:cursor-grabbing hover:border-slate-300 dark:hover:border-neutral-500 active:scale-95'
       }`}
     >
-      <Icon className={`h-4 w-4 ${isFull ? 'text-slate-400' : 'text-slate-600'}`} />
-      <span className={`text-xs font-bold ${isFull ? 'text-slate-400' : 'text-slate-700'} pr-5`}>{tab.label}</span>
+      <Icon className={`h-4 w-4 ${isFull ? 'text-slate-400 dark:text-neutral-600' : 'text-slate-600 dark:text-neutral-300'}`} />
+      <span className={`text-xs font-bold ${isFull ? 'text-slate-400 dark:text-neutral-600' : 'text-slate-700 dark:text-neutral-200'} pr-5`}>{tab.label}</span>
       
       {!isFull && (
         <button
@@ -245,9 +245,9 @@ export function NavSettingsDnd({ slots, updateSlots, isAdmin }: { slots: string[
 
   return (
     <>
-      <div className="border-b border-slate-100 pb-5 mb-5">
-        <h2 className="text-lg font-bold text-slate-900">Bottom Navigation</h2>
-        <p className="text-xs text-slate-500 mt-1">Design your mobile bottom app bar using drag and drop.</p>
+      <div className="border-b border-slate-100 dark:border-neutral-800 pb-5 mb-5">
+        <h2 className="text-lg font-bold text-slate-900 dark:text-white">Bottom Navigation</h2>
+        <p className="text-xs text-slate-500 dark:text-neutral-400 mt-1">Design your mobile bottom app bar using drag and drop.</p>
       </div>
 
       <DndContext
@@ -260,12 +260,12 @@ export function NavSettingsDnd({ slots, updateSlots, isAdmin }: { slots: string[
         <div className="space-y-8">
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">Active Navigation <span className="text-slate-400 font-medium">({activeIds.length}/6 max)</span></h3>
-              {activeIds.length <= 4 && <span className="text-[10px] font-semibold text-rose-500 bg-rose-50 px-2 py-0.5 rounded-md">Minimum Reached</span>}
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-neutral-300">Active Navigation <span className="text-slate-400 dark:text-neutral-500 font-medium">({activeIds.length}/6 max)</span></h3>
+              {activeIds.length <= 4 && <span className="text-[10px] font-semibold text-rose-500 bg-rose-50 dark:bg-rose-900/20 px-2 py-0.5 rounded-md">Minimum Reached</span>}
             </div>
             
             <SortableContext id="active" items={activeIds} strategy={horizontalListSortingStrategy}>
-              <DroppableZone id="active" className="flex flex-wrap md:flex-nowrap gap-2 md:gap-3 overflow-x-auto pb-4 custom-scrollbar items-center bg-slate-50 p-4 rounded-2xl border border-slate-200 border-dashed min-h-[110px]">
+              <DroppableZone id="active" className="flex flex-wrap md:flex-nowrap gap-2 md:gap-3 overflow-x-auto pb-4 custom-scrollbar items-center bg-slate-50 dark:bg-neutral-800/50 p-4 rounded-2xl border border-slate-200 dark:border-neutral-700 border-dashed min-h-[110px]">
                 {activeIds.map((id, index) => {
                   const tab = availableTabs.find(t => t.id === id);
                   if (!tab) return null;
@@ -287,10 +287,10 @@ export function NavSettingsDnd({ slots, updateSlots, isAdmin }: { slots: string[
           </div>
 
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3">Available Tabs</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-neutral-300 mb-3">Available Tabs</h3>
             
             <SortableContext id="inactive" items={inactiveIds} strategy={rectSortingStrategy}>
-              <DroppableZone id="inactive" className="flex flex-row flex-wrap gap-3 bg-white p-4 rounded-2xl border border-slate-200 min-h-[80px]">
+              <DroppableZone id="inactive" className="flex flex-row flex-wrap gap-3 bg-white dark:bg-neutral-800/30 p-4 rounded-2xl border border-slate-200 dark:border-neutral-700 min-h-[80px]">
                 {inactiveIds.map((id) => {
                   const tab = availableTabs.find(t => t.id === id);
                   if (!tab) return null;

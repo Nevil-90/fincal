@@ -22,11 +22,11 @@ interface RecentTransactionsProps {
 
 export default function RecentTransactions({ transactions, onViewAll }: RecentTransactionsProps) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="rounded-2xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-5 shadow-sm">
       <div className="mb-5 flex items-center justify-between gap-3">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Activity</p>
-          <h3 className="mt-1 text-xl font-bold text-slate-950">Recent Transactions</h3>
+          <h3 className="mt-1 text-xl font-bold text-slate-950 dark:text-white">Recent Transactions</h3>
         </div>
         <button
           type="button"
@@ -51,10 +51,10 @@ export default function RecentTransactions({ transactions, onViewAll }: RecentTr
               </div>
 
               <div className="min-w-0">
-                <p className="truncate text-base font-semibold text-slate-950">
+                <p className="truncate text-base font-semibold text-slate-950 dark:text-white">
                   {transaction.description || transaction.category}
                 </p>
-                <p className="mt-0.5 truncate text-sm text-slate-500">
+                <p className="mt-0.5 truncate text-sm text-slate-500 dark:text-neutral-400">
                   {transaction.category} • {new Date(transaction.date).toLocaleDateString()}
                 </p>
               </div>
@@ -71,10 +71,10 @@ export default function RecentTransactions({ transactions, onViewAll }: RecentTr
         })}
 
         {transactions.length === 0 && (
-          <div className="rounded-2xl bg-slate-50 px-4 py-10 text-center">
+          <div className="rounded-2xl bg-slate-50 dark:bg-neutral-900 px-4 py-10 text-center">
             <div className="mb-4 flex justify-center"><ClipboardList className="h-10 w-10 text-slate-300" /></div>
-            <p className="mt-3 font-semibold text-slate-700">No transactions yet</p>
-            <p className="mt-1 text-sm text-slate-500">Add your first transaction to get started</p>
+            <p className="mt-3 font-semibold text-slate-700 dark:text-neutral-300">No transactions yet</p>
+            <p className="mt-1 text-sm text-slate-500 dark:text-neutral-400">Add your first transaction to get started</p>
           </div>
         )}
       </div>

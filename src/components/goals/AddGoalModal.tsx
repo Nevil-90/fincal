@@ -29,57 +29,57 @@ export function AddGoalModal({ isOpen, onClose, newGoal, setNewGoal, handleAddGo
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
-      <div className="bg-white rounded-3xl w-full max-w-md relative z-10 animate-slide-up shadow-2xl overflow-hidden max-h-[90vh] flex flex-col overscroll-contain">
-        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-          <h4 className="font-semibold text-gray-900 flex items-center gap-2 text-lg">
-            <div className="p-2 bg-purple-100 rounded-full text-purple-600">
+      <div className="fixed inset-0 bg-black/40 dark:bg-neutral-950/80 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
+      <div className="bg-white dark:bg-neutral-900 rounded-3xl w-full max-w-md relative z-10 animate-slide-up shadow-2xl overflow-hidden max-h-[90vh] flex flex-col overscroll-contain">
+        <div className="p-6 border-b border-gray-100 dark:border-neutral-800 flex justify-between items-center bg-gray-50/50 dark:bg-neutral-800/50">
+          <h4 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2 text-lg">
+            <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-full text-purple-600 dark:text-purple-400">
               <Target className="h-5 w-5" />
             </div>
             New Savings Goal
           </h4>
-          <button onClick={onClose} className="p-2 text-gray-400 hover:bg-gray-100 rounded-full transition-colors">
+          <button onClick={onClose} className="p-2 text-gray-400 dark:text-neutral-500 hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-full transition-colors">
             <X className="h-5 w-5" />
           </button>
         </div>
         <div className="p-6 overflow-y-auto">
           <form onSubmit={handleAddGoal} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">What are you saving for?</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1.5">What are you saving for?</label>
               <input
                 type="text"
                 placeholder="e.g., Dream Vacation, New Car..."
                 value={newGoal.name}
                 onChange={(e) => setNewGoal({ ...newGoal, name: e.target.value })}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-purple-500 focus:bg-white transition-colors text-gray-900 outline-none"
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-2xl focus:ring-2 focus:ring-purple-500 focus:bg-white dark:focus:bg-neutral-900 transition-colors text-gray-900 dark:text-white outline-none"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Target Amount</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1.5">Target Amount</label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 font-medium">₹</span>
+                <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-neutral-500 font-medium">₹</span>
                 <input
                   type="number"
                   placeholder="100000"
                   value={newGoal.targetAmount}
                   onChange={(e) => setNewGoal({ ...newGoal, targetAmount: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-purple-500 focus:bg-white transition-colors text-gray-900 outline-none"
+                  className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-2xl focus:ring-2 focus:ring-purple-500 focus:bg-white dark:focus:bg-neutral-900 transition-colors text-gray-900 dark:text-white outline-none"
                   step="0.01"
                   required
                 />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Target Date <span className="text-gray-400 font-normal">(Optional)</span></label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1.5">Target Date <span className="text-gray-400 dark:text-neutral-500 font-normal">(Optional)</span></label>
               <div className="relative w-full">
-                <div className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 flex items-center justify-between pointer-events-none transition-colors">
-                  <span className={newGoal.deadline ? 'text-gray-900' : 'text-gray-400'}>
+                <div className="w-full px-4 py-3 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-2xl text-gray-900 dark:text-white flex items-center justify-between pointer-events-none transition-colors">
+                  <span className={newGoal.deadline ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-neutral-500'}>
                     {newGoal.deadline
                       ? new Date(newGoal.deadline).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
                       : 'yyyy-mm-dd'}
                   </span>
-                  <Calendar className="h-5 w-5 text-gray-400" />
+                  <Calendar className="h-5 w-5 text-gray-400 dark:text-neutral-500" />
                 </div>
                 <input
                   type="date"

@@ -478,9 +478,9 @@ export default function TravelingTab() {
 
   if (loading && travelEntries.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] bg-white/50 rounded-2xl border border-slate-100 border-dashed animate-pulse">
-        <div className="h-8 w-8 border-4 border-slate-200 border-t-indigo-500 rounded-full animate-spin mb-4"></div>
-        <p className="text-sm font-medium text-slate-500">Loading your travel logs...</p>
+      <div className="flex flex-col items-center justify-center min-h-[400px] bg-white dark:bg-neutral-900/50 rounded-2xl border border-slate-100 dark:border-neutral-800 border-dashed animate-pulse">
+        <div className="h-8 w-8 border-4 border-slate-200 dark:border-neutral-700 border-t-indigo-500 rounded-full animate-spin mb-4"></div>
+        <p className="text-sm font-medium text-slate-500 dark:text-neutral-400">Loading your travel logs...</p>
       </div>
     )
   }
@@ -489,8 +489,8 @@ export default function TravelingTab() {
     <div className="space-y-4 sm:space-y-5 font-sans max-w-[1600px] mx-auto pb-24 md:pb-6 overflow-x-hidden">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Travel & Fuel Tracking</h1>
-          <p className="text-sm text-slate-500 mt-1">Monitor your fuel expenses and vehicle efficiency over time.</p>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">Travel & Fuel Tracking</h1>
+          <p className="text-sm text-slate-500 dark:text-neutral-400 mt-1">Monitor your fuel expenses and vehicle efficiency over time.</p>
         </div>
         <div className="flex items-center gap-3">
           {selectedEntries.size > 0 && (
@@ -512,7 +512,7 @@ export default function TravelingTab() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white/80 p-2 shadow-sm">
+      <div className="rounded-2xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900/80 p-2 shadow-sm">
         <div className="flex flex-row items-center gap-1 sm:gap-2 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden w-full">
           {[
             { id: 'overview', label: 'Overview' },
@@ -527,7 +527,7 @@ export default function TravelingTab() {
               className={`flex-1 sm:flex-initial shrink-0 whitespace-nowrap px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-colors text-center ${
                 activeSubTab === tab.id
                   ? 'bg-slate-900 text-white shadow-sm'
-                  : 'text-slate-600 hover:bg-slate-100'
+                  : 'text-slate-600 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-800 dark:bg-neutral-800'
               }`}
             >
               {tab.label}
@@ -550,25 +550,25 @@ export default function TravelingTab() {
 
       {activeSubTab === 'insights' && (
         <div className="space-y-4 sm:space-y-5">
-          <div className="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm">
+          <div className="rounded-2xl border border-slate-200 dark:border-neutral-700/80 bg-white dark:bg-neutral-900 p-4 sm:p-5 shadow-sm">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Travel Insights</p>
-                <h3 className="mt-2 text-lg font-semibold text-slate-900">Movement & Comparison Review</h3>
-                <p className="text-sm text-slate-500 mt-1">Raw travel and fuel deltas across periods.</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400 dark:text-neutral-500">Travel Insights</p>
+                <h3 className="mt-2 text-lg font-semibold text-slate-900 dark:text-white">Movement & Comparison Review</h3>
+                <p className="text-sm text-slate-500 dark:text-neutral-400 mt-1">Raw travel and fuel deltas across periods.</p>
               </div>
-              <div className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-semibold text-slate-600 self-start lg:self-auto">
+              <div className="rounded-full border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800/50 px-4 py-2 text-xs font-semibold text-slate-600 dark:text-neutral-400 self-start lg:self-auto">
                 Current period: {currentMonthLabel}
               </div>
             </div>
 
             <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 [&>*:last-child:nth-child(odd)]:col-span-2 sm:[&>*:last-child:nth-child(odd)]:col-span-1">
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Year</label>
+                <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-neutral-400">Year</label>
                 <select
                   value={selectedYear}
                   onChange={(e) => setSelectedYear(Number(e.target.value))}
-                  className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-800"
+                  className="mt-2 w-full rounded-xl border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800/50 px-3 py-2 text-sm font-semibold text-slate-800 dark:text-neutral-200"
                 >
                   {analytics?.yearly?.length ? (
                     analytics.yearly.map(year => (
@@ -580,11 +580,11 @@ export default function TravelingTab() {
                 </select>
               </div>
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Month</label>
+                <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-neutral-400">Month</label>
                 <select
                   value={insightsMonth}
                   onChange={(e) => setInsightsMonth(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-                  className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-800"
+                  className="mt-2 w-full rounded-xl border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800/50 px-3 py-2 text-sm font-semibold text-slate-800 dark:text-neutral-200"
                 >
                   <option value="all">All Months</option>
                   {availableInsightMonths.length ? (
@@ -607,15 +607,15 @@ export default function TravelingTab() {
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5 [&>*:last-child:nth-child(odd)]:col-span-2 md:[&>*:last-child:nth-child(odd)]:col-span-1">
             {insightsMetrics.map(metric => (
-              <div key={metric.label} className="rounded-2xl border border-slate-200/80 bg-white p-3 sm:p-5 shadow-sm flex flex-col items-start justify-start">
+              <div key={metric.label} className="rounded-2xl border border-slate-200 dark:border-neutral-700/80 bg-white dark:bg-neutral-900 p-3 sm:p-5 shadow-sm flex flex-col items-start justify-start">
                 <div className="min-w-0 w-full">
-                  <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-slate-500 truncate">{metric.label}</p>
+                  <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-neutral-400 truncate">{metric.label}</p>
                 </div>
                 
                 <div className="text-left w-full mt-2">
-                  <p className="text-base sm:text-lg font-bold text-slate-900 truncate">{metric.format(metric.current)}</p>
+                  <p className="text-base sm:text-lg font-bold text-slate-900 dark:text-white truncate">{metric.format(metric.current)}</p>
                   
-                  <div className="flex items-center justify-between mt-2 text-[10px] sm:text-xs text-slate-500">
+                  <div className="flex items-center justify-between mt-2 text-[10px] sm:text-xs text-slate-500 dark:text-neutral-400">
                     <span className="truncate">Prev: {metric.format(metric.previous)}</span>
                   </div>
                   
@@ -625,11 +625,11 @@ export default function TravelingTab() {
                         ? 'bg-emerald-100 text-emerald-700'
                         : metric.delta.direction === 'down'
                           ? 'bg-rose-100 text-rose-700'
-                          : 'bg-slate-200 text-slate-600'
+                          : 'bg-slate-200 text-slate-600 dark:text-neutral-400'
                     }`}>
                       {formatSignedMetric(metric.delta.delta, metric.format)}
                     </span>
-                    <span className="text-[9px] sm:text-[10px] text-slate-500">{formatDeltaPct(metric.delta.pct)}</span>
+                    <span className="text-[9px] sm:text-[10px] text-slate-500 dark:text-neutral-400">{formatDeltaPct(metric.delta.pct)}</span>
                   </div>
                 </div>
               </div>
@@ -637,24 +637,24 @@ export default function TravelingTab() {
           </div>
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:[&>*:last-child:nth-child(odd)]:col-span-2">
-            <div className="rounded-none border-0 bg-transparent p-0 shadow-none sm:rounded-2xl sm:border sm:border-slate-200 sm:bg-white sm:p-5 sm:shadow-sm">
+            <div className="rounded-none border-0 bg-transparent p-0 shadow-none sm:rounded-2xl sm:border sm:border-slate-200 dark:border-neutral-700 sm:bg-white dark:bg-neutral-900 sm:p-5 sm:shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Month Comparison</p>
-                  <h4 className="mt-1 text-base font-semibold text-slate-900">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400 dark:text-neutral-500">Month Comparison</p>
+                  <h4 className="mt-1 text-base font-semibold text-slate-900 dark:text-white">
                     {insightsMonth === 'all' ? 'Current Year vs Previous Year' : 'Current vs Previous Month'}
                   </h4>
                 </div>
-                <span className="text-xs font-semibold text-slate-500">{previousMonthLabel}</span>
+                <span className="text-xs font-semibold text-slate-500 dark:text-neutral-400">{previousMonthLabel}</span>
               </div>
 
               <div className="mt-4 divide-y divide-slate-100 sm:divide-y-0 sm:space-y-3 text-sm">
                 {insightsMetrics.map(metric => (
-                  <div key={metric.label} className="flex items-center justify-between py-3.5 sm:rounded-xl sm:border sm:border-slate-100 sm:bg-slate-50/70 sm:px-4 sm:py-3">
-                    <span className="font-semibold text-slate-700">{metric.label}</span>
+                  <div key={metric.label} className="flex items-center justify-between py-3.5 sm:rounded-xl sm:border sm:border-slate-100 dark:border-neutral-800 sm:bg-slate-50 dark:bg-neutral-800/50 sm:px-4 sm:py-3">
+                    <span className="font-semibold text-slate-700 dark:text-neutral-300">{metric.label}</span>
                     <div className="text-right">
-                      <p className="font-semibold text-slate-900">{metric.format(metric.current)}</p>
-                      <p className="text-xs text-slate-500">
+                      <p className="font-semibold text-slate-900 dark:text-white">{metric.format(metric.current)}</p>
+                      <p className="text-xs text-slate-500 dark:text-neutral-400">
                         {formatSignedMetric(metric.delta.delta, metric.format)} ({formatDeltaPct(metric.delta.pct)})
                       </p>
                     </div>
@@ -663,24 +663,24 @@ export default function TravelingTab() {
               </div>
             </div>
 
-            <div className="rounded-none border-0 bg-transparent p-0 shadow-none sm:rounded-2xl sm:border sm:border-slate-200 sm:bg-white sm:p-5 sm:shadow-sm">
+            <div className="rounded-none border-0 bg-transparent p-0 shadow-none sm:rounded-2xl sm:border sm:border-slate-200 dark:border-neutral-700 sm:bg-white dark:bg-neutral-900 sm:p-5 sm:shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">Year Comparison</p>
-                  <h4 className="mt-1 text-base font-semibold text-slate-900">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400 dark:text-neutral-500">Year Comparison</p>
+                  <h4 className="mt-1 text-base font-semibold text-slate-900 dark:text-white">
                     {insightsMonth === 'all' ? 'Year-over-Year Comparison' : 'Current vs Same Month Last Year'}
                   </h4>
                 </div>
-                <span className="text-xs font-semibold text-slate-500">{sameMonthLastYearLabel}</span>
+                <span className="text-xs font-semibold text-slate-500 dark:text-neutral-400">{sameMonthLastYearLabel}</span>
               </div>
 
               <div className="mt-4 divide-y divide-slate-100 sm:divide-y-0 sm:space-y-3 text-sm">
                 {yearOverYearMetrics.map(metric => (
-                  <div key={metric.label} className="flex items-center justify-between py-3.5 sm:rounded-xl sm:border sm:border-slate-100 sm:bg-slate-50/70 sm:px-4 sm:py-3">
-                    <span className="font-semibold text-slate-700">{metric.label}</span>
+                  <div key={metric.label} className="flex items-center justify-between py-3.5 sm:rounded-xl sm:border sm:border-slate-100 dark:border-neutral-800 sm:bg-slate-50 dark:bg-neutral-800/50 sm:px-4 sm:py-3">
+                    <span className="font-semibold text-slate-700 dark:text-neutral-300">{metric.label}</span>
                     <div className="text-right">
-                      <p className="font-semibold text-slate-900">{metric.format(metric.current)}</p>
-                      <p className="text-xs text-slate-500">
+                      <p className="font-semibold text-slate-900 dark:text-white">{metric.format(metric.current)}</p>
+                      <p className="text-xs text-slate-500 dark:text-neutral-400">
                         {formatSignedMetric(metric.delta.delta, metric.format)} ({formatDeltaPct(metric.delta.pct)})
                       </p>
                     </div>
@@ -694,27 +694,27 @@ export default function TravelingTab() {
 
       {activeSubTab === 'charts' && (
         <div className="space-y-6">
-          <div className="rounded-none border-0 bg-transparent p-0 shadow-none sm:rounded-2xl sm:border sm:border-slate-200 sm:bg-white sm:p-5 sm:shadow-sm">
+          <div className="rounded-none border-0 bg-transparent p-0 shadow-none sm:rounded-2xl sm:border sm:border-slate-200 dark:border-neutral-700 sm:bg-white dark:bg-neutral-900 sm:p-5 sm:shadow-sm">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400 dark:text-neutral-500">
                   Travel Charts
                 </p>
 
-                <h3 className="mt-2 text-lg font-semibold text-slate-900">
+                <h3 className="mt-2 text-lg font-semibold text-slate-900 dark:text-white">
                   Monthly Travel Movement
                 </h3>
               </div>
 
               <div className="min-w-[180px]">
-                <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-neutral-500">
                   Select Year
                 </label>
 
                 <select
                   value={selectedYear}
                   onChange={(e) => setSelectedYear(Number(e.target.value))}
-                  className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-100"
+                  className="mt-2 w-full rounded-xl border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800/50 px-3 py-2 text-sm font-semibold text-slate-800 dark:text-neutral-200 shadow-sm outline-none transition focus:border-indigo-500 focus:bg-white dark:bg-neutral-900 focus:ring-4 focus:ring-indigo-100"
                 >
                   {analytics?.yearly?.length ? (
                     analytics.yearly.map((year) => (
@@ -730,9 +730,9 @@ export default function TravelingTab() {
             </div>
 
             {/* Month Multi-Selector */}
-            <div className="mt-5 border-t border-slate-100/60 pt-4">
+            <div className="mt-5 border-t border-slate-100 dark:border-neutral-800/60 pt-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-                <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-neutral-500">
                   Toggle Months
                 </label>
                 <div className="flex items-center gap-2 text-[11px] font-semibold">
@@ -747,7 +747,7 @@ export default function TravelingTab() {
                   <button
                     type="button"
                     onClick={handleClearAllMonths}
-                    className="text-slate-400 hover:text-slate-600 transition-colors"
+                    className="text-slate-400 dark:text-neutral-500 hover:text-slate-600 dark:text-neutral-400 transition-colors"
                   >
                     Clear All
                   </button>
@@ -767,7 +767,7 @@ export default function TravelingTab() {
                       className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all ${
                         isSelected
                           ? 'bg-slate-900 text-white shadow-sm ring-1 ring-slate-950'
-                          : 'bg-slate-50 text-slate-500 hover:bg-slate-100 ring-1 ring-slate-200/40'
+                          : 'bg-slate-50 dark:bg-neutral-800/50 text-slate-500 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-800 dark:bg-neutral-800 ring-1 ring-slate-200/40'
                       }`}
                     >
                       {mName}
@@ -780,8 +780,8 @@ export default function TravelingTab() {
 
           {monthlyChartSeries.length ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 sm:[&>*:last-child:nth-child(odd)]:col-span-2 lg:[&>*:last-child:nth-child(odd)]:col-span-1">
-              <div className="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">Monthly Spend</p>
+              <div className="rounded-2xl border border-slate-200 dark:border-neutral-700/80 bg-white dark:bg-neutral-900 p-4 sm:p-5 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-neutral-400 mb-2">Monthly Spend</p>
                 <div className="flex items-end justify-start sm:justify-center gap-2 sm:gap-3.5 overflow-x-auto pb-2 pt-8 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden h-48 w-full">
                   {filteredChartSeries.length ? (
                     filteredChartSeries.map(item => {
@@ -791,31 +791,31 @@ export default function TravelingTab() {
                           <div className="absolute bottom-full mb-2 bg-slate-900 text-white text-[10px] font-semibold px-2 py-1 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
                             {formatCurrency(item.totalAmount)}
                           </div>
-                          <span className="text-[10px] font-medium text-slate-500 mb-1.5 whitespace-nowrap">
+                          <span className="text-[10px] font-medium text-slate-500 dark:text-neutral-400 mb-1.5 whitespace-nowrap">
                             {item.totalAmount >= 1000 ? `${(item.totalAmount / 1000).toFixed(0)}k` : item.totalAmount.toString()}
                           </span>
-                          <div className="w-5 sm:w-7 bg-slate-50 rounded-t-md relative h-28 flex items-end border border-slate-100/50">
+                          <div className="w-5 sm:w-7 bg-slate-50 dark:bg-neutral-800/50 rounded-t-md relative h-28 flex items-end border border-slate-100 dark:border-neutral-800/50">
                             <div
                               className="w-full bg-slate-900 rounded-t-md transition-all duration-300 group-hover:bg-indigo-600"
                               style={{ height: `${heightPercent}%` }}
                             />
                           </div>
-                          <span className="mt-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                          <span className="mt-2 text-[10px] font-semibold text-slate-500 dark:text-neutral-400 uppercase tracking-wider">
                             {item.monthName.slice(0, 3)}
                           </span>
                         </div>
                       )
                     })
                   ) : (
-                    <div className="flex items-center justify-center h-full w-full text-xs font-semibold text-slate-400 py-10">
+                    <div className="flex items-center justify-center h-full w-full text-xs font-semibold text-slate-400 dark:text-neutral-500 py-10">
                       No months selected
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">Monthly Distance</p>
+              <div className="rounded-2xl border border-slate-200 dark:border-neutral-700/80 bg-white dark:bg-neutral-900 p-4 sm:p-5 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-neutral-400 mb-2">Monthly Distance</p>
                 <div className="flex items-end justify-start sm:justify-center gap-2 sm:gap-3.5 overflow-x-auto pb-2 pt-8 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden h-48 w-full">
                   {filteredChartSeries.length ? (
                     filteredChartSeries.map(item => {
@@ -825,7 +825,7 @@ export default function TravelingTab() {
                           <div className="absolute bottom-full mb-2 bg-slate-900 text-white text-[10px] font-semibold px-2 py-1 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
                             {item.totalKmTraveled.toLocaleString()} km
                           </div>
-                          <span className="text-[10px] font-medium text-slate-500 mb-1.5 whitespace-nowrap">
+                          <span className="text-[10px] font-medium text-slate-500 dark:text-neutral-400 mb-1.5 whitespace-nowrap">
                             {item.totalKmTraveled >= 1000 ? `${(item.totalKmTraveled / 1000).toFixed(0)}k` : item.totalKmTraveled.toString()}
                           </span>
                           <div className="w-5 sm:w-7 bg-indigo-50/30 rounded-t-md relative h-28 flex items-end border border-indigo-100/30">
@@ -834,22 +834,22 @@ export default function TravelingTab() {
                               style={{ height: `${heightPercent}%` }}
                             />
                           </div>
-                          <span className="mt-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                          <span className="mt-2 text-[10px] font-semibold text-slate-500 dark:text-neutral-400 uppercase tracking-wider">
                             {item.monthName.slice(0, 3)}
                           </span>
                         </div>
                       )
                     })
                   ) : (
-                    <div className="flex items-center justify-center h-full w-full text-xs font-semibold text-slate-400 py-10">
+                    <div className="flex items-center justify-center h-full w-full text-xs font-semibold text-slate-400 dark:text-neutral-500 py-10">
                       No months selected
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">Efficiency Trend</p>
+              <div className="rounded-2xl border border-slate-200 dark:border-neutral-700/80 bg-white dark:bg-neutral-900 p-4 sm:p-5 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-neutral-400 mb-2">Efficiency Trend</p>
                 <div className="flex items-end justify-start sm:justify-center gap-2 sm:gap-3.5 overflow-x-auto pb-2 pt-8 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden h-48 w-full">
                   {filteredChartSeries.length ? (
                     filteredChartSeries.map(item => {
@@ -859,7 +859,7 @@ export default function TravelingTab() {
                           <div className="absolute bottom-full mb-2 bg-slate-900 text-white text-[10px] font-semibold px-2 py-1 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
                             {item.averageEfficiency} km/L
                           </div>
-                          <span className="text-[10px] font-medium text-slate-500 mb-1.5 whitespace-nowrap">
+                          <span className="text-[10px] font-medium text-slate-500 dark:text-neutral-400 mb-1.5 whitespace-nowrap">
                             {item.averageEfficiency.toFixed(1)}
                           </span>
                           <div className="w-5 sm:w-7 bg-emerald-50/30 rounded-t-md relative h-28 flex items-end border border-emerald-100/30">
@@ -868,14 +868,14 @@ export default function TravelingTab() {
                               style={{ height: `${heightPercent}%` }}
                             />
                           </div>
-                          <span className="mt-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                          <span className="mt-2 text-[10px] font-semibold text-slate-500 dark:text-neutral-400 uppercase tracking-wider">
                             {item.monthName.slice(0, 3)}
                           </span>
                         </div>
                       )
                     })
                   ) : (
-                    <div className="flex items-center justify-center h-full w-full text-xs font-semibold text-slate-400 py-10">
+                    <div className="flex items-center justify-center h-full w-full text-xs font-semibold text-slate-400 dark:text-neutral-500 py-10">
                       No months selected
                     </div>
                   )}
@@ -883,7 +883,7 @@ export default function TravelingTab() {
               </div>
             </div>
           ) : (
-            <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-slate-500">
+            <div className="rounded-2xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-10 text-center text-slate-500 dark:text-neutral-400">
               No monthly analytics available for this year yet.
             </div>
           )}
@@ -909,13 +909,13 @@ export default function TravelingTab() {
       )}
 
       {showAddForm && (
-        <div className="fixed inset-0 z-[200] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 overflow-hidden">
-          <div className="bg-white rounded-2xl shadow-2xl ring-1 ring-slate-900/5 w-full max-w-md max-h-[90vh] overflow-y-auto transform transition-all">
-            <div className="flex justify-between items-center px-6 py-5 border-b border-slate-100 bg-slate-50/50">
-              <h3 className="text-base font-semibold text-slate-900">Add Travel Entry</h3>
+        <div className="fixed inset-0 z-[200] bg-slate-900/40 dark:bg-neutral-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-hidden">
+          <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl ring-1 ring-slate-900/5 dark:ring-neutral-800 w-full max-w-md max-h-[90vh] overflow-y-auto transform transition-all">
+            <div className="flex justify-between items-center px-6 py-5 border-b border-slate-100 dark:border-neutral-800 bg-slate-50 dark:bg-neutral-800/50">
+              <h3 className="text-base font-semibold text-slate-900 dark:text-white">Add Travel Entry</h3>
               <button
                 onClick={() => setShowAddForm(false)}
-                className="p-2 -mr-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+                className="p-2 -mr-2 text-slate-400 dark:text-neutral-500 hover:text-slate-600 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-800 dark:bg-neutral-800 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-slate-900/10"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -924,15 +924,15 @@ export default function TravelingTab() {
             <form onSubmit={handleSubmit} className="p-6 space-y-5">
               <div className="grid grid-cols-2 gap-5 [&>*:last-child:nth-child(odd)]:col-span-2">
                 <div>
-                  <label className="block text-[12px] font-semibold text-slate-600 uppercase tracking-wider mb-2">Start Date</label>
+                  <label className="block text-[12px] font-semibold text-slate-600 dark:text-neutral-400 uppercase tracking-wider mb-2">Start Date</label>
                   <div className="relative w-full">
-                    <div className="w-full px-3.5 py-2.5 text-sm bg-white border-0 shadow-sm ring-1 ring-inset ring-slate-300 rounded-xl text-slate-900 flex items-center justify-between pointer-events-none transition-colors">
-                      <span className={formData.startDate ? 'text-slate-900' : 'text-slate-400'}>
+                    <div className="w-full px-3.5 py-2.5 text-sm bg-white dark:bg-neutral-900 border-0 shadow-sm ring-1 ring-inset ring-slate-300 rounded-xl text-slate-900 dark:text-white flex items-center justify-between pointer-events-none transition-colors">
+                      <span className={formData.startDate ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-neutral-500'}>
                         {formData.startDate
                           ? new Date(formData.startDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
                           : 'Select Date'}
                       </span>
-                      <Calendar className="h-4 w-4 text-slate-400" />
+                      <Calendar className="h-4 w-4 text-slate-400 dark:text-neutral-500" />
                     </div>
                     <input
                       type="date"
@@ -944,15 +944,15 @@ export default function TravelingTab() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[12px] font-semibold text-slate-600 uppercase tracking-wider mb-2">End Date</label>
+                  <label className="block text-[12px] font-semibold text-slate-600 dark:text-neutral-400 uppercase tracking-wider mb-2">End Date</label>
                   <div className="relative w-full">
-                    <div className="w-full px-3.5 py-2.5 text-sm bg-white border-0 shadow-sm ring-1 ring-inset ring-slate-300 rounded-xl text-slate-900 flex items-center justify-between pointer-events-none transition-colors">
-                      <span className={formData.endDate ? 'text-slate-900' : 'text-slate-400'}>
+                    <div className="w-full px-3.5 py-2.5 text-sm bg-white dark:bg-neutral-900 border-0 shadow-sm ring-1 ring-inset ring-slate-300 rounded-xl text-slate-900 dark:text-white flex items-center justify-between pointer-events-none transition-colors">
+                      <span className={formData.endDate ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-neutral-500'}>
                         {formData.endDate
                           ? new Date(formData.endDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
                           : 'Select Date'}
                       </span>
-                      <Calendar className="h-4 w-4 text-slate-400" />
+                      <Calendar className="h-4 w-4 text-slate-400 dark:text-neutral-500" />
                     </div>
                     <input
                       type="date"
@@ -967,35 +967,35 @@ export default function TravelingTab() {
 
               <div className="grid grid-cols-2 gap-5 [&>*:last-child:nth-child(odd)]:col-span-2">
                 <div>
-                  <label className="block text-[12px] font-semibold text-slate-600 uppercase tracking-wider mb-2">Start KM</label>
+                  <label className="block text-[12px] font-semibold text-slate-600 dark:text-neutral-400 uppercase tracking-wider mb-2">Start KM</label>
                   <input
                     type="number"
                     step="0.1"
                     value={formData.startKm}
                     onChange={(e) => setFormData({ ...formData, startKm: e.target.value })}
-                    className="w-full px-3.5 py-2.5 text-sm bg-white border-0 shadow-sm ring-1 ring-inset ring-slate-300 rounded-xl focus:ring-2 focus:ring-inset focus:ring-indigo-600 text-slate-900 transition-all"
+                    className="w-full px-3.5 py-2.5 text-sm bg-white dark:bg-neutral-900 border-0 shadow-sm ring-1 ring-inset ring-slate-300 rounded-xl focus:ring-2 focus:ring-inset focus:ring-indigo-600 text-slate-900 dark:text-white transition-all"
                     placeholder="e.g. 15000"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-[12px] font-semibold text-slate-600 uppercase tracking-wider mb-2">End KM</label>
+                  <label className="block text-[12px] font-semibold text-slate-600 dark:text-neutral-400 uppercase tracking-wider mb-2">End KM</label>
                   <input
                     type="number"
                     step="0.1"
                     value={formData.endKm}
                     onChange={(e) => setFormData({ ...formData, endKm: e.target.value })}
-                    className="w-full px-3.5 py-2.5 text-sm bg-white border-0 shadow-sm ring-1 ring-inset ring-slate-300 rounded-xl focus:ring-2 focus:ring-inset focus:ring-indigo-600 text-slate-900 transition-all"
+                    className="w-full px-3.5 py-2.5 text-sm bg-white dark:bg-neutral-900 border-0 shadow-sm ring-1 ring-inset ring-slate-300 rounded-xl focus:ring-2 focus:ring-inset focus:ring-indigo-600 text-slate-900 dark:text-white transition-all"
                     placeholder="e.g. 15450"
                     required
                   />
                 </div>
               </div>
 
-              <div className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl p-3.5 mb-5">
+              <div className="flex items-center justify-between bg-slate-50 dark:bg-neutral-800/50 border border-slate-200 dark:border-neutral-700 rounded-xl p-3.5 mb-5">
                 <div>
-                  <h4 className="text-[12px] font-semibold text-slate-800">Manual Entry Mode</h4>
-                  <p className="text-[10px] text-slate-500 mt-0.5">Disable auto-calc for custom fuel pricing</p>
+                  <h4 className="text-[12px] font-semibold text-slate-800 dark:text-neutral-200">Manual Entry Mode</h4>
+                  <p className="text-[10px] text-slate-500 dark:text-neutral-400 mt-0.5">Disable auto-calc for custom fuel pricing</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input 
@@ -1007,13 +1007,13 @@ export default function TravelingTab() {
                       staticManager.saveSetting('overrideTravelCalc', val)
                     }}
                   />
-                  <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                  <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:bg-neutral-900 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
                 </label>
               </div>
 
               <div className="grid grid-cols-2 gap-5 [&>*:last-child:nth-child(odd)]:col-span-2">
                 <div>
-                  <label className="block text-[12px] font-semibold text-slate-600 uppercase tracking-wider mb-2">Amount</label>
+                  <label className="block text-[12px] font-semibold text-slate-600 dark:text-neutral-400 uppercase tracking-wider mb-2">Amount</label>
                   <input
                     type="number"
                     step="0.01"
@@ -1030,13 +1030,13 @@ export default function TravelingTab() {
                       }
                       setFormData({ ...formData, amount })
                     }}
-                    className="w-full px-3.5 py-2.5 text-sm bg-white border-0 shadow-sm ring-1 ring-inset ring-slate-300 rounded-xl focus:ring-2 focus:ring-inset focus:ring-indigo-600 text-slate-900 transition-all"
+                    className="w-full px-3.5 py-2.5 text-sm bg-white dark:bg-neutral-900 border-0 shadow-sm ring-1 ring-inset ring-slate-300 rounded-xl focus:ring-2 focus:ring-inset focus:ring-indigo-600 text-slate-900 dark:text-white transition-all"
                     placeholder="0.00"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-[12px] font-semibold text-slate-600 uppercase tracking-wider mb-2">Liters</label>
+                  <label className="block text-[12px] font-semibold text-slate-600 dark:text-neutral-400 uppercase tracking-wider mb-2">Liters</label>
                   <input
                     type="number"
                     step="0.01"
@@ -1053,7 +1053,7 @@ export default function TravelingTab() {
                       }
                       setFormData({ ...formData, liters })
                     }}
-                    className="w-full px-3.5 py-2.5 text-sm bg-white border-0 shadow-sm ring-1 ring-inset ring-slate-300 rounded-xl focus:ring-2 focus:ring-inset focus:ring-indigo-600 text-slate-900 transition-all"
+                    className="w-full px-3.5 py-2.5 text-sm bg-white dark:bg-neutral-900 border-0 shadow-sm ring-1 ring-inset ring-slate-300 rounded-xl focus:ring-2 focus:ring-inset focus:ring-indigo-600 text-slate-900 dark:text-white transition-all"
                     placeholder="0.00"
                     required
                   />
@@ -1061,21 +1061,21 @@ export default function TravelingTab() {
               </div>
 
               <div>
-                <label className="block text-[12px] font-semibold text-slate-600 uppercase tracking-wider mb-2">Description <span className="text-slate-400 font-normal normal-case">(Optional)</span></label>
+                <label className="block text-[12px] font-semibold text-slate-600 dark:text-neutral-400 uppercase tracking-wider mb-2">Description <span className="text-slate-400 dark:text-neutral-500 font-normal normal-case">(Optional)</span></label>
                 <input
                   type="text"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3.5 py-2.5 text-sm bg-white border-0 shadow-sm ring-1 ring-inset ring-slate-300 rounded-xl focus:ring-2 focus:ring-inset focus:ring-indigo-600 text-slate-900 transition-all placeholder:text-slate-400"
+                  className="w-full px-3.5 py-2.5 text-sm bg-white dark:bg-neutral-900 border-0 shadow-sm ring-1 ring-inset ring-slate-300 rounded-xl focus:ring-2 focus:ring-inset focus:ring-indigo-600 text-slate-900 dark:text-white transition-all placeholder:text-slate-400 dark:text-neutral-500"
                   placeholder="Trip to Mumbai, Weekend getaway..."
                 />
               </div>
 
-              <div className="flex gap-3 pt-6 border-t border-slate-100">
+              <div className="flex gap-3 pt-6 border-t border-slate-100 dark:border-neutral-800">
                 <button
                   type="button"
                   onClick={() => setShowAddForm(false)}
-                  className="flex-1 px-4 py-2.5 text-sm font-semibold text-slate-700 bg-white border-0 ring-1 ring-inset ring-slate-300 rounded-xl hover:bg-slate-50 transition-all focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+                  className="flex-1 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-neutral-300 bg-white dark:bg-neutral-900 border-0 ring-1 ring-inset ring-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-neutral-800/50 dark:bg-neutral-800/50 transition-all focus:outline-none focus:ring-2 focus:ring-slate-900/10"
                 >
                   Cancel
                 </button>

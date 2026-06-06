@@ -105,14 +105,14 @@ export function DesktopGoalsView({
   }, 0)
 
   return (
-    <div className="hidden lg:flex flex-col gap-4 relative h-[calc(100vh-200px)] overflow-hidden text-slate-800 animate-fade-in w-full">
+    <div className="hidden lg:flex flex-col gap-4 relative h-[calc(100vh-130px)] overflow-hidden text-slate-800 dark:text-neutral-200 animate-fade-in w-full">
       {/* 1. Header Row */}
       <div className="flex justify-between items-center w-full">
         <div className="min-w-0 pr-4">
-          <h2 className="text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2 truncate">
-            Goals Dashboard <span className="text-[10px] font-bold text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">Pro</span>
+          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2 truncate">
+            Goals Dashboard <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/40 px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">Pro</span>
           </h2>
-          <p className="text-slate-500 text-xs mt-1 truncate">Redesigned financial target tracking and velocity analyzer.</p>
+          <p className="text-slate-500 dark:text-neutral-400 text-xs mt-1 truncate">Redesigned financial target tracking and velocity analyzer.</p>
         </div>
         
         <div className="flex items-center gap-3 shrink-0">
@@ -126,7 +126,7 @@ export function DesktopGoalsView({
       </div>
 
       {/* Sub-Tabs Navigation */}
-      <div className="flex flex-row items-center gap-2 overflow-x-auto w-full border-b border-slate-200 pb-2 shrink-0">
+      <div className="flex flex-row items-center gap-2 overflow-x-auto w-full border-b border-slate-200 dark:border-neutral-700 pb-2 shrink-0">
         {[
           { id: 'overview', label: 'Overview' },
           { id: 'active', label: `Active Goals (${filteredGoals.length})` },
@@ -143,7 +143,7 @@ export function DesktopGoalsView({
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               goalFilter === tab.id 
                 ? 'bg-slate-900 text-white shadow-sm' 
-                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+                : 'text-slate-500 dark:text-neutral-400 hover:bg-slate-50 dark:hover:bg-neutral-800/50 dark:bg-neutral-800/50 hover:text-slate-700 dark:text-neutral-300'
             }`}
           >
             {tab.label}
@@ -160,23 +160,23 @@ export function DesktopGoalsView({
             {/* Executive Summary Metrics Grid */}
             <div className="grid grid-cols-4 gap-4 shrink-0">
               {/* Card 1: Portfolio Progress */}
-              <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex flex-col justify-between min-h-[120px]">
+              <div className="bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-800 rounded-2xl p-4 shadow-sm flex flex-col justify-between min-h-[120px]">
                 <div className="flex justify-between items-center mb-3">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Portfolio Progress</span>
-                  <span className="p-1.5 bg-purple-50 text-purple-600 rounded-lg">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-500">Portfolio Progress</span>
+                  <span className="p-1.5 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-lg">
                     <Target className="h-4 w-4" />
                   </span>
                 </div>
                 <div>
                   <div className="flex justify-between items-end mb-2">
-                    <span className="text-2xl font-black text-slate-900 leading-none">
+                    <span className="text-2xl font-black text-slate-900 dark:text-white leading-none">
                       {overallProgress.toFixed(1)}%
                     </span>
-                    <span className="text-[10px] font-bold text-slate-500">
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-neutral-400">
                       {formatCurrency(totalActiveSaved)} / {formatCurrency(totalActiveTarget)}
                     </span>
                   </div>
-                  <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                  <div className="w-full bg-slate-100 dark:bg-neutral-800 rounded-full h-1.5 overflow-hidden">
                     <div
                       className="bg-gradient-to-r from-purple-500 to-indigo-500 h-full rounded-full transition-all duration-1000"
                       style={{ width: `${overallProgress}%` }}
@@ -186,15 +186,15 @@ export function DesktopGoalsView({
               </div>
 
               {/* Card 2: Savings Velocity Analyzer */}
-              <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex flex-col justify-between min-h-[120px]">
+              <div className="bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-800 rounded-2xl p-4 shadow-sm flex flex-col justify-between min-h-[120px]">
                 <div className="flex justify-between items-center mb-3">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Savings Velocity</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-500">Savings Velocity</span>
                   {monthlySavingPotential >= totalMonthlySavingRequired ? (
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-1 rounded-md uppercase tracking-wider">
+                    <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 px-2 py-1 rounded-md uppercase tracking-wider">
                       On Track
                     </span>
                   ) : (
-                    <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-100 px-2 py-1 rounded-md uppercase tracking-wider">
+                    <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 px-2 py-1 rounded-md uppercase tracking-wider">
                       Under Pace
                     </span>
                   )}
@@ -202,67 +202,67 @@ export function DesktopGoalsView({
                 <div>
                   <div className="flex justify-between items-baseline mb-2">
                     <div className="flex flex-col">
-                      <span className="text-[9px] font-bold text-slate-400 uppercase">Monthly Needed</span>
-                      <span className="text-base font-black text-slate-900 leading-none mt-1">
+                      <span className="text-[9px] font-bold text-slate-400 dark:text-neutral-500 uppercase">Monthly Needed</span>
+                      <span className="text-base font-black text-slate-900 dark:text-white leading-none mt-1">
                         {formatCurrency(totalMonthlySavingRequired)}
                       </span>
                     </div>
                     <div className="flex flex-col text-right">
-                      <span className="text-[9px] font-bold text-slate-400 uppercase">Savings Capacity</span>
-                      <span className="text-xs font-bold text-slate-600 leading-none mt-1">
+                      <span className="text-[9px] font-bold text-slate-400 dark:text-neutral-500 uppercase">Savings Capacity</span>
+                      <span className="text-xs font-bold text-slate-600 dark:text-neutral-400 leading-none mt-1">
                         {formatCurrency(monthlySavingPotential)}
                       </span>
                     </div>
                   </div>
-                  <p className="text-[9px] text-slate-400 mt-1 truncate">
+                  <p className="text-[9px] text-slate-400 dark:text-neutral-500 mt-1 truncate">
                     {monthlySavingPotential >= totalMonthlySavingRequired 
-                      ? <span className="flex items-center gap-1"><Check className="h-2.5 w-2.5 text-emerald-500" /> Capability covers required pace.</span>
+                      ? <span className="flex items-center gap-1"><Check className="h-2.5 w-2.5 text-emerald-500 dark:text-emerald-400" /> Capability covers required pace.</span>
                       : <span className="flex items-center gap-1"><AlertTriangle className="h-2.5 w-2.5 text-orange-500" /> Increase savings or extend deadlines.</span>}
                   </p>
                 </div>
               </div>
 
               {/* Card 3: Landmark Milestone */}
-              <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex flex-col justify-between min-h-[120px]">
+              <div className="bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-800 rounded-2xl p-4 shadow-sm flex flex-col justify-between min-h-[120px]">
                 <div className="flex justify-between items-center mb-3">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Next Landmark</span>
-                  <span className="p-1.5 bg-blue-50 text-blue-600 rounded-lg">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-500">Next Landmark</span>
+                  <span className="p-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg">
                     <Clock className="h-4 w-4" />
                   </span>
                 </div>
                 <div>
                   {nextMilestoneGoal ? (
                     <div>
-                      <h4 className="font-bold text-slate-900 text-xs truncate leading-none mb-2">{nextMilestoneGoal.name}</h4>
+                      <h4 className="font-bold text-slate-900 dark:text-white text-xs truncate leading-none mb-2">{nextMilestoneGoal.name}</h4>
                       <div className="flex justify-between items-center mt-2">
-                        <span className="text-[10px] font-semibold text-slate-400">
+                        <span className="text-[10px] font-semibold text-slate-400 dark:text-neutral-500">
                           Due: {new Date(nextMilestoneGoal.deadline!).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
                         </span>
-                        <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded leading-none">
+                        <span className="text-[10px] font-bold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-1.5 py-0.5 rounded leading-none">
                           {Math.min((nextMilestoneGoal.currentAmount / nextMilestoneGoal.targetAmount) * 100, 100).toFixed(0)}%
                         </span>
                       </div>
                     </div>
                   ) : (
-                    <p className="text-[10px] text-slate-400 mt-2">No active deadline goals.</p>
+                    <p className="text-[10px] text-slate-400 dark:text-neutral-500 mt-2">No active deadline goals.</p>
                   )}
                 </div>
               </div>
 
               {/* Card 4: Achievements */}
-              <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex flex-col justify-between min-h-[120px]">
+              <div className="bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-800 rounded-2xl p-4 shadow-sm flex flex-col justify-between min-h-[120px]">
                 <div className="flex justify-between items-center mb-3">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Achievements</span>
-                  <span className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-500">Achievements</span>
+                  <span className="p-1.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-lg">
                     <Trophy className="h-4 w-4" />
                   </span>
                 </div>
                 <div>
                   <div className="flex items-baseline gap-2 mb-2">
-                    <span className="text-2xl font-black text-slate-900 leading-none">{completedGoals.length}</span>
-                    <span className="text-[10px] font-semibold text-slate-500">Goals Achieved</span>
+                    <span className="text-2xl font-black text-slate-900 dark:text-white leading-none">{completedGoals.length}</span>
+                    <span className="text-[10px] font-semibold text-slate-500 dark:text-neutral-400">Goals Achieved</span>
                   </div>
-                  <p className="text-[10px] text-slate-400 mt-1 truncate">
+                  <p className="text-[10px] text-slate-400 dark:text-neutral-500 mt-1 truncate">
                     Total saved: {formatCurrency(totalCompletedSaved)}
                   </p>
                 </div>
@@ -270,22 +270,22 @@ export function DesktopGoalsView({
             </div>
 
             {/* Goal Coach Panel */}
-            <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-sm flex flex-col">
-              <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
-                <div className="p-2 bg-amber-50 text-amber-500 rounded-lg">
+            <div className="bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-800 rounded-3xl p-5 shadow-sm flex flex-col">
+              <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-neutral-800">
+                <div className="p-2 bg-amber-50 dark:bg-amber-900/20 text-amber-500 dark:text-amber-400 rounded-lg">
                   <Sparkles className="h-5 w-5" />
                 </div>
                 <div>
-                  <h4 className="font-extrabold text-slate-900 text-sm">Goal Coach & Insights</h4>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Personal Finance assistant</p>
+                  <h4 className="font-extrabold text-slate-900 dark:text-white text-sm">Goal Coach & Insights</h4>
+                  <p className="text-[10px] text-slate-400 dark:text-neutral-500 font-bold uppercase tracking-wider mt-0.5">Personal Finance assistant</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4 mt-4 [&>*:last-child:nth-child(odd)]:col-span-2">
                 {/* Advice column */}
                 <div className="space-y-3">
-                  <div className="p-4 bg-gradient-to-br from-indigo-50/75 to-purple-50/40 border border-indigo-100/50 rounded-2xl">
-                    <p className="text-[11px] font-bold text-indigo-950 flex items-center gap-1.5 mb-2">
+                  <div className="p-4 bg-gradient-to-br from-indigo-50/75 to-purple-50/40 dark:from-indigo-900/30 dark:to-purple-900/30 border border-indigo-100/50 dark:border-indigo-900/50 rounded-2xl">
+                    <p className="text-[11px] font-bold text-indigo-950 dark:text-indigo-300 flex items-center gap-1.5 mb-2">
                       <span className="flex items-center gap-1.5"><Lightbulb className="h-3.5 w-3.5" /> Coach Allocation Advice</span>
                     </p>
                     
@@ -304,19 +304,19 @@ export function DesktopGoalsView({
 
                       if (readyToCompleteGoal) {
                         return (
-                          <p className="text-xs text-slate-700 leading-relaxed">
+                          <p className="text-xs text-slate-700 dark:text-neutral-300 leading-relaxed">
                             Fantastic! You have an available balance of <strong>{formatCurrency(availableBalance)}</strong>, which is enough to immediately achieve your <strong>"{readyToCompleteGoal.name}"</strong> goal (needs {formatCurrency(readyToCompleteGoal.targetAmount - readyToCompleteGoal.currentAmount)}). Head to the Active Goals tab to fund it!
                           </p>
                         )
                       } else if (highestProgressGoal) {
                         return (
-                          <p className="text-xs text-slate-700 leading-relaxed">
+                          <p className="text-xs text-slate-700 dark:text-neutral-300 leading-relaxed">
                             Your goal <strong>"{highestProgressGoal.name}"</strong> is currently closest to the finish line at <strong>{((highestProgressGoal.currentAmount / highestProgressGoal.targetAmount) * 100).toFixed(0)}%</strong>. Consider allocating some of your <strong>{formatCurrency(availableBalance)}</strong> available balance to speed it up.
                           </p>
                         )
                       } else {
                         return (
-                          <p className="text-xs text-slate-700 leading-relaxed">
+                          <p className="text-xs text-slate-700 dark:text-neutral-300 leading-relaxed">
                             No active savings goals found. Create a savings goal and we will analyze your available balance to help you pace your contributions.
                           </p>
                         )
@@ -324,16 +324,16 @@ export function DesktopGoalsView({
                     })()}
                   </div>
 
-                  <div className="p-3 bg-purple-50/50 border border-purple-100 rounded-2xl">
-                    <p className="text-xs text-purple-700 leading-relaxed font-medium">
+                  <div className="p-3 bg-purple-50 dark:bg-purple-900/30 border border-purple-100 dark:border-purple-900/50 rounded-2xl">
+                    <p className="text-xs text-purple-700 dark:text-purple-300 leading-relaxed font-medium">
                       <Lightbulb className="h-4 w-4 shrink-0 text-yellow-600 mt-0.5" /> <span><strong>Smart Tip:</strong> Automated weekly contributions are statistically proven to help complete goals 40% faster than monthly transfers. Try creating a recurring payment!</span>
                     </p>
                   </div>
                 </div>
 
                 {/* Priority List Column */}
-                <div className="flex flex-col bg-slate-50/50 rounded-2xl border border-slate-100 p-4">
-                  <h5 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-3">Active Targets Hierarchy</h5>
+                <div className="flex flex-col bg-slate-50 dark:bg-neutral-800 rounded-2xl border border-slate-100 dark:border-neutral-700 p-4">
+                  <h5 className="text-[10px] font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider mb-3">Active Targets Hierarchy</h5>
                   {goals.filter(g => !g.isCompleted).length > 0 ? (
                     <div className="space-y-2.5">
                       {goals
@@ -342,13 +342,13 @@ export function DesktopGoalsView({
                         .map((g) => {
                           const progress = Math.min((g.currentAmount / g.targetAmount) * 100, 100)
                           return (
-                            <div key={g.id} className="flex flex-col gap-1.5 p-2.5 bg-white border border-slate-100 rounded-xl">
+                            <div key={g.id} className="flex flex-col gap-1.5 p-2.5 bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-700 rounded-xl">
                               <div className="flex justify-between items-center">
-                                <span className="text-xs font-bold text-slate-800 truncate">{g.name}</span>
-                                <span className="text-[10px] font-semibold text-slate-500">{formatCurrency(g.currentAmount)}</span>
+                                <span className="text-xs font-bold text-slate-800 dark:text-neutral-200 truncate">{g.name}</span>
+                                <span className="text-[10px] font-semibold text-slate-500 dark:text-neutral-400">{formatCurrency(g.currentAmount)}</span>
                               </div>
-                              <div className="w-full bg-slate-100 h-1 rounded-full overflow-hidden">
-                                <div className="bg-purple-500 h-full transition-all" style={{ width: `${progress}%` }}></div>
+                              <div className="w-full bg-slate-100 dark:bg-neutral-700 h-1.5 rounded-full overflow-hidden">
+                                <div className="bg-purple-500 dark:bg-purple-400 h-full transition-all" style={{ width: `${progress}%` }}></div>
                               </div>
                             </div>
                           )
@@ -356,7 +356,7 @@ export function DesktopGoalsView({
                     </div>
                   ) : (
                     <div className="flex-1 flex items-center justify-center">
-                      <p className="text-slate-400 text-sm">No active targets to display.</p>
+                      <p className="text-slate-400 dark:text-neutral-500 text-sm">No active targets to display.</p>
                     </div>
                   )}
                 </div>
@@ -369,18 +369,18 @@ export function DesktopGoalsView({
         {goalFilter === 'active' && (
           <>
             {/* Left Column (List) */}
-            <div className={`bg-white border border-slate-100 rounded-3xl shadow-sm flex flex-col min-h-0 overflow-hidden ${selectedGoal ? 'w-[60%] shrink-0' : 'flex-1'} transition-all duration-300`}>
+            <div className={`bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-800 rounded-3xl shadow-sm flex flex-col min-h-0 overflow-hidden ${selectedGoal ? 'w-[60%] shrink-0' : 'flex-1'} transition-all duration-300`}>
               
               {/* Header controls (Sorting, View Toggle) */}
-              <div className="h-[60px] px-5 flex justify-between items-center border-b border-slate-100 bg-white shrink-0">
+              <div className="h-[60px] px-5 flex justify-between items-center border-b border-slate-100 dark:border-neutral-800 bg-white dark:bg-neutral-900 shrink-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1.5">
+                  <span className="text-[10px] font-bold text-slate-400 dark:text-neutral-500 flex items-center gap-1.5">
                     <Filter className="h-3.5 w-3.5" /> Sort:
                   </span>
                   <select
                     value={desktopSort}
                     onChange={(e) => setDesktopSort(e.target.value as any)}
-                    className="border border-slate-200 rounded-xl text-xs font-bold px-2.5 py-1 bg-slate-50 text-slate-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-colors cursor-pointer"
+                    className="border border-slate-200 dark:border-neutral-700 rounded-xl text-xs font-bold px-2.5 py-1 bg-slate-50 dark:bg-neutral-800/50 text-slate-700 dark:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white dark:bg-neutral-900 transition-colors cursor-pointer"
                   >
                     <option value="priority">Priority</option>
                     <option value="deadline">Target Date</option>
@@ -389,17 +389,17 @@ export function DesktopGoalsView({
                   </select>
                 </div>
                 
-                <div className="flex border border-slate-200 rounded-xl p-0.5 bg-slate-50">
+                <div className="flex border border-slate-200 dark:border-neutral-700 rounded-xl p-0.5 bg-slate-50 dark:bg-neutral-800/50">
                   <button
                     onClick={() => setViewMode('cards')}
-                    className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === 'cards' ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                    className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === 'cards' ? 'bg-white dark:bg-neutral-900 text-purple-600 dark:text-purple-400 shadow-sm' : 'text-slate-400 dark:text-neutral-500 hover:text-slate-600 dark:text-neutral-400'}`}
                     title="Card Grid View"
                   >
                     <Sparkles className="h-3.5 w-3.5" />
                   </button>
                   <button
                     onClick={() => setViewMode('list')}
-                    className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === 'list' ? 'bg-white text-purple-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                    className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === 'list' ? 'bg-white dark:bg-neutral-900 text-purple-600 dark:text-purple-400 shadow-sm' : 'text-slate-400 dark:text-neutral-500 hover:text-slate-600 dark:text-neutral-400'}`}
                     title="Spreadsheet List View"
                   >
                     <History className="h-3.5 w-3.5" />
@@ -411,11 +411,11 @@ export function DesktopGoalsView({
               <div className="flex-1 min-h-0 overflow-y-auto p-5 custom-scrollbar">
                 {filteredGoals.length === 0 ? (
                   <div className="text-center py-16 px-5 flex-1 flex flex-col justify-center items-center h-full">
-                    <div className="w-16 h-16 bg-purple-50 rounded-full flex items-center justify-center mb-4">
+                    <div className="w-16 h-16 bg-purple-50 dark:bg-purple-900/20 rounded-full flex items-center justify-center mb-4">
                       <Target className="h-8 w-8 text-purple-500" />
                     </div>
-                    <h3 className="text-lg font-bold text-slate-900 mb-1.5">No Active Goals</h3>
-                    <p className="text-slate-500 text-xs max-w-sm mb-5 leading-relaxed">Create a savings goal to start tracking progress towards your financial landmarks.</p>
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1.5">No Active Goals</h3>
+                    <p className="text-slate-500 dark:text-neutral-400 text-xs max-w-sm mb-5 leading-relaxed">Create a savings goal to start tracking progress towards your financial landmarks.</p>
                     <button
                       onClick={() => setShowAddForm(true)}
                       className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 px-5 rounded-xl transition-colors text-xs shadow-md cursor-pointer"
@@ -435,17 +435,17 @@ export function DesktopGoalsView({
                         <div
                           key={goal.id}
                           onClick={() => setSelectedGoal(goal.id)}
-                          className={`bg-white border rounded-2xl p-4 shadow-sm hover:shadow-md hover:border-purple-200 cursor-pointer group active:scale-[0.99] transition-all flex flex-col justify-between min-h-[130px] ${isSelected ? 'border-2 border-purple-600 bg-purple-50/10 shadow-purple-500/5' : 'border-slate-100'}`}
+                          className={`bg-white dark:bg-neutral-900 border rounded-2xl p-4 shadow-sm hover:shadow-md hover:border-purple-200 cursor-pointer group active:scale-[0.99] transition-all flex flex-col justify-between min-h-[130px] ${isSelected ? 'border-2 border-purple-600 bg-purple-50 dark:bg-purple-900/20 shadow-purple-500/5' : 'border-slate-100 dark:border-neutral-800'}`}
                         >
                           <div className="flex justify-between items-start mb-3">
                             <div className="flex items-center gap-2.5">
-                              <div className={`h-10 w-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105 ${isSelected ? 'bg-purple-100 text-purple-600' : 'bg-slate-50 text-slate-600'}`}>
+                              <div className={`h-10 w-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105 ${isSelected ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400' : 'bg-slate-50 dark:bg-neutral-800/50 text-slate-600 dark:text-neutral-400'}`}>
                                 <Target className="h-5 w-5" />
                               </div>
                               <div className="min-w-0 flex-1">
-                                <h4 className="font-bold text-slate-900 text-xs truncate pr-2">{goal.name}</h4>
+                                <h4 className="font-bold text-slate-900 dark:text-white text-xs truncate pr-2">{goal.name}</h4>
                                 {goal.deadline ? (
-                                  <p className="text-[10px] font-semibold text-slate-400 flex items-center gap-1 mt-0.5">
+                                  <p className="text-[10px] font-semibold text-slate-400 dark:text-neutral-500 flex items-center gap-1 mt-0.5">
                                     <Calendar className="h-3 w-3" /> By {new Date(goal.deadline).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
                                   </p>
                                 ) : (
@@ -453,44 +453,44 @@ export function DesktopGoalsView({
                                 )}
                               </div>
                             </div>
-                            <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full shrink-0 ${progress >= 75 ? 'bg-emerald-100 text-emerald-700' : progress >= 40 ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>
+                            <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full shrink-0 ${progress >= 75 ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400' : progress >= 40 ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400' : 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400'}`}>
                               {progress.toFixed(0)}%
                             </span>
                           </div>
 
                           <div className="mt-auto">
                             <div className="flex justify-between items-baseline mb-1.5">
-                              <span className="text-lg font-black text-slate-900 tracking-tight">
+                              <span className="text-lg font-black text-slate-900 dark:text-white tracking-tight">
                                 {formatCurrency(goal.currentAmount)}
                               </span>
-                              <span className="text-[10px] text-slate-400 font-semibold">
+                              <span className="text-[10px] text-slate-400 dark:text-neutral-500 font-semibold">
                                 Target: {formatCurrency(goal.targetAmount)}
                               </span>
                             </div>
                             
-                            <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden relative">
+                            <div className="w-full bg-slate-100 dark:bg-neutral-800 rounded-full h-2 overflow-hidden relative">
                               <div
                                 className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full transition-all duration-1000 ease-out"
                                 style={{ width: `${progress}%` }}
                               ></div>
                             </div>
 
-                            <div className="mt-4 border-t border-slate-100 pt-3">
+                            <div className="mt-4 border-t border-slate-100 dark:border-neutral-800 pt-3">
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setSelectedGoal(goal.id);
                                 }}
-                                className="w-full py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
+                                className="w-full py-2 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
                               >
                                 <Plus className="h-3.5 w-3.5" /> Add Funds
                               </button>
                             </div>
 
-                            <div className="flex justify-between items-center text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-3">
-                              <span>Remaining: <strong className="text-slate-700 font-extrabold text-[10px] ml-1">{formatCurrency(remaining)}</strong></span>
+                            <div className="flex justify-between items-center text-[9px] text-slate-400 dark:text-neutral-500 font-bold uppercase tracking-wider mt-3">
+                              <span>Remaining: <strong className="text-slate-700 dark:text-neutral-300 font-extrabold text-[10px] ml-1">{formatCurrency(remaining)}</strong></span>
                               {goal.deadline && (
-                                <span>Pace: <strong className="text-slate-700 font-extrabold text-[10px] ml-1">{formatCurrency(calculatePace(goal))}</strong></span>
+                                <span>Pace: <strong className="text-slate-700 dark:text-neutral-300 font-extrabold text-[10px] ml-1">{formatCurrency(calculatePace(goal))}</strong></span>
                               )}
                             </div>
                           </div>
@@ -503,7 +503,7 @@ export function DesktopGoalsView({
                   <div className="overflow-x-auto animate-fade-in">
                     <table className="w-full text-left border-collapse min-w-[650px]">
                       <thead>
-                        <tr className="border-b border-slate-100 text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                        <tr className="border-b border-slate-100 dark:border-neutral-800 text-[10px] font-black uppercase text-slate-400 dark:text-neutral-500 tracking-wider">
                           <th className="pb-2 font-extrabold px-2">Goal Name</th>
                           <th className="pb-2 font-extrabold px-2">Progress</th>
                           <th className="pb-2 font-extrabold px-2 text-right">Saved</th>
@@ -523,38 +523,38 @@ export function DesktopGoalsView({
                             <tr
                               key={goal.id}
                               onClick={() => setSelectedGoal(goal.id)}
-                              className={`hover:bg-slate-50/70 transition-colors cursor-pointer group ${isSelected ? 'bg-purple-50/20' : ''}`}
+                              className={`hover:bg-slate-50 dark:hover:bg-neutral-800/50 dark:bg-neutral-800/50 transition-colors cursor-pointer group ${isSelected ? 'bg-purple-50 dark:bg-purple-900/20' : ''}`}
                             >
-                              <td className="py-3 px-2 font-bold text-slate-900 text-xs max-w-[180px] truncate">
+                              <td className="py-3 px-2 font-bold text-slate-900 dark:text-white text-xs max-w-[180px] truncate">
                                 {goal.name}
                               </td>
                               <td className="py-3 px-2">
                                 <div className="flex items-center gap-2">
-                                  <div className="w-16 bg-slate-100 rounded-full h-1 overflow-hidden">
+                                  <div className="w-16 bg-slate-100 dark:bg-neutral-800 rounded-full h-1 overflow-hidden">
                                     <div
                                       className="bg-gradient-to-r from-purple-500 to-indigo-500 h-full rounded-full"
                                       style={{ width: `${progress}%` }}
                                     ></div>
                                   </div>
-                                  <span className="text-[10px] font-extrabold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">
+                                  <span className="text-[10px] font-extrabold text-slate-600 dark:text-neutral-400 bg-slate-100 dark:bg-neutral-800 px-1.5 py-0.5 rounded">
                                     {progress.toFixed(0)}%
                                   </span>
                                 </div>
                               </td>
-                              <td className="py-3 px-2 text-right font-semibold text-slate-700 text-xs">
+                              <td className="py-3 px-2 text-right font-semibold text-slate-700 dark:text-neutral-300 text-xs">
                                 {formatCurrency(goal.currentAmount)}
                               </td>
-                              <td className="py-3 px-2 text-right font-semibold text-slate-400 text-xs">
+                              <td className="py-3 px-2 text-right font-semibold text-slate-400 dark:text-neutral-500 text-xs">
                                 {formatCurrency(goal.targetAmount)}
                               </td>
-                              <td className="py-3 px-2 text-right font-bold text-slate-900 text-xs">
+                              <td className="py-3 px-2 text-right font-bold text-slate-900 dark:text-white text-xs">
                                 {formatCurrency(remaining)}
                               </td>
-                              <td className="py-3 px-2 text-slate-500 text-[10px] font-semibold">
+                              <td className="py-3 px-2 text-slate-500 dark:text-neutral-400 text-[10px] font-semibold">
                                 {goal.deadline ? new Date(goal.deadline).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
                               </td>
                               <td className="py-3 px-2 text-right">
-                                <span className="text-[10px] font-bold text-purple-600 group-hover:underline">
+                                <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 group-hover:underline">
                                   Manage
                                 </span>
                               </td>
@@ -601,15 +601,15 @@ export function DesktopGoalsView({
         {goalFilter === 'achieved' && (
           <>
             {/* Left Column (List) */}
-            <div className={`bg-white border border-slate-100 rounded-3xl shadow-sm flex flex-col min-h-0 overflow-hidden ${selectedCompletedGoal ? 'w-[60%] shrink-0' : 'flex-1'} transition-all duration-300`}>
+            <div className={`bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-800 rounded-3xl shadow-sm flex flex-col min-h-0 overflow-hidden ${selectedCompletedGoal ? 'w-[60%] shrink-0' : 'flex-1'} transition-all duration-300`}>
               <div className="flex-1 min-h-0 overflow-y-auto p-5 custom-scrollbar">
                 {completedGoals.length === 0 ? (
                   <div className="text-center py-16 px-5 flex-1 flex flex-col justify-center items-center h-full">
-                    <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mb-4">
-                      <Trophy className="h-8 w-8 text-green-500" />
+                    <div className="w-16 h-16 bg-green-50 dark:bg-emerald-900/20 rounded-full flex items-center justify-center mb-4">
+                      <Trophy className="h-8 w-8 text-green-500 dark:text-emerald-400" />
                     </div>
-                    <h3 className="text-lg font-bold text-slate-900 mb-1.5">No Achieved Goals Yet</h3>
-                    <p className="text-slate-500 text-xs max-w-sm leading-relaxed">Every small contribution counts. Keep saving to hit your targets and they will appear here!</p>
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1.5">No Achieved Goals Yet</h3>
+                    <p className="text-slate-500 dark:text-neutral-400 text-xs max-w-sm leading-relaxed">Every small contribution counts. Keep saving to hit your targets and they will appear here!</p>
                   </div>
                 ) : (
                   <div className={`grid ${selectedCompletedGoal ? 'grid-cols-1 xl:grid-cols-2 xl:[&>*:last-child:nth-child(odd)]:col-span-2' : 'grid-cols-2 xl:grid-cols-3 [&>*:last-child:nth-child(odd)]:col-span-2 xl:[&>*:last-child:nth-child(odd)]:col-span-1'} gap-4 content-start animate-fade-in`}>
@@ -619,28 +619,28 @@ export function DesktopGoalsView({
                         <div
                           key={goal.id}
                           onClick={() => setSelectedCompletedGoal(goal.id)}
-                          className={`border rounded-2xl p-4 shadow-sm hover:shadow-md cursor-pointer group active:scale-[0.99] transition-all flex flex-col justify-between min-h-[120px] bg-gradient-to-br from-emerald-50/30 to-green-50/10 hover:border-emerald-200 ${isSelected ? 'border-2 border-emerald-500 shadow-emerald-500/5' : 'border-slate-100'}`}
+                          className={`border rounded-2xl p-4 shadow-sm hover:shadow-md cursor-pointer group active:scale-[0.99] transition-all flex flex-col justify-between min-h-[120px] bg-gradient-to-br from-emerald-50/30 to-green-50/10 hover:border-emerald-200 ${isSelected ? 'border-2 border-emerald-500 shadow-emerald-500/5' : 'border-slate-100 dark:border-neutral-800'}`}
                         >
                           <div className="flex justify-between items-start mb-3">
                             <div className="flex items-center gap-2.5 flex-1 min-w-0 pr-2">
-                              <div className={`h-9 w-9 rounded-xl flex items-center justify-center transition-transform group-hover:rotate-6 bg-white shadow-sm shrink-0 ${isSelected ? 'text-emerald-600' : 'text-emerald-500'}`}>
+                              <div className={`h-9 w-9 rounded-xl flex items-center justify-center transition-transform group-hover:rotate-6 bg-white dark:bg-neutral-900 shadow-sm shrink-0 ${isSelected ? 'text-emerald-600 dark:text-emerald-400' : 'text-emerald-500 dark:text-emerald-400'}`}>
                                 <Trophy className="h-4 w-4 text-yellow-500" />
                               </div>
                               <div className="min-w-0">
-                                <h4 className="font-bold text-slate-900 text-xs truncate">{goal.name}</h4>
-                                <p className="text-[10px] font-semibold text-emerald-600 mt-0.5 truncate">
+                                <h4 className="font-bold text-slate-900 dark:text-white text-xs truncate">{goal.name}</h4>
+                                <p className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 mt-0.5 truncate">
                                   Achieved {goal.completedAt ? new Date(goal.completedAt).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) : 'Recently'}
                                 </p>
                               </div>
                             </div>
-                            <span className="text-[9px] font-bold bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full uppercase tracking-wider shrink-0">
+                            <span className="text-[9px] font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 px-1.5 py-0.5 rounded-full uppercase tracking-wider shrink-0">
                               100% Completed
                             </span>
                           </div>
                           
-                          <div className="border-t border-slate-100/50 pt-2 flex justify-between items-baseline mt-auto">
-                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Target Reached</span>
-                            <span className="text-lg font-black text-emerald-700 tracking-tight">
+                          <div className="border-t border-slate-100 dark:border-neutral-800/50 pt-2 flex justify-between items-baseline mt-auto">
+                            <span className="text-[9px] font-bold text-slate-400 dark:text-neutral-500 uppercase tracking-wider">Target Reached</span>
+                            <span className="text-lg font-black text-emerald-700 dark:text-emerald-400 tracking-tight">
                               {formatCurrency(goal.targetAmount)}
                             </span>
                           </div>
@@ -683,11 +683,11 @@ export function DesktopGoalsView({
 
         {/* BULK ADD TAB CONTENT */}
         {goalFilter === 'bulk_add' && (
-          <div className="flex-1 bg-white border border-slate-100 rounded-3xl shadow-sm flex flex-col min-h-0 overflow-hidden">
+          <div className="flex-1 bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-800 rounded-3xl shadow-sm flex flex-col min-h-0 overflow-hidden">
             <div className="flex-1 overflow-x-auto p-5">
               <table className="w-full text-left border-collapse min-w-[800px]">
                 <thead>
-                  <tr className="border-b border-slate-100 text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                  <tr className="border-b border-slate-100 dark:border-neutral-800 text-[10px] font-black uppercase text-slate-400 dark:text-neutral-500 tracking-wider">
                     <th className="pb-2 font-extrabold px-2">Goal Name</th>
                     <th className="pb-2 font-extrabold px-2">Amount (₹)</th>
                     <th className="pb-2 font-extrabold px-2">Date</th>
@@ -702,17 +702,17 @@ export function DesktopGoalsView({
                     if (!goal) return null
                     const progress = Math.min((goal.currentAmount / goal.targetAmount) * 100, 100)
                     return (
-                      <tr key={entry.id} className="hover:bg-slate-50/50 transition-colors">
+                      <tr key={entry.id} className="hover:bg-slate-50 dark:hover:bg-neutral-800/50 dark:bg-neutral-800/50 transition-colors">
                         <td className="py-3 px-2 w-[22%] align-top">
-                          <h4 className="font-bold text-slate-900 text-xs truncate max-w-[160px]">{goal.name}</h4>
+                          <h4 className="font-bold text-slate-900 dark:text-white text-xs truncate max-w-[160px]">{goal.name}</h4>
                           <div className="flex items-center gap-1.5 mt-1">
-                            <div className="w-16 bg-slate-100 rounded-full h-1 overflow-hidden">
+                            <div className="w-16 bg-slate-100 dark:bg-neutral-800 rounded-full h-1 overflow-hidden">
                               <div
                                 className="bg-gradient-to-r from-purple-500 to-indigo-500 h-full rounded-full"
                                 style={{ width: `${progress}%` }}
                               ></div>
                             </div>
-                            <span className="text-[10px] font-extrabold text-slate-400">
+                            <span className="text-[10px] font-extrabold text-slate-400 dark:text-neutral-500">
                               {progress.toFixed(0)}%
                             </span>
                           </div>
@@ -724,7 +724,7 @@ export function DesktopGoalsView({
                             placeholder="0.00"
                             value={entry.amount}
                             onChange={(e) => handleBulkEntryChange(entry.id, 'amount', e.target.value)}
-                            className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:bg-white transition-colors text-slate-900 font-bold outline-none text-xs"
+                            className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-neutral-800/50 border border-slate-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-purple-500 focus:bg-white dark:bg-neutral-900 transition-colors text-slate-900 dark:text-white font-bold outline-none text-xs"
                           />
                         </td>
                         <td className="py-3 px-2 w-[15%] align-top">
@@ -732,14 +732,14 @@ export function DesktopGoalsView({
                             type="date"
                             value={entry.date}
                             onChange={(e) => handleBulkEntryChange(entry.id, 'date', e.target.value)}
-                            className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:bg-white transition-colors text-slate-900 font-semibold outline-none text-xs"
+                            className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-neutral-800/50 border border-slate-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-purple-500 focus:bg-white dark:bg-neutral-900 transition-colors text-slate-900 dark:text-white font-semibold outline-none text-xs"
                           />
                         </td>
                         <td className="py-3 px-2 w-[18%] align-top">
                           <select
                             value={entry.paymentMethod}
                             onChange={(e) => handleBulkEntryChange(entry.id, 'paymentMethod', e.target.value)}
-                            className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:bg-white transition-colors text-slate-900 font-semibold outline-none text-xs cursor-pointer"
+                            className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-neutral-800/50 border border-slate-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-purple-500 focus:bg-white dark:bg-neutral-900 transition-colors text-slate-900 dark:text-white font-semibold outline-none text-xs cursor-pointer"
                           >
                             {staticData.paymentMethods.filter(pm => pm.isActive).map((method) => (
                               <option key={method.id} value={method.name}>{method.name}</option>
@@ -752,21 +752,21 @@ export function DesktopGoalsView({
                             placeholder="Optional"
                             value={entry.description}
                             onChange={(e) => handleBulkEntryChange(entry.id, 'description', e.target.value)}
-                            className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:bg-white transition-colors text-slate-900 font-medium outline-none text-xs"
+                            className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-neutral-800/50 border border-slate-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-purple-500 focus:bg-white dark:bg-neutral-900 transition-colors text-slate-900 dark:text-white font-medium outline-none text-xs"
                           />
                         </td>
                         <td className="py-3 px-2 align-top text-right">
                           <div className="flex items-center justify-end gap-1 mt-0.5">
                             <button
                               onClick={() => handleAddBulkRow(goal.id)}
-                              className="p-1.5 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition-colors cursor-pointer"
+                              className="p-1.5 text-slate-400 dark:text-neutral-500 hover:text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:bg-purple-900/20 rounded-xl transition-colors cursor-pointer"
                               title="Add another entry for this goal"
                             >
                               <Plus className="h-3.5 w-3.5" />
                             </button>
                             <button
                               onClick={() => handleRemoveBulkRow(entry.id)}
-                              className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors cursor-pointer"
+                              className="p-1.5 text-slate-400 dark:text-neutral-500 hover:text-red-600 dark:text-red-400 hover:bg-red-50 dark:bg-red-900/20 rounded-xl transition-colors cursor-pointer"
                               title="Remove this entry"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
@@ -780,10 +780,10 @@ export function DesktopGoalsView({
               </table>
             </div>
             
-            <div className="p-4 border-t border-slate-100 bg-slate-50/30 flex justify-between items-center shrink-0">
-              <div className="text-xs font-bold text-slate-500 flex items-center gap-1.5">
+            <div className="p-4 border-t border-slate-100 dark:border-neutral-800 bg-slate-50 dark:bg-neutral-800/50 flex justify-between items-center shrink-0">
+              <div className="text-xs font-bold text-slate-500 dark:text-neutral-400 flex items-center gap-1.5">
                 Total Allocation:
-                <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded-lg border border-purple-200 text-sm">
+                <span className="bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400 px-2 py-0.5 rounded-lg border border-purple-200 text-sm">
                   {formatCurrency(currentBulkTotal)}
                 </span>
               </div>

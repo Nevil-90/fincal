@@ -471,8 +471,8 @@ export default function PaginatedRecurringTransactions() {
       {/* Header with Search and Filters */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div className="flex items-center gap-4">
-          <h2 className="text-2xl font-bold text-gray-900">Recurring Transactions</h2>
-          <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Recurring Transactions</h2>
+          <span className="text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-neutral-800 px-2 py-1 rounded">
             {recurringData?.pagination.totalCount || 0} total
           </span>
         </div>
@@ -480,7 +480,7 @@ export default function PaginatedRecurringTransactions() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+            className="flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-700 rounded-md hover:bg-gray-50 dark:hover:bg-neutral-800"
           >
             <Filter className="w-4 h-4" />
             Filters
@@ -491,7 +491,7 @@ export default function PaginatedRecurringTransactions() {
               fetchRecurringTransactions()
             }}
             disabled={loading}
-            className="flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+            className="flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-700 rounded-md hover:bg-gray-50 dark:hover:bg-neutral-800 disabled:opacity-50"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             Refresh
@@ -499,7 +499,7 @@ export default function PaginatedRecurringTransactions() {
           
           <button
             onClick={() => setShowAddForm(true)}
-            className="flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+            className="flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 dark:bg-blue-500 rounded-md hover:bg-blue-700 dark:hover:bg-blue-600"
           >
             <Plus className="w-4 h-4" />
             Add Recurring
@@ -509,13 +509,13 @@ export default function PaginatedRecurringTransactions() {
 
       {/* Filters Panel */}
       {showFilters && (
-        <div className="bg-white p-4 rounded-xl shadow-sm ring-1 ring-gray-100">
+        <div className="bg-white dark:bg-neutral-900 p-4 rounded-xl shadow-sm ring-1 ring-gray-100 dark:ring-neutral-800">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:[&>*:last-child:nth-child(odd)]:col-span-2 lg:[&>*:last-child:nth-child(odd)]:col-span-1">
             {/* Status Filter */}
             <select
               value={filters.status}
               onChange={(e) => handleFilterChange('status', e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 border border-gray-300 dark:border-neutral-700 rounded-md text-sm text-gray-900 dark:text-gray-200 bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>
@@ -526,7 +526,7 @@ export default function PaginatedRecurringTransactions() {
             <select
               value={filters.type}
               onChange={(e) => handleFilterChange('type', e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 border border-gray-300 dark:border-neutral-700 rounded-md text-sm text-gray-900 dark:text-gray-200 bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
             >
               <option value="all">All Types</option>
               <option value="income">Income</option>
@@ -537,7 +537,7 @@ export default function PaginatedRecurringTransactions() {
             <select
               value={filters.category}
               onChange={(e) => handleFilterChange('category', e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 border border-gray-300 dark:border-neutral-700 rounded-md text-sm text-gray-900 dark:text-gray-200 bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
             >
               <option value="">All Categories</option>
               {recurringData?.filters.categories.map(category => (
@@ -549,7 +549,7 @@ export default function PaginatedRecurringTransactions() {
             <select
               value={filters.frequency}
               onChange={(e) => handleFilterChange('frequency', e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 border border-gray-300 dark:border-neutral-700 rounded-md text-sm text-gray-900 dark:text-gray-200 bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
             >
               <option value="">All Frequencies</option>
               {recurringData?.filters.frequencies.map(frequency => (
@@ -562,7 +562,7 @@ export default function PaginatedRecurringTransactions() {
           <div className="mt-4 flex justify-end">
             <button
               onClick={clearFilters}
-              className="text-sm text-gray-600 hover:text-gray-800"
+              className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
             >
               Clear all filters
             </button>
@@ -579,44 +579,44 @@ export default function PaginatedRecurringTransactions() {
           const isNegative = netRemaining < 0;
 
           return (
-            <div className="bg-white rounded-2xl p-4 sm:p-5 mb-6 shadow-sm ring-1 ring-gray-100">
+            <div className="bg-white dark:bg-neutral-900 rounded-2xl p-4 sm:p-5 mb-6 shadow-sm ring-1 ring-gray-100 dark:ring-neutral-800">
               <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 items-start lg:items-center">
                 
                 {/* Left: Net Remaining */}
                 <div className="flex-1 w-full min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">Net Cashflow</h3>
-                    <span className={`text-[10px] font-bold flex items-center px-1.5 py-0.5 rounded-md ${isNegative ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                    <h3 className="text-gray-500 dark:text-gray-400 text-[11px] font-bold uppercase tracking-wider">Net Cashflow</h3>
+                    <span className={`text-[10px] font-bold flex items-center px-1.5 py-0.5 rounded-md ${isNegative ? 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400' : 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400'}`}>
                       {isNegative ? 'Deficit' : 'Surplus'}
                     </span>
                   </div>
-                  <span className="text-2xl sm:text-3xl font-black tracking-tight text-gray-900 truncate block">
+                  <span className="text-2xl sm:text-3xl font-black tracking-tight text-gray-900 dark:text-white truncate block">
                     {isNegative ? '-' : ''}{formatCurrency(Math.abs(netRemaining))}
                   </span>
                 </div>
 
                 {/* Middle: Progress Bar */}
-                <div className="w-full lg:w-[45%] bg-gray-50 p-3 sm:p-4 rounded-xl ring-1 ring-gray-200/60 shrink-0">
+                <div className="w-full lg:w-[45%] bg-gray-50 dark:bg-neutral-800/50 p-3 sm:p-4 rounded-xl ring-1 ring-gray-200/60 dark:ring-neutral-700/50 shrink-0">
                   <div className="flex justify-between items-end mb-2">
                     <div className="min-w-0">
-                      <p className="text-emerald-600 text-[10px] font-bold uppercase tracking-wider">Income</p>
-                      <p className="text-sm sm:text-base font-bold text-gray-900 leading-none mt-0.5 truncate">{formatCurrency(monthlyIncome)}</p>
+                      <p className="text-emerald-600 dark:text-emerald-400 text-[10px] font-bold uppercase tracking-wider">Income</p>
+                      <p className="text-sm sm:text-base font-bold text-gray-900 dark:text-white leading-none mt-0.5 truncate">{formatCurrency(monthlyIncome)}</p>
                     </div>
                     <div className="text-right min-w-0 pl-2">
-                      <p className="text-rose-600 text-[10px] font-bold uppercase tracking-wider">Cost</p>
-                      <p className="text-sm sm:text-base font-bold text-gray-900 leading-none mt-0.5 truncate">{formatCurrency(monthlyCost)}</p>
+                      <p className="text-rose-600 dark:text-rose-400 text-[10px] font-bold uppercase tracking-wider">Cost</p>
+                      <p className="text-sm sm:text-base font-bold text-gray-900 dark:text-white leading-none mt-0.5 truncate">{formatCurrency(monthlyCost)}</p>
                     </div>
                   </div>
                   
-                  <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden flex">
+                  <div className="h-2 w-full bg-gray-200 dark:bg-neutral-700 rounded-full overflow-hidden flex">
                     <div className="h-full bg-emerald-500 transition-all duration-1000 ease-out" style={{ width: `${incomePercentage}%` }}></div>
                     <div className="h-full bg-rose-500 transition-all duration-1000 ease-out" style={{ width: `${expensePercentage}%` }}></div>
                   </div>
                   
-                  <div className="flex justify-between items-center text-[10px] font-medium text-gray-500 pt-2">
+                  <div className="flex justify-between items-center text-[10px] font-medium text-gray-500 dark:text-gray-400 pt-2">
                     <p>Utilizing {expensePercentage.toFixed(1)}%</p>
                     {expensePercentage > 50 && monthlyIncome > 0 && (
-                      <span className={`${expensePercentage > 80 ? 'text-rose-600 font-bold' : 'text-amber-600'}`}>
+                      <span className={`${expensePercentage > 80 ? 'text-rose-600 dark:text-rose-400 font-bold' : 'text-amber-600 dark:text-amber-400'}`}>
                         {expensePercentage > 80 ? 'Critical usage' : 'High usage'}
                       </span>
                     )}
@@ -624,16 +624,16 @@ export default function PaginatedRecurringTransactions() {
                 </div>
 
                 {/* Right: Sub/Spent Stats */}
-                <div className="flex-1 w-full flex lg:flex-col justify-between lg:justify-center gap-4 lg:gap-3 border-t border-gray-100 pt-4 lg:border-t-0 lg:pt-0 lg:pl-4 lg:border-l min-w-0">
+                <div className="flex-1 w-full flex lg:flex-col justify-between lg:justify-center gap-4 lg:gap-3 border-t border-gray-100 dark:border-neutral-800 pt-4 lg:border-t-0 lg:pt-0 lg:pl-4 lg:border-l min-w-0">
                   <div className="min-w-0">
-                    <p className="text-gray-500 text-[10px] font-bold uppercase tracking-wider mb-0.5 truncate">Active Subs</p>
-                    <p className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-1.5 truncate">
+                    <p className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase tracking-wider mb-0.5 truncate">Active Subs</p>
+                    <p className="text-base sm:text-lg font-bold text-gray-900 dark:text-white flex items-center gap-1.5 truncate">
                       {activeSubscriptions.length} <Repeat className="w-3 h-3 text-blue-500 shrink-0" />
                     </p>
                   </div>
                   <div className="text-right lg:text-left min-w-0">
-                    <p className="text-gray-500 text-[10px] font-bold uppercase tracking-wider mb-0.5 truncate">Lifetime Spent</p>
-                    <p className="text-base sm:text-lg font-bold text-gray-900 truncate">{formatCurrency(totalSpent)}</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase tracking-wider mb-0.5 truncate">Lifetime Spent</p>
+                    <p className="text-base sm:text-lg font-bold text-gray-900 dark:text-white truncate">{formatCurrency(totalSpent)}</p>
                   </div>
                 </div>
 
@@ -646,62 +646,62 @@ export default function PaginatedRecurringTransactions() {
       {/* Recurring Transactions List */}
       <div className="space-y-4">
         {recurringData?.data.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-2xl shadow-sm ring-1 ring-gray-100">
-            <RefreshCw className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Recurring Transactions</h3>
-            <p className="text-gray-600">Add your first recurring transaction to get started</p>
+          <div className="text-center py-16 bg-white dark:bg-neutral-900 rounded-2xl shadow-sm ring-1 ring-gray-100 dark:ring-neutral-800">
+            <RefreshCw className="h-12 w-12 text-slate-300 dark:text-neutral-700 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No Recurring Transactions</h3>
+            <p className="text-gray-600 dark:text-gray-400">Add your first recurring transaction to get started</p>
           </div>
         ) : (
           recurringData?.data.map((recurring) => (
-            <div key={recurring.id} className="bg-white rounded-2xl shadow-sm ring-1 ring-gray-100 overflow-hidden">
+            <div key={recurring.id} className="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm ring-1 ring-gray-100 dark:ring-neutral-800 overflow-hidden">
               <div className="flex flex-col">
                 {/* Compact Transaction Header */}
-                <div className="p-4 sm:p-5 bg-slate-50/70">
+                <div className="p-4 sm:p-5 bg-slate-50/70 dark:bg-neutral-800/50">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       <span className={`inline-flex px-2.5 py-1.5 text-xs font-medium rounded-full shrink-0 ${
                         recurring.type === 'income' 
-                          ? 'bg-green-50 text-green-700 border border-green-200/50' 
-                          : 'bg-red-50 text-red-700 border border-red-200/50'
+                          ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200/50 dark:border-green-900/50' 
+                          : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200/50 dark:border-red-900/50'
                       }`}>
-                        {recurring.type === 'income' ? <ArrowDownLeft className="h-4 w-4 text-emerald-600" /> : <ArrowUpRight className="h-4 w-4 text-rose-600" />}
+                        {recurring.type === 'income' ? <ArrowDownLeft className="h-4 w-4 text-emerald-600 dark:text-emerald-400" /> : <ArrowUpRight className="h-4 w-4 text-rose-600 dark:text-rose-400" />}
                       </span>
                       <button
                         type="button"
                         onClick={() => setAnalyticsRecurring(recurring)}
                         className="flex-1 text-left group min-w-0 cursor-pointer"
                       >
-                        <h3 className="text-sm sm:text-base font-semibold text-gray-900 group-hover:text-blue-600 transition-colors truncate">
+                        <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
                           {recurring.description || recurring.category}
                         </h3>
-                        <p className="text-xs text-gray-500 truncate">{recurring.category}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{recurring.category}</p>
                       </button>
                     </div>
                     
-                    <div className="flex items-center justify-between md:justify-end gap-4 border-t border-slate-200/60 pt-3 md:border-t-0 md:pt-0">
+                    <div className="flex items-center justify-between md:justify-end gap-4 border-t border-slate-200/60 dark:border-neutral-700 pt-3 md:border-t-0 md:pt-0">
                       <div className="text-left md:text-right">
-                        <div className="text-base sm:text-lg font-black text-gray-900">
+                        <div className="text-base sm:text-lg font-black text-gray-900 dark:text-white">
                           {formatCurrency(recurring.amount)}
                         </div>
-                        <div className="text-[10px] sm:text-xs text-gray-500 capitalize font-medium">
+                        <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 capitalize font-medium">
                           {recurring.frequency}
                         </div>
                       </div>
                       
                       {/* Individual Total Spent */}
-                      <div className="text-left md:text-right border-l border-gray-200 pl-4">
-                        <span className={`text-sm font-semibold mt-1 ${recurring.type === 'income' ? 'text-emerald-700' : 'text-slate-900'}`}>
+                      <div className="text-left md:text-right border-l border-gray-200 dark:border-neutral-700 pl-4">
+                        <span className={`text-sm font-semibold mt-1 ${recurring.type === 'income' ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-900 dark:text-neutral-100'}`}>
                           {formatCurrency(recurring.totalSpent || 0)}
                         </span>
-                        <div className="text-[10px] sm:text-xs text-gray-500 font-medium">
+                        <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-medium">
                           Total Spent
                         </div>
                       </div>
                       
                       <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-full ${
                         (recurring.isActive && !recurring.isPaused)
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/30' 
-                          : 'bg-slate-50 text-slate-600 border border-slate-200/50'
+                          ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200/30 dark:border-emerald-900/30' 
+                          : 'bg-slate-50 dark:bg-neutral-800/50 text-slate-600 dark:text-neutral-400 border border-slate-200/50 dark:border-neutral-700'
                       }`}>
                         {(recurring.isActive && !recurring.isPaused) ? 'Active' : 'Paused'}
                       </span>
@@ -709,17 +709,17 @@ export default function PaginatedRecurringTransactions() {
                   </div>
                   
                   {/* Compact Info Row */}
-                  <div className="mt-4 pt-3 border-t border-slate-200/60 md:border-t-0 md:pt-0 md:mt-3.5 flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between text-xs text-gray-500 font-medium">
+                  <div className="mt-4 pt-3 border-t border-slate-200/60 dark:border-neutral-700 md:border-t-0 md:pt-0 md:mt-3.5 flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between text-xs text-gray-500 dark:text-gray-400 font-medium">
                     <div className="flex flex-wrap items-center gap-3 sm:gap-4">
                       <span>Start: {new Date(recurring.startDate || recurring.nextDue).toLocaleDateString()}</span>
-                      <span className="hidden sm:inline text-gray-300">•</span>
+                      <span className="hidden sm:inline text-gray-300 dark:text-gray-600">•</span>
                       <span>Next: {new Date(recurring.nextDue).toLocaleDateString()}</span>
                     </div>
                     
                     <div className="flex items-center justify-between sm:justify-end gap-1 sm:gap-1.5 mt-3 sm:mt-0 w-full sm:w-auto">
                       <button
                         onClick={() => showPriceHistory(recurring)}
-                        className="text-indigo-600 hover:text-indigo-900 px-1.5 sm:px-2.5 py-1.5 sm:py-1 bg-indigo-50 border border-indigo-100 hover:bg-indigo-100 rounded-lg text-[11px] sm:text-xs transition-colors"
+                        className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 px-1.5 sm:px-2.5 py-1.5 sm:py-1 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-900/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 rounded-lg text-[11px] sm:text-xs transition-colors"
                         title="Price History"
                       >
                         <span className="flex items-center justify-center gap-1 sm:gap-1.5 whitespace-nowrap"><BarChart2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> History</span>
@@ -728,22 +728,22 @@ export default function PaginatedRecurringTransactions() {
                         onClick={() => toggleRecurringStatus(recurring.id, recurring.isActive && !recurring.isPaused)}
                         className={`px-1.5 sm:px-2.5 py-1.5 sm:py-1 rounded-lg text-[11px] sm:text-xs transition-colors border ${
                           (recurring.isActive && !recurring.isPaused)
-                            ? 'text-amber-700 bg-amber-50 border-amber-200 hover:bg-amber-100'
-                            : 'text-emerald-700 bg-emerald-50 border-emerald-200 hover:bg-emerald-100'
+                            ? 'text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-900/50 hover:bg-amber-100 dark:hover:bg-amber-900/40'
+                            : 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-900/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/40'
                         }`}
                       >
                         {(recurring.isActive && !recurring.isPaused) ? <span className="flex items-center justify-center gap-1 sm:gap-1.5 whitespace-nowrap"><Pause className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Pause</span> : <span className="flex items-center justify-center gap-1 sm:gap-1.5 whitespace-nowrap"><Play className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Resume</span>}
                       </button>
                       <button
                         onClick={() => deleteRecurring(recurring.id)}
-                        className="text-rose-600 hover:text-rose-900 px-1.5 sm:px-2.5 py-1.5 sm:py-1 bg-rose-50 border border-rose-100 hover:bg-rose-100 rounded-lg text-[11px] sm:text-xs transition-colors"
+                        className="text-rose-600 dark:text-rose-400 hover:text-rose-900 dark:hover:text-rose-300 px-1.5 sm:px-2.5 py-1.5 sm:py-1 bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-900/50 hover:bg-rose-100 dark:hover:bg-rose-900/40 rounded-lg text-[11px] sm:text-xs transition-colors"
                         title="Delete"
                       >
                         <span className="flex items-center justify-center gap-1 sm:gap-1.5 whitespace-nowrap"><Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Del</span>
                       </button>
                       <button
                         onClick={() => toggleRowExpansion(recurring.id)}
-                        className="text-blue-600 hover:text-blue-900 px-1.5 sm:px-2.5 py-1.5 sm:py-1 bg-blue-50 border border-blue-100 hover:bg-blue-100 rounded-lg text-[11px] sm:text-xs font-semibold transition-colors flex items-center justify-center gap-1 sm:gap-1.5 whitespace-nowrap"
+                        className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 px-1.5 sm:px-2.5 py-1.5 sm:py-1 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/50 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-lg text-[11px] sm:text-xs font-semibold transition-colors flex items-center justify-center gap-1 sm:gap-1.5 whitespace-nowrap"
                       >
                         {expandedRows.has(recurring.id) ? (
                           <><ChevronUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Hide ({recurring._count?.transactions || 0})</>
@@ -757,17 +757,17 @@ export default function PaginatedRecurringTransactions() {
 
                 {/* Expanded Transaction History */}
                 {expandedRows.has(recurring.id) && (
-                  <div className="p-4 border-t border-gray-100 bg-white">
+                  <div className="p-4 border-t border-gray-100 dark:border-neutral-800 bg-white dark:bg-neutral-900">
                     <div className="flex items-center justify-between mb-3">
-                      <h4 className="text-sm font-semibold text-gray-900">Transaction History</h4>
-                      <div className="text-xs text-gray-500">
+                      <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Transaction History</h4>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
                         {transactionHistory[recurring.id]?.transactions?.length || 0} transactions
                       </div>
                     </div>
                     
                     <div className="relative min-h-[100px]">
                       {loadingHistory[recurring.id] && transactionHistory[recurring.id]?.transactions ? (
-                        <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-10 flex items-center justify-center rounded-xl">
+                        <div className="absolute inset-0 bg-white/60 dark:bg-neutral-900/60 backdrop-blur-[2px] z-10 flex items-center justify-center rounded-xl">
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                         </div>
                       ) : null}
@@ -779,24 +779,24 @@ export default function PaginatedRecurringTransactions() {
                       ) : transactionHistory[recurring.id]?.transactions?.length > 0 ? (
                         <div className="space-y-3">
                           {/* Compact Transaction List */}
-                          <div className="space-y-1 rounded-xl ring-1 ring-gray-100 overflow-hidden">
+                          <div className="space-y-1 rounded-xl ring-1 ring-gray-100 dark:ring-neutral-800 overflow-hidden">
                             {transactionHistory[recurring.id].transactions.map((transaction) => (
-                              <div key={`tx-${transaction.id}`} className="flex items-center justify-between p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors">
+                              <div key={`tx-${transaction.id}`} className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-neutral-800/50 border-b border-gray-100 dark:border-neutral-800 last:border-b-0 transition-colors">
                                 <div className="flex items-center gap-3">
-                                  <div className="text-sm font-semibold text-gray-900">
+                                  <div className="text-sm font-semibold text-gray-900 dark:text-white">
                                     {new Date(transaction.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                                   </div>
-                                  <div className="px-2 py-0.5 rounded-md bg-slate-100 text-[10px] font-bold text-slate-600 uppercase tracking-wider">
+                                  <div className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-neutral-800 text-[10px] font-bold text-slate-600 dark:text-neutral-400 uppercase tracking-wider">
                                     {transaction.paymentMethod || 'N/A'}
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-4">
-                                  <div className="text-sm font-black text-gray-900">
+                                  <div className="text-sm font-black text-gray-900 dark:text-white">
                                     {formatCurrency(transaction.amount)}
                                   </div>
                                   <button
                                     onClick={() => deleteTransaction(transaction.id)}
-                                    className="text-red-500 hover:text-red-700 p-1.5 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
+                                    className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 p-1.5 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-md transition-colors"
                                     title="Delete transaction"
                                   >
                                     <Trash2 className="h-3.5 w-3.5" />
@@ -808,22 +808,22 @@ export default function PaginatedRecurringTransactions() {
 
                           {/* Compact Pagination */}
                           {transactionHistory[recurring.id]?.pagination && transactionHistory[recurring.id].pagination!.totalPages > 1 && (
-                            <div className="flex items-center justify-between pt-2 border-t border-gray-200">
-                              <div className="text-xs text-gray-500">
+                            <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-neutral-700">
+                              <div className="text-xs text-gray-500 dark:text-gray-400">
                                 Page {transactionHistory[recurring.id].pagination!.currentPage} of {transactionHistory[recurring.id].pagination!.totalPages}
                               </div>
                               <div className="flex gap-1">
                                 <button
                                   onClick={() => fetchTransactionHistory(recurring.id, transactionHistory[recurring.id].pagination!.currentPage - 1)}
                                   disabled={!transactionHistory[recurring.id].pagination!.hasPrevPage}
-                                  className="px-2 py-1 text-xs bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50"
+                                  className="px-2 py-1 text-xs text-gray-700 dark:text-gray-300 bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-700 rounded hover:bg-gray-50 dark:hover:bg-neutral-800 disabled:opacity-50"
                                 >
                                   ‹
                                 </button>
                                 <button
                                   onClick={() => fetchTransactionHistory(recurring.id, transactionHistory[recurring.id].pagination!.currentPage + 1)}
                                   disabled={!transactionHistory[recurring.id].pagination!.hasNextPage}
-                                  className="px-2 py-1 text-xs bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50"
+                                  className="px-2 py-1 text-xs text-gray-700 dark:text-gray-300 bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-700 rounded hover:bg-gray-50 dark:hover:bg-neutral-800 disabled:opacity-50"
                                 >
                                   ›
                                 </button>
@@ -832,8 +832,8 @@ export default function PaginatedRecurringTransactions() {
                           )}
                         </div>
                       ) : (
-                        <div className="text-center py-6 text-gray-500 bg-gray-50 rounded">
-                          <FileText className="h-8 w-8 text-slate-300 mx-auto mb-2" />
+                        <div className="text-center py-6 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-neutral-800/50 rounded">
+                          <FileText className="h-8 w-8 text-slate-300 dark:text-neutral-600 mx-auto mb-2" />
                           <p className="text-sm">No transaction history yet</p>
                         </div>
                       )}
@@ -848,8 +848,8 @@ export default function PaginatedRecurringTransactions() {
 
       {/* Pagination */}
       {recurringData && recurringData.pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between bg-white px-4 py-3 rounded-xl shadow-sm ring-1 ring-gray-100">
-          <div className="flex items-center text-sm text-gray-700">
+        <div className="flex items-center justify-between bg-white dark:bg-neutral-900 px-4 py-3 rounded-xl shadow-sm ring-1 ring-gray-100 dark:ring-neutral-800">
+          <div className="flex items-center text-sm text-gray-700 dark:text-gray-300">
             Showing {((recurringData.pagination.currentPage - 1) * recurringData.pagination.limit) + 1} to{' '}
             {Math.min(recurringData.pagination.currentPage * recurringData.pagination.limit, recurringData.pagination.totalCount)} of{' '}
             {recurringData.pagination.totalCount} results
@@ -859,20 +859,20 @@ export default function PaginatedRecurringTransactions() {
             <button
               onClick={() => goToPage(recurringData.pagination.currentPage - 1)}
               disabled={!recurringData.pagination.hasPrevPage}
-              className="flex items-center gap-1 px-3 py-1 text-sm text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-1 px-3 py-1 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-700 rounded hover:bg-gray-50 dark:hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ChevronLeft className="w-4 h-4" />
               Previous
             </button>
             
-            <span className="text-sm text-gray-700">
+            <span className="text-sm text-gray-700 dark:text-gray-300">
               Page {recurringData.pagination.currentPage} of {recurringData.pagination.totalPages}
             </span>
             
             <button
               onClick={() => goToPage(recurringData.pagination.currentPage + 1)}
               disabled={!recurringData.pagination.hasNextPage}
-              className="flex items-center gap-1 px-3 py-1 text-sm text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-1 px-3 py-1 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-700 rounded hover:bg-gray-50 dark:hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next
               <ChevronRight className="w-4 h-4" />
@@ -921,19 +921,19 @@ export default function PaginatedRecurringTransactions() {
 
           return (
             <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/20 backdrop-blur-[1px] p-4">
-              <div className="w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-2xl ring-1 ring-gray-200">
-                <div className="sticky top-0 z-10 flex items-start justify-between border-b border-gray-100 bg-white/95 p-6 backdrop-blur">
+              <div className="w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white dark:bg-neutral-900 shadow-2xl ring-1 ring-gray-200 dark:ring-neutral-800">
+                <div className="sticky top-0 z-10 flex items-start justify-between border-b border-gray-100 dark:border-neutral-800 bg-white/95 dark:bg-neutral-900/95 p-6 backdrop-blur">
                   <div>
-                    <p className="text-sm font-medium text-blue-600">Recurring Analytics</p>
-                    <h3 className="text-2xl font-bold text-gray-900">{analyticsRecurring.description || analyticsRecurring.category}</h3>
-                    <p className="mt-1 text-sm text-gray-500">
+                    <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Recurring Analytics</p>
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{analyticsRecurring.description || analyticsRecurring.category}</h3>
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                       {analyticsRecurring.category} · {analyticsRecurring.frequency} · Next due {nextDueDate.toLocaleDateString()}
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setAnalyticsRecurring(null)}
-                    className="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                    className="rounded-full p-2 text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-neutral-800 hover:text-gray-700 dark:hover:text-gray-300"
                   >
                     <X className="h-5 w-5" />
                   </button>
@@ -941,57 +941,57 @@ export default function PaginatedRecurringTransactions() {
 
                 <div className="space-y-6 p-6">
                   <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-                    <div className="rounded-2xl bg-blue-50 p-3 sm:p-4 ring-1 ring-blue-100">
-                      <p className="text-xs sm:text-sm text-blue-700">Total Spent</p>
-                      <p className="mt-1 text-lg sm:text-2xl font-bold text-blue-900">{formatCurrency(totalSpent)}</p>
+                    <div className="rounded-2xl bg-blue-50 dark:bg-blue-900/20 p-3 sm:p-4 ring-1 ring-blue-100 dark:ring-blue-900/50">
+                      <p className="text-xs sm:text-sm text-blue-700 dark:text-blue-400">Total Spent</p>
+                      <p className="mt-1 text-lg sm:text-2xl font-bold text-blue-900 dark:text-blue-100">{formatCurrency(totalSpent)}</p>
                     </div>
-                    <div className="rounded-2xl bg-green-50 p-3 sm:p-4 ring-1 ring-green-100">
-                      <p className="text-xs sm:text-sm text-green-700">Monthly Impact</p>
-                      <p className="mt-1 text-lg sm:text-2xl font-bold text-green-900">{formatCurrency(monthlyEquivalent)}</p>
+                    <div className="rounded-2xl bg-green-50 dark:bg-green-900/20 p-3 sm:p-4 ring-1 ring-green-100 dark:ring-green-900/50">
+                      <p className="text-xs sm:text-sm text-green-700 dark:text-green-400">Monthly Impact</p>
+                      <p className="mt-1 text-lg sm:text-2xl font-bold text-green-900 dark:text-green-100">{formatCurrency(monthlyEquivalent)}</p>
                     </div>
-                    <div className="rounded-2xl bg-purple-50 p-3 sm:p-4 ring-1 ring-purple-100">
-                      <p className="text-xs sm:text-sm text-purple-700">Yearly Impact</p>
-                      <p className="mt-1 text-lg sm:text-2xl font-bold text-purple-900">{formatCurrency(yearlyEquivalent)}</p>
+                    <div className="rounded-2xl bg-purple-50 dark:bg-purple-900/20 p-3 sm:p-4 ring-1 ring-purple-100 dark:ring-purple-900/50">
+                      <p className="text-xs sm:text-sm text-purple-700 dark:text-purple-400">Yearly Impact</p>
+                      <p className="mt-1 text-lg sm:text-2xl font-bold text-purple-900 dark:text-purple-100">{formatCurrency(yearlyEquivalent)}</p>
                     </div>
-                    <div className="rounded-2xl bg-orange-50 p-3 sm:p-4 ring-1 ring-orange-100">
-                      <p className="text-xs sm:text-sm text-orange-700">Share of Recurring</p>
-                      <p className="mt-1 text-lg sm:text-2xl font-bold text-orange-900">{shareOfRecurringSpend.toFixed(1)}%</p>
+                    <div className="rounded-2xl bg-orange-50 dark:bg-orange-900/20 p-3 sm:p-4 ring-1 ring-orange-100 dark:ring-orange-900/50">
+                      <p className="text-xs sm:text-sm text-orange-700 dark:text-orange-400">Share of Recurring</p>
+                      <p className="mt-1 text-lg sm:text-2xl font-bold text-orange-900 dark:text-orange-100">{shareOfRecurringSpend.toFixed(1)}%</p>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
-                    <div className="rounded-2xl bg-white p-3 sm:p-4 ring-1 ring-gray-100">
-                      <p className="text-xs text-gray-500">Transactions Created</p>
-                      <p className="mt-1 text-base sm:text-xl font-semibold text-gray-900">{transactionCount}</p>
+                    <div className="rounded-2xl bg-white dark:bg-neutral-800 p-3 sm:p-4 ring-1 ring-gray-100 dark:ring-neutral-700">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Transactions Created</p>
+                      <p className="mt-1 text-base sm:text-xl font-semibold text-gray-900 dark:text-white">{transactionCount}</p>
                     </div>
-                    <div className="rounded-2xl bg-white p-3 sm:p-4 ring-1 ring-gray-100">
-                      <p className="text-xs text-gray-500">Average Transaction</p>
-                      <p className="mt-1 text-base sm:text-xl font-semibold text-gray-900">{formatCurrency(averageTransaction)}</p>
+                    <div className="rounded-2xl bg-white dark:bg-neutral-800 p-3 sm:p-4 ring-1 ring-gray-100 dark:ring-neutral-700">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Average Transaction</p>
+                      <p className="mt-1 text-base sm:text-xl font-semibold text-gray-900 dark:text-white">{formatCurrency(averageTransaction)}</p>
                     </div>
-                    <div className="rounded-2xl bg-white p-3 sm:p-4 ring-1 ring-gray-100 col-span-2 md:col-span-1">
-                      <p className="text-xs text-gray-500">Daily Average Since Start</p>
-                      <p className="mt-1 text-base sm:text-xl font-semibold text-gray-900">{formatCurrency(dailyAverage)}</p>
+                    <div className="rounded-2xl bg-white dark:bg-neutral-800 p-3 sm:p-4 ring-1 ring-gray-100 dark:ring-neutral-700 col-span-2 md:col-span-1">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Daily Average Since Start</p>
+                      <p className="mt-1 text-base sm:text-xl font-semibold text-gray-900 dark:text-white">{formatCurrency(dailyAverage)}</p>
                     </div>
                   </div>
 
-                  <div className="rounded-2xl bg-white p-5 ring-1 ring-gray-100">
-                    <h4 className="text-base font-semibold text-gray-900">Subscription Details</h4>
+                  <div className="rounded-2xl bg-white dark:bg-neutral-800 p-5 ring-1 ring-gray-100 dark:ring-neutral-700">
+                    <h4 className="text-base font-semibold text-gray-900 dark:text-white">Subscription Details</h4>
                     <div className="mt-4 grid grid-cols-1 gap-3 text-sm md:grid-cols-2">
-                      <div className="flex justify-between rounded-xl bg-gray-50 p-3">
-                        <span className="text-gray-500">Current amount</span>
-                        <span className="font-medium text-gray-900">{formatCurrency(analyticsRecurring.amount)}</span>
+                      <div className="flex justify-between rounded-xl bg-gray-50 dark:bg-neutral-700/50 p-3">
+                        <span className="text-gray-500 dark:text-gray-400">Current amount</span>
+                        <span className="font-medium text-gray-900 dark:text-white">{formatCurrency(analyticsRecurring.amount)}</span>
                       </div>
-                      <div className="flex justify-between rounded-xl bg-gray-50 p-3">
-                        <span className="text-gray-500">Frequency</span>
-                        <span className="font-medium capitalize text-gray-900">{analyticsRecurring.frequency}</span>
+                      <div className="flex justify-between rounded-xl bg-gray-50 dark:bg-neutral-700/50 p-3">
+                        <span className="text-gray-500 dark:text-gray-400">Frequency</span>
+                        <span className="font-medium capitalize text-gray-900 dark:text-white">{analyticsRecurring.frequency}</span>
                       </div>
-                      <div className="flex justify-between rounded-xl bg-gray-50 p-3">
-                        <span className="text-gray-500">Start date</span>
-                        <span className="font-medium text-gray-900">{startDate.toLocaleDateString()}</span>
+                      <div className="flex justify-between rounded-xl bg-gray-50 dark:bg-neutral-700/50 p-3">
+                        <span className="text-gray-500 dark:text-gray-400">Start date</span>
+                        <span className="font-medium text-gray-900 dark:text-white">{startDate.toLocaleDateString()}</span>
                       </div>
-                      <div className="flex justify-between rounded-xl bg-gray-50 p-3">
-                        <span className="text-gray-500">Status</span>
-                        <span className="font-medium text-gray-900">{analyticsRecurring.isActive && !analyticsRecurring.isPaused ? 'Active' : 'Paused'}</span>
+                      <div className="flex justify-between rounded-xl bg-gray-50 dark:bg-neutral-700/50 p-3">
+                        <span className="text-gray-500 dark:text-gray-400">Status</span>
+                        <span className="font-medium text-gray-900 dark:text-white">{analyticsRecurring.isActive && !analyticsRecurring.isPaused ? 'Active' : 'Paused'}</span>
                       </div>
                     </div>
                   </div>

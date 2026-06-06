@@ -51,15 +51,15 @@ export default function PeriodFilter({ overviewPeriod, onPeriodChange }: PeriodF
     overviewPeriod.year === period.year && overviewPeriod.month === period.month
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
-      <div className="border-b border-slate-200 bg-gradient-to-r from-slate-950 via-blue-900 to-indigo-800 px-5 py-3.5">
+    <section className="overflow-hidden rounded-2xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
+      <div className="border-b border-slate-200 dark:border-neutral-800 bg-gradient-to-r from-slate-950 via-blue-900 to-indigo-800 px-5 py-3.5">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <span className="rounded-full bg-white/15 px-2.5 py-1 text-xs font-semibold text-white ring-1 ring-white/20">
                 Financial Dashboard
               </span>
-              <span className="rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-blue-700">
+              <span className="rounded-full bg-white dark:bg-neutral-900 px-2.5 py-1 text-xs font-semibold text-blue-700">
                 {selectedMonthLabel}
               </span>
             </div>
@@ -87,11 +87,11 @@ export default function PeriodFilter({ overviewPeriod, onPeriodChange }: PeriodF
       <div className="px-5 py-3.5">
         <div className="grid gap-3 lg:grid-cols-[160px_200px_auto] lg:items-end">
           <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">Year</label>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-neutral-400">Year</label>
             <select
               value={overviewPeriod.year}
               onChange={(e) => onPeriodChange({ ...overviewPeriod, year: parseInt(e.target.value) })}
-              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-900 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
+              className="w-full rounded-lg border border-slate-200 dark:border-neutral-800 bg-slate-50 dark:bg-neutral-900 px-3 py-2 text-sm font-semibold text-slate-900 dark:text-white outline-none transition focus:border-blue-500 focus:bg-white dark:bg-neutral-900 focus:ring-4 focus:ring-blue-100"
             >
               {Array.from({ length: 10 }, (_, i) => currentYear - i).map((year) => (
                 <option key={year} value={year}>
@@ -102,7 +102,7 @@ export default function PeriodFilter({ overviewPeriod, onPeriodChange }: PeriodF
           </div>
 
           <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">Month</label>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-neutral-400">Month</label>
             <select
               value={overviewPeriod.month || ''}
               onChange={(e) =>
@@ -111,7 +111,7 @@ export default function PeriodFilter({ overviewPeriod, onPeriodChange }: PeriodF
                   month: e.target.value ? parseInt(e.target.value) : undefined
                 })
               }
-              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-900 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
+              className="w-full rounded-lg border border-slate-200 dark:border-neutral-800 bg-slate-50 dark:bg-neutral-900 px-3 py-2 text-sm font-semibold text-slate-900 dark:text-white outline-none transition focus:border-blue-500 focus:bg-white dark:bg-neutral-900 focus:ring-4 focus:ring-blue-100"
             >
               <option value="">All Year</option>
               {monthOptions.map((month) => (
@@ -123,7 +123,7 @@ export default function PeriodFilter({ overviewPeriod, onPeriodChange }: PeriodF
           </div>
 
           <div className="sm:hidden">
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">Quick Filter</label>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-neutral-400">Quick Filter</label>
             <select
               value={
                 overviewPeriod.year === currentYear && overviewPeriod.month === currentMonth
@@ -152,7 +152,7 @@ export default function PeriodFilter({ overviewPeriod, onPeriodChange }: PeriodF
                 if (value === 'this-year') onPeriodChange({ year: currentYear })
                 if (value === 'previous-year') onPeriodChange({ year: currentYear - 1 })
               }}
-              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-900 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
+              className="w-full rounded-lg border border-slate-200 dark:border-neutral-800 bg-slate-50 dark:bg-neutral-900 px-3 py-2 text-sm font-semibold text-slate-900 dark:text-white outline-none transition focus:border-blue-500 focus:bg-white dark:bg-neutral-900 focus:ring-4 focus:ring-blue-100"
             >
               <option value="full-year">Full Year</option>
               <option value="current-month">Current Month</option>
@@ -167,7 +167,7 @@ export default function PeriodFilter({ overviewPeriod, onPeriodChange }: PeriodF
             <button
               type="button"
               onClick={() => onPeriodChange({ year: overviewPeriod.year })}
-              className="rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+              className="rounded-lg border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 px-3.5 py-2 text-sm font-semibold text-slate-700 dark:text-neutral-300 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
             >
               Full Year
             </button>
@@ -180,7 +180,7 @@ export default function PeriodFilter({ overviewPeriod, onPeriodChange }: PeriodF
                 className={`rounded-lg px-3.5 py-2 text-sm font-semibold transition ${
                   isSelectedQuickFilter(filter.period)
                     ? 'bg-slate-900 text-white shadow-sm'
-                    : 'bg-slate-50 text-slate-700 ring-1 ring-slate-200 hover:bg-blue-50 hover:text-blue-700 hover:ring-blue-200'
+                    : 'bg-slate-50 dark:bg-neutral-900 text-slate-700 dark:text-neutral-300 ring-1 ring-slate-200 hover:bg-blue-50 hover:text-blue-700 hover:ring-blue-200'
                 }`}
               >
                 {filter.label}

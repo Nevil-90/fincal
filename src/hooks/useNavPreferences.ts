@@ -22,7 +22,8 @@ export function useNavPreferences() {
               const data = await response.json()
               return data.preferences ? filterValidSlots(data.preferences) : DEFAULT_SLOTS
             }
-            throw new Error('Failed to fetch preferences')
+            // Silently fall back to defaults on auth errors (401) or other issues
+            return DEFAULT_SLOTS
           }).finally(() => {
             // keep the cached promise for a while or just clear it?
             // clear it so future refetches can happen if needed

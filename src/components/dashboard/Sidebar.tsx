@@ -1,7 +1,8 @@
 'use client'
 
 import React, { useEffect } from 'react'
-import { DollarSign, BarChart3, Activity, CreditCard, Target, RefreshCw, Calendar, Car, Settings, PieChart, LogOut, Shield } from 'lucide-react'
+import { useTheme } from 'next-themes'
+import { DollarSign, BarChart3, Activity, CreditCard, Target, RefreshCw, Calendar, Car, Settings, PieChart, LogOut, Shield, Sun, Moon } from 'lucide-react'
 import { formatCurrency } from '@/lib/financial-utils'
 
 interface SidebarProps {
@@ -16,6 +17,13 @@ interface SidebarProps {
 
 
 export default React.memo(function Sidebar({ sidebarOpen, activeTab, availableBalance, onTabChange, onClose, user, onLogout }: SidebarProps) {
+  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = React.useState(false)
+
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
+
   const handleTabClick = (tab: any) => {
     onTabChange(tab)
     if (onClose) {
@@ -54,20 +62,20 @@ export default React.memo(function Sidebar({ sidebarOpen, activeTab, availableBa
         />
       )}
 
-      <div className={`fixed inset-y-0 left-0 z-[110] bg-white border-r border-slate-200 transition-all duration-300 flex flex-col shadow-xl md:shadow-sm md:sticky md:top-0 md:h-screen md:translate-x-0 ${
+      <div className={`fixed inset-y-0 left-0 z-[110] bg-white dark:bg-neutral-900 border-r border-slate-200 dark:border-neutral-800 transition-all duration-300 flex flex-col shadow-xl md:shadow-sm md:sticky md:top-0 md:h-screen md:translate-x-0 ${
         sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full w-64 md:translate-x-0 md:w-16'
       }`}>
         {/* Logo */}
-        <div className="p-6 border-b border-slate-200">
+        <div className="px-6 border-b border-slate-200 dark:border-neutral-800 h-[60px] sm:h-[68px] flex flex-col justify-center shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg flex items-center justify-center shadow-sm">
+            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg flex items-center justify-center shadow-sm shrink-0">
               <DollarSign className="h-5 w-5 text-white" />
             </div>
             {(!sidebarOpen ? (
-              <span className="md:hidden font-bold text-slate-900">FinTracker</span>
+              <span className="md:hidden font-bold text-slate-900 dark:text-white">FinTracker</span>
             ) : (
               <div>
-                <h1 className="text-xl font-bold text-slate-900">FinTracker</h1>
+                <h1 className="text-xl font-bold text-slate-900 dark:text-white">FinTracker</h1>
               </div>
             ))}
           </div>
@@ -93,7 +101,7 @@ export default React.memo(function Sidebar({ sidebarOpen, activeTab, availableBa
                   className={`w-full flex items-center ${sidebarOpen ? 'gap-3 px-3 justify-start' : 'justify-center px-0'} py-2.5 rounded-xl text-left transition-colors ${
                     activeTab === tab.id
                       ? `bg-gradient-to-r ${tab.activeColor} text-white shadow-sm`
-                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                      : 'text-slate-700 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-800 hover:text-slate-900 dark:hover:text-white'
                   }`}
                   title={!sidebarOpen ? tab.label : undefined}
                 >
@@ -109,7 +117,7 @@ export default React.memo(function Sidebar({ sidebarOpen, activeTab, availableBa
                 className={`w-full flex items-center ${sidebarOpen ? 'gap-3 px-3 justify-start' : 'justify-center px-0'} py-2.5 rounded-xl text-left transition-colors ${
                   activeTab === 'admin'
                     ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-sm font-semibold'
-                    : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                    : 'text-slate-700 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-800 hover:text-slate-900 dark:hover:text-white'
                 }`}
                 title={!sidebarOpen ? 'Admin Panel' : undefined}
               >
@@ -121,7 +129,7 @@ export default React.memo(function Sidebar({ sidebarOpen, activeTab, availableBa
         </nav>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-200 flex flex-col gap-2">
+        <div className="p-4 border-t border-slate-200 dark:border-neutral-800 flex flex-col gap-2">
           {sidebarOpen ? (
             <div className="flex items-center justify-between gap-2 min-w-0 w-full">
               {user ? (
@@ -130,29 +138,42 @@ export default React.memo(function Sidebar({ sidebarOpen, activeTab, availableBa
                     {user.firstName ? user.firstName[0] : 'U'}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xs font-bold text-slate-800 truncate">{user.firstName} {user.lastName}</p>
-                    <p className="text-[9px] text-slate-500 truncate">{user.email}</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-xs font-bold text-slate-800 dark:text-neutral-200 truncate">{user.firstName} {user.lastName}</p>
+                    </div>
+                    <p className="text-[9px] text-slate-500 dark:text-neutral-400 truncate">{user.email}</p>
                   </div>
                 </div>
               ) : (
                 <div className="flex items-center gap-2.5 min-w-0 animate-pulse">
-                  <div className="h-8 w-8 rounded-full bg-slate-200 shrink-0" />
+                  <div className="h-8 w-8 rounded-full bg-slate-200 dark:bg-neutral-700 shrink-0" />
                   <div className="min-w-0 space-y-1">
-                    <div className="h-3 w-16 bg-slate-200 rounded" />
-                    <div className="h-2 w-24 bg-slate-200 rounded" />
+                    <div className="h-3 w-16 bg-slate-200 dark:bg-neutral-700 rounded" />
+                    <div className="h-2 w-24 bg-slate-200 dark:bg-neutral-700 rounded" />
                   </div>
                 </div>
               )}
               
-              {onLogout && (
-                <button
-                  onClick={onLogout}
-                  className="p-2 hover:bg-red-50 hover:text-red-600 rounded-lg text-slate-500 transition-colors shrink-0"
-                  title="Logout"
-                >
-                  <LogOut className="h-4 w-4" />
-                </button>
-              )}
+              <div className="flex items-center gap-1 shrink-0">
+                {mounted && (
+                  <button
+                    onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                    className="flex items-center justify-center h-8 w-8 hover:bg-slate-100 dark:hover:bg-neutral-800 rounded-lg text-slate-500 dark:text-amber-300 transition-colors"
+                    title="Toggle Theme"
+                  >
+                    {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                  </button>
+                )}
+                {onLogout && (
+                  <button
+                    onClick={onLogout}
+                    className="flex items-center justify-center h-8 w-8 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400 rounded-lg text-slate-500 dark:text-neutral-400 transition-colors"
+                    title="Logout"
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-2.5 w-full">
@@ -161,23 +182,34 @@ export default React.memo(function Sidebar({ sidebarOpen, activeTab, availableBa
                   {user.firstName ? user.firstName[0] : 'U'}
                 </div>
               ) : (
-                <div className="h-8 w-8 rounded-full bg-slate-200 shrink-0 animate-pulse" />
+                <div className="h-8 w-8 rounded-full bg-slate-200 dark:bg-neutral-700 shrink-0 animate-pulse" />
               )}
               
-              {onLogout && (
-                <button
-                  onClick={onLogout}
-                  className="w-8 h-8 mx-auto flex items-center justify-center hover:bg-red-50 rounded-lg text-slate-500 hover:text-red-600 transition-colors shrink-0"
-                  title="Logout"
-                >
-                  <LogOut className="h-4 w-4" />
-                </button>
-              )}
+              <div className="flex flex-col items-center gap-1 shrink-0">
+                {mounted && (
+                  <button
+                    onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                    className="w-8 h-8 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-neutral-800 rounded-lg text-slate-500 dark:text-neutral-400 transition-colors"
+                    title="Toggle Theme"
+                  >
+                    {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                  </button>
+                )}
+                {onLogout && (
+                  <button
+                    onClick={onLogout}
+                    className="w-8 h-8 flex items-center justify-center hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg text-slate-500 dark:text-neutral-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                    title="Logout"
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
             </div>
           )}
           
           {sidebarOpen && (
-            <div className="text-[11px] font-bold text-slate-500 truncate mt-1">
+            <div className="text-[11px] font-bold text-slate-500 dark:text-neutral-400 truncate mt-1">
               Balance: {formatCurrency(availableBalance)}
             </div>
           )}

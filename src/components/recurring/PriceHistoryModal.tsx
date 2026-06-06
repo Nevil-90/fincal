@@ -121,19 +121,19 @@ export default function PriceHistoryModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-md">
-      <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/40 dark:bg-neutral-950/80 p-4 backdrop-blur-md">
+      <div className="bg-white dark:bg-neutral-900 rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">Price History</h3>
-            <p className="text-sm text-gray-600">{recurringTransaction.description || 'Recurring Transaction'}</p>
-            <p className="text-sm text-gray-500">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Price History</h3>
+            <p className="text-sm text-gray-600 dark:text-neutral-400">{recurringTransaction.description || 'Recurring Transaction'}</p>
+            <p className="text-sm text-gray-500 dark:text-neutral-500">
               Current amount: {formatCurrency(recurringTransaction.amount)} · {recurringTransaction.frequency}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -171,14 +171,14 @@ export default function PriceHistoryModal({
 
         {/* Add Price Change Form */}
         {showAddForm && (
-          <div className="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
-            <h4 className="text-md font-medium text-gray-900 mb-4">Add New Price Change</h4>
+          <div className="mb-6 p-4 border border-gray-200 dark:border-neutral-800 rounded-lg bg-gray-50 dark:bg-neutral-800/50">
+            <h4 className="text-md font-medium text-gray-900 dark:text-white mb-4">Add New Price Change</h4>
             <form onSubmit={handleAddPriceChange} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">New Amount *</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">New Amount *</label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm font-medium">₹</span>
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-neutral-500 text-sm font-medium">₹</span>
                     <input
                       type="number"
                       placeholder="150.00"
@@ -187,7 +187,7 @@ export default function PriceHistoryModal({
                         ...newPriceChange, 
                         newAmount: parseFloat(e.target.value) || 0 
                       })}
-                      className="w-full pl-8 pr-3 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 bg-white"
+                      className="w-full pl-8 pr-3 py-3 border-2 border-gray-300 dark:border-neutral-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-neutral-500 bg-white dark:bg-neutral-950 transition-colors"
                       step="0.01"
                       min="0"
                       required
@@ -195,15 +195,15 @@ export default function PriceHistoryModal({
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Effective Date *</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">Effective Date *</label>
                   <div className="relative w-full">
-                    <div className="w-full px-3 py-3 border-2 border-gray-300 rounded-lg bg-white text-gray-900 flex items-center justify-between pointer-events-none transition-colors">
-                      <span className={newPriceChange.effectiveDate ? 'text-gray-900' : 'text-gray-400'}>
+                    <div className="w-full px-3 py-3 border-2 border-gray-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-950 text-gray-900 dark:text-white flex items-center justify-between pointer-events-none transition-colors">
+                      <span className={newPriceChange.effectiveDate ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-neutral-500'}>
                         {newPriceChange.effectiveDate
                           ? new Date(newPriceChange.effectiveDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
                           : 'Select Date'}
                       </span>
-                      <Calendar className="h-5 w-5 text-gray-400" />
+                      <Calendar className="h-5 w-5 text-gray-400 dark:text-neutral-500" />
                     </div>
                     <input
                       type="date"
@@ -219,7 +219,7 @@ export default function PriceHistoryModal({
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Reason (Optional)</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">Reason (Optional)</label>
                 <textarea
                   placeholder="e.g., Price increase due to plan upgrade"
                   value={newPriceChange.reason || ''}
@@ -227,7 +227,7 @@ export default function PriceHistoryModal({
                     ...newPriceChange, 
                     reason: e.target.value 
                   })}
-                  className="w-full px-3 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 bg-white resize-none"
+                  className="w-full px-3 py-3 border-2 border-gray-300 dark:border-neutral-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-neutral-500 bg-white dark:bg-neutral-950 resize-none transition-colors"
                   rows={2}
                 />
               </div>
@@ -245,7 +245,7 @@ export default function PriceHistoryModal({
                     setShowAddForm(false)
                     setNewPriceChange({ newAmount: 0, effectiveDate: '', reason: '' })
                   }}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                  className="px-4 py-2 border border-gray-300 dark:border-neutral-700 text-gray-700 dark:text-neutral-300 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors"
                 >
                   Cancel
                 </button>
@@ -256,16 +256,16 @@ export default function PriceHistoryModal({
 
         {/* Price Changes List */}
         <div>
-          <h4 className="text-md font-medium text-gray-900 mb-4">Price Change History</h4>
+          <h4 className="text-md font-medium text-gray-900 dark:text-white mb-4">Price Change History</h4>
           
           {loading ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="text-gray-500 mt-2">Loading price changes...</p>
+              <p className="text-gray-500 dark:text-neutral-400 mt-2">Loading price changes...</p>
             </div>
           ) : priceChanges.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <svg className="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="text-center py-8 text-gray-500 dark:text-neutral-400">
+              <svg className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
               <p>No price changes yet.</p>
@@ -274,32 +274,32 @@ export default function PriceHistoryModal({
           ) : (
             <div className="space-y-3">
               {priceChanges.map((change, index) => (
-                <div key={change.id || index} className="border border-gray-200 rounded-lg p-4">
+                <div key={change.id || index} className="border border-gray-200 dark:border-neutral-800 rounded-lg p-4 bg-white dark:bg-neutral-900">
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <div className="flex items-center gap-4 mb-2">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-500">From:</span>
-                          <span className="font-medium text-red-600">{formatCurrency(change.oldAmount || 0)}</span>
+                          <span className="text-sm text-gray-500 dark:text-neutral-400">From:</span>
+                          <span className="font-medium text-red-600 dark:text-red-400">{formatCurrency(change.oldAmount || 0)}</span>
                         </div>
-                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 text-gray-400 dark:text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
                         <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-500">To:</span>
-                          <span className="font-medium text-green-600">{formatCurrency(change.newAmount)}</span>
+                          <span className="text-sm text-gray-500 dark:text-neutral-400">To:</span>
+                          <span className="font-medium text-green-600 dark:text-green-400">{formatCurrency(change.newAmount)}</span>
                         </div>
                       </div>
-                      <div className="text-sm text-gray-600">
-                        <span className="font-medium">Effective from:</span> {formatDate(change.effectiveDate)}
+                      <div className="text-sm text-gray-600 dark:text-neutral-400">
+                        <span className="font-medium text-gray-900 dark:text-white">Effective from:</span> {formatDate(change.effectiveDate)}
                       </div>
                       {change.reason && (
-                        <div className="text-sm text-gray-600 mt-1">
-                          <span className="font-medium">Reason:</span> {change.reason}
+                        <div className="text-sm text-gray-600 dark:text-neutral-400 mt-1">
+                          <span className="font-medium text-gray-900 dark:text-white">Reason:</span> {change.reason}
                         </div>
                       )}
                     </div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-gray-500 dark:text-neutral-500">
                       {change.createdAt && formatDate(change.createdAt)}
                     </div>
                   </div>
@@ -310,19 +310,19 @@ export default function PriceHistoryModal({
         </div>
 
         {/* Info Box */}
-        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-900/50 rounded-lg p-4">
           <div className="flex">
-            <svg className="w-5 h-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <div>
-              <h5 className="text-sm font-medium text-blue-900 mb-1">How Price History Works</h5>
-              <p className="text-sm text-blue-800 mb-2">
+              <h5 className="text-sm font-medium text-blue-900 dark:text-blue-300 mb-1">How Price History Works</h5>
+              <p className="text-sm text-blue-800 dark:text-blue-200 mb-2">
                 When you add a price change, the system will automatically apply the correct amount for each billing period. 
                 Past transactions keep their original amounts, and future transactions will use the new amount from the effective date.
               </p>
-              <div className="text-xs text-blue-700 bg-blue-100 rounded p-2 mt-2">
-                <strong>Example:</strong> If your Netflix subscription increases from ₹199 to ₹249 in March 2025, 
+              <div className="text-xs text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/40 rounded p-2 mt-2">
+                <strong className="text-blue-900 dark:text-blue-200">Example:</strong> If your Netflix subscription increases from ₹199 to ₹249 in March 2025, 
                 all transactions from March onwards will use ₹249, while January and February transactions remain at ₹199.
               </div>
             </div>
@@ -331,16 +331,16 @@ export default function PriceHistoryModal({
 
         {/* Future Transactions Preview */}
         {priceChanges.length > 0 && (
-          <div className="mt-6 bg-green-50 border border-green-200 rounded-lg p-4">
-            <h5 className="text-sm font-medium text-green-900 mb-2 flex items-center gap-1.5"><Lightbulb className="h-4 w-4" /> Price Changes Active</h5>
-            <p className="text-sm text-green-800 mb-2">
+          <div className="mt-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-900/50 rounded-lg p-4">
+            <h5 className="text-sm font-medium text-green-900 dark:text-green-300 mb-2 flex items-center gap-1.5"><Lightbulb className="h-4 w-4" /> Price Changes Active</h5>
+            <p className="text-sm text-green-800 dark:text-green-200 mb-2">
               This recurring transaction has {priceChanges.length} price change{priceChanges.length > 1 ? 's' : ''}. 
               Future transactions will automatically use the correct amount based on their billing date.
             </p>
-            <div className="text-xs text-green-700 mt-2 bg-green-100 rounded p-2">
-              <strong className="flex items-center gap-1"><Lightbulb className="h-3 w-3" /> Tip:</strong> If you see incorrect amounts in past transactions, use the &quot;Fix Past Transactions&quot; button above to recalculate all existing transactions based on the current price history.
+            <div className="text-xs text-green-700 dark:text-green-300 mt-2 bg-green-100 dark:bg-green-900/40 rounded p-2">
+              <strong className="flex items-center gap-1 text-green-900 dark:text-green-200"><Lightbulb className="h-3 w-3" /> Tip:</strong> If you see incorrect amounts in past transactions, use the &quot;Fix Past Transactions&quot; button above to recalculate all existing transactions based on the current price history.
             </div>
-            <div className="text-xs text-green-700 mt-1">
+            <div className="text-xs text-green-700 dark:text-green-300 mt-1">
               Next billing: Uses {formatCurrency(recurringTransaction.amount)} 
               ({priceChanges[0]?.effectiveDate && new Date(priceChanges[0].effectiveDate) <= new Date() 
                 ? 'current rate' : 'scheduled rate'})

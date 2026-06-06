@@ -26,6 +26,7 @@ export const viewport: Viewport = {
 
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { SwrProvider } from "@/components/providers/SwrProvider";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 export default function RootLayout({
   children,
@@ -33,15 +34,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased overflow-x-hidden`}
       >
-        <SwrProvider>
-          <ErrorBoundary>
-            {children}
-          </ErrorBoundary>
-        </SwrProvider>
+        <ThemeProvider>
+          <SwrProvider>
+            <ErrorBoundary>
+              {children}
+            </ErrorBoundary>
+          </SwrProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

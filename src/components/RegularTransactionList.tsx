@@ -471,7 +471,7 @@ export default function RegularTransactionList({
 
 
       {/* Transactions List */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-slate-200 dark:border-neutral-800 overflow-hidden">
         {filteredTransactions.length > 0 ? (
           groupBy === 'none' ? (
             // Ungrouped table view
@@ -479,69 +479,69 @@ export default function RegularTransactionList({
               {/* Desktop Table View */}
               <div className="hidden sm:block overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-white border-b border-slate-200">
+                  <thead className="bg-white dark:bg-neutral-900 border-b border-slate-200 dark:border-neutral-800">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-neutral-400 uppercase tracking-wider">
                         <input
                           type="checkbox"
                           checked={paginatedTransactions.length > 0 && paginatedTransactions.every(t => selectedTransactions.has(t.id))}
                           onChange={() => handleSelectAll(paginatedTransactions)}
-                          className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                          className="rounded border-slate-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400"
                         />
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Date</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Description</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Category</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Method</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Amount</th>
-                      <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-neutral-400 uppercase tracking-wider">Date</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-neutral-400 uppercase tracking-wider">Description</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-neutral-400 uppercase tracking-wider">Category</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-neutral-400 uppercase tracking-wider">Method</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-neutral-400 uppercase tracking-wider">Amount</th>
+                      <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-neutral-400 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-slate-200">
+                  <tbody className="bg-white dark:bg-neutral-900 divide-y divide-slate-200 dark:divide-neutral-800">
                     {paginatedTransactions.map((transaction) => (
-                      <tr key={transaction.id} className="hover:bg-slate-50">
+                      <tr key={transaction.id} className="hover:bg-slate-50 dark:hover:bg-neutral-800/50">
                         <td className="px-4 py-3">
                           <input
                             type="checkbox"
                             checked={selectedTransactions.has(transaction.id)}
                             onChange={() => handleSelectTransaction(transaction.id)}
-                            className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                            className="rounded border-slate-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400"
                           />
                         </td>
-                        <td className="px-4 py-3 text-sm text-slate-900">
+                        <td className="px-4 py-3 text-sm text-slate-900 dark:text-neutral-200">
                           {new Date(transaction.date).toLocaleDateString()}
                         </td>
-                        <td className="px-4 py-3 text-sm text-slate-900">
+                        <td className="px-4 py-3 text-sm text-slate-900 dark:text-neutral-200">
                           <div className="flex items-center gap-2">
                             <span>{transaction.description || 'No description'}</span>
                             {transaction.recurringTransactionId && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
                                 <span className="flex items-center gap-1"><RefreshCw className="h-3 w-3" /> {transaction.recurringTransaction?.frequency || 'Auto'}</span>
                               </span>
                             )}
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-sm text-slate-900">
+                        <td className="px-4 py-3 text-sm text-slate-900 dark:text-neutral-200">
                           {transaction.category}
                         </td>
-                        <td className="px-4 py-3 text-sm text-slate-900">
+                        <td className="px-4 py-3 text-sm text-slate-900 dark:text-neutral-200">
                           {transaction.paymentMethod || '-'}
                         </td>
-                        <td className={`px-4 py-3 text-sm font-medium text-right ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
+                        <td className={`px-4 py-3 text-sm font-medium text-right ${transaction.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                           }`}>
                           {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
                         </td>
                         <td className="px-4 py-3 text-center flex items-center justify-center gap-1">
                           <button
                             onClick={() => setEditingTransaction(transaction)}
-                            className="text-slate-400 hover:text-blue-600 transition-colors p-1"
+                            className="text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors p-1"
                             title="Edit transaction"
                           >
                             <Edit2 className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => deleteTransaction(transaction.id)}
-                            className="text-rose-600 hover:text-rose-800 transition-colors p-1"
+                            className="text-rose-600 dark:text-rose-500 hover:text-rose-800 dark:hover:text-rose-400 transition-colors p-1"
                             title="Delete transaction"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -576,7 +576,7 @@ export default function RegularTransactionList({
                     >
                       <div
                         onClick={() => setEditingTransaction(transaction)}
-                        className="flex items-center gap-3 py-3 px-4 bg-white border border-slate-100 rounded-2xl cursor-pointer active:bg-slate-50 transition-colors shadow-sm"
+                        className="flex items-center gap-3 py-3 px-4 bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-800 rounded-2xl cursor-pointer active:bg-slate-50 dark:active:bg-neutral-800 transition-colors shadow-sm"
                       >
                         {/* Checkbox (Stop propagation) */}
                         <div onClick={(e) => e.stopPropagation()} className="flex items-center">
@@ -584,24 +584,24 @@ export default function RegularTransactionList({
                             type="checkbox"
                             checked={selectedTransactions.has(transaction.id)}
                             onChange={() => handleSelectTransaction(transaction.id)}
-                            className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                            className="h-4 w-4 rounded border-slate-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400 cursor-pointer"
                           />
                         </div>
 
                         {/* Icon */}
                         <div className={`h-10 w-10 flex items-center justify-center rounded-xl text-lg shrink-0 shadow-sm border ${isIncome
-                            ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                            : 'bg-rose-50 text-rose-600 border-rose-100'
+                            ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/50'
+                            : 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 border-rose-100 dark:border-rose-900/50'
                           }`}>
-                          {isIncome ? <ArrowDownLeft className="h-4 w-4 text-emerald-600" /> : <ArrowUpRight className="h-4 w-4 text-rose-600" />}
+                          {isIncome ? <ArrowDownLeft className="h-4 w-4 text-emerald-600 dark:text-emerald-400" /> : <ArrowUpRight className="h-4 w-4 text-rose-600 dark:text-rose-400" />}
                         </div>
 
                         {/* Details */}
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-slate-900 leading-snug truncate">
+                          <p className="text-sm font-bold text-slate-900 dark:text-white leading-snug truncate">
                             {transaction.description || 'No description'}
                           </p>
-                          <div className="flex items-center text-[11px] text-slate-500 gap-1.5 mt-0.5">
+                          <div className="flex items-center text-[11px] text-slate-500 dark:text-neutral-400 gap-1.5 mt-0.5">
                             <span className="font-semibold">{new Date(transaction.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</span>
                             <span>•</span>
                             <span className="truncate font-medium">{transaction.category || 'Unspecified'}</span>
@@ -610,19 +610,19 @@ export default function RegularTransactionList({
 
                         {/* Amount & Metadata */}
                         <div className="text-right shrink-0 flex flex-col items-end gap-1">
-                          <span className={`text-[15px] font-black tracking-tight ${isIncome ? 'text-emerald-600' : 'text-slate-900'
+                          <span className={`text-[15px] font-black tracking-tight ${isIncome ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-900 dark:text-neutral-100'
                             }`}>
                             {isIncome ? '+' : '-'}{formatCurrency(transaction.amount)}
                           </span>
                           {(transaction.paymentMethod || transaction.recurringTransactionId) && (
                             <div className="flex gap-1">
                               {transaction.paymentMethod && (
-                                <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[8px] font-bold">
+                                <span className="bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-300 px-1.5 py-0.5 rounded text-[8px] font-bold">
                                   {transaction.paymentMethod}
                                 </span>
                               )}
                               {transaction.recurringTransactionId && (
-                                <span className="bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded text-[8px] font-bold flex items-center gap-0.5">
+                                <span className="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded text-[8px] font-bold flex items-center gap-0.5">
                                   <RefreshCw className="h-2 w-2" />
                                 </span>
                               )}
@@ -639,9 +639,9 @@ export default function RegularTransactionList({
             // Grouped view
             <div className="space-y-4 p-4">
               {paginatedGroups.map(([groupKey, group]) => (
-                <div key={groupKey} className="border border-slate-200 rounded-2xl">
+                <div key={groupKey} className="border border-slate-200 dark:border-neutral-800 rounded-2xl">
                   <div
-                    className="flex flex-col gap-3 p-4 bg-white cursor-pointer hover:bg-slate-50 transition-colors sm:flex-row sm:items-center sm:justify-between"
+                    className="flex flex-col gap-3 p-4 bg-white dark:bg-neutral-900 cursor-pointer hover:bg-slate-50 dark:hover:bg-neutral-800/50 transition-colors sm:flex-row sm:items-center sm:justify-between"
                     onClick={() => {
                       const newExpanded = new Set(expandedGroups)
                       if (expandedGroups.has(groupKey)) {
@@ -653,15 +653,15 @@ export default function RegularTransactionList({
                     }}
                   >
                     <div className="flex min-w-0 flex-wrap items-center gap-2">
-                      <h3 className="font-medium text-slate-900 break-words">{groupKey}</h3>
-                      <span className="text-sm text-slate-500">({group.count} transactions)</span>
+                      <h3 className="font-medium text-slate-900 dark:text-neutral-200 break-words">{groupKey}</h3>
+                      <span className="text-sm text-slate-500 dark:text-neutral-400">({group.count} transactions)</span>
                     </div>
                     <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
-                      <span className="text-green-600 font-medium whitespace-nowrap">+{formatCurrency(group.income)}</span>
-                      <span className="text-slate-300">|</span>
-                      <span className="text-red-600 font-medium whitespace-nowrap">-{formatCurrency(group.expenses)}</span>
-                      <span className="text-slate-300">|</span>
-                      <span className={`font-medium whitespace-nowrap ${group.balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
+                      <span className="text-green-600 dark:text-green-400 font-medium whitespace-nowrap">+{formatCurrency(group.income)}</span>
+                      <span className="text-slate-300 dark:text-neutral-700">|</span>
+                      <span className="text-red-600 dark:text-red-400 font-medium whitespace-nowrap">-{formatCurrency(group.expenses)}</span>
+                      <span className="text-slate-300 dark:text-neutral-700">|</span>
+                      <span className={`font-medium whitespace-nowrap ${group.balance >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-orange-600 dark:text-orange-400'}`}>
                         {formatCurrency(group.balance)}
                       </span>
                       <span className="text-slate-400">
@@ -671,13 +671,13 @@ export default function RegularTransactionList({
                   </div>
 
                   {expandedGroups.has(groupKey) && (
-                    <div className="border-t border-slate-200">
+                    <div className="border-t border-slate-200 dark:border-neutral-800">
                       {/* Desktop Table View */}
                       <div className="hidden sm:block overflow-x-auto">
                         <table className="w-full">
-                          <thead className="bg-white">
+                          <thead className="bg-white dark:bg-neutral-900">
                             <tr>
-                              <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                              <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 dark:text-neutral-400 uppercase tracking-wider">
                                 <input
                                   type="checkbox"
                                   checked={group.transactions.length > 0 && group.transactions.every(t => selectedTransactions.has(t.id))}
@@ -693,62 +693,62 @@ export default function RegularTransactionList({
                                     }
                                     setSelectedTransactions(newSelected)
                                   }}
-                                  className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                  className="rounded border-slate-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400"
                                 />
                               </th>
-                              <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Date</th>
-                              <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Description</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 dark:text-neutral-400 uppercase tracking-wider">Date</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 dark:text-neutral-400 uppercase tracking-wider">Description</th>
                               <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Category</th>
                               <th className="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Method</th>
                               <th className="px-4 py-2 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Amount</th>
                               <th className="px-4 py-2 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
                             </tr>
                           </thead>
-                          <tbody className="bg-white divide-y divide-slate-100">
+                          <tbody className="bg-white dark:bg-neutral-900 divide-y divide-slate-100 dark:divide-neutral-800">
                             {group.transactions.map((transaction) => (
-                              <tr key={transaction.id} className="hover:bg-slate-50">
+                              <tr key={transaction.id} className="hover:bg-slate-50 dark:hover:bg-neutral-800/50">
                                 <td className="px-4 py-2">
                                   <input
                                     type="checkbox"
                                     checked={selectedTransactions.has(transaction.id)}
                                     onChange={() => handleSelectTransaction(transaction.id)}
-                                    className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                    className="rounded border-slate-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400"
                                   />
                                 </td>
-                                <td className="px-4 py-2 text-sm text-slate-900">
+                                <td className="px-4 py-2 text-sm text-slate-900 dark:text-neutral-200">
                                   {new Date(transaction.date).toLocaleDateString()}
                                 </td>
-                                <td className="px-4 py-2 text-sm text-slate-900">
+                                <td className="px-4 py-2 text-sm text-slate-900 dark:text-neutral-200">
                                   <div className="flex items-center gap-2">
                                     <span>{transaction.description || 'No description'}</span>
                                     {transaction.recurringTransactionId && (
-                                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
                                         <span className="flex items-center gap-1"><RefreshCw className="h-3 w-3" /> {transaction.recurringTransaction?.frequency || 'Auto'}</span>
                                       </span>
                                     )}
                                   </div>
                                 </td>
-                                <td className="px-4 py-2 text-sm text-slate-900">
+                                <td className="px-4 py-2 text-sm text-slate-900 dark:text-neutral-200">
                                   {transaction.category}
                                 </td>
-                                <td className="px-4 py-2 text-sm text-slate-900">
+                                <td className="px-4 py-2 text-sm text-slate-900 dark:text-neutral-200">
                                   {transaction.paymentMethod || '-'}
                                 </td>
-                                <td className={`px-4 py-2 text-sm font-medium text-right ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
+                                <td className={`px-4 py-2 text-sm font-medium text-right ${transaction.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                                   }`}>
                                   {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
                                 </td>
                                 <td className="px-4 py-2 text-center flex items-center justify-center gap-1">
                                   <button
                                     onClick={() => setEditingTransaction(transaction)}
-                                    className="text-slate-400 hover:text-blue-600 transition-colors p-1"
+                                    className="text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors p-1"
                                     title="Edit transaction"
                                   >
                                     <Edit2 className="h-4 w-4" />
                                   </button>
                                   <button
                                     onClick={() => deleteTransaction(transaction.id)}
-                                    className="text-rose-600 hover:text-rose-800 transition-colors p-1"
+                                    className="text-rose-600 dark:text-rose-500 hover:text-rose-800 dark:hover:text-rose-400 transition-colors p-1"
                                     title="Delete transaction"
                                   >
                                     <Trash2 className="h-4 w-4" />
@@ -784,7 +784,7 @@ export default function RegularTransactionList({
                             >
                               <div
                                 onClick={() => setEditingTransaction(transaction)}
-                                className="flex items-center gap-3 py-3 px-4 bg-white border border-slate-100 rounded-2xl cursor-pointer active:bg-slate-50 transition-colors shadow-sm"
+                                className="flex items-center gap-3 py-3 px-4 bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-800 rounded-2xl cursor-pointer active:bg-slate-50 dark:active:bg-neutral-800 transition-colors shadow-sm"
                               >
                                 {/* Checkbox (Stop propagation) */}
                                 <div onClick={(e) => e.stopPropagation()} className="flex items-center">
@@ -792,24 +792,24 @@ export default function RegularTransactionList({
                                     type="checkbox"
                                     checked={selectedTransactions.has(transaction.id)}
                                     onChange={() => handleSelectTransaction(transaction.id)}
-                                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                    className="h-4 w-4 rounded border-slate-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400 cursor-pointer"
                                   />
                                 </div>
 
                                 {/* Icon */}
                                 <div className={`h-10 w-10 flex items-center justify-center rounded-xl text-lg shrink-0 shadow-sm border ${isIncome
-                                    ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                                    : 'bg-rose-50 text-rose-600 border-rose-100'
+                                    ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/50'
+                                    : 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 border-rose-100 dark:border-rose-900/50'
                                   }`}>
-                                  {isIncome ? <ArrowDownLeft className="h-4 w-4 text-emerald-600" /> : <ArrowUpRight className="h-4 w-4 text-rose-600" />}
+                                  {isIncome ? <ArrowDownLeft className="h-4 w-4 text-emerald-600 dark:text-emerald-400" /> : <ArrowUpRight className="h-4 w-4 text-rose-600 dark:text-rose-400" />}
                                 </div>
 
                                 {/* Details */}
                                 <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-bold text-slate-900 leading-snug truncate">
+                                  <p className="text-sm font-bold text-slate-900 dark:text-white leading-snug truncate">
                                     {transaction.description || 'No description'}
                                   </p>
-                                  <div className="flex items-center text-[11px] text-slate-500 gap-1.5 mt-0.5">
+                                  <div className="flex items-center text-[11px] text-slate-500 dark:text-neutral-400 gap-1.5 mt-0.5">
                                     <span className="font-semibold">{new Date(transaction.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</span>
                                     <span>•</span>
                                     <span className="truncate font-medium">{transaction.category || 'Unspecified'}</span>
@@ -818,19 +818,19 @@ export default function RegularTransactionList({
 
                                 {/* Amount & Metadata */}
                                 <div className="text-right shrink-0 flex flex-col items-end gap-1">
-                                  <span className={`text-[15px] font-black tracking-tight ${isIncome ? 'text-emerald-600' : 'text-slate-900'
+                                  <span className={`text-[15px] font-black tracking-tight ${isIncome ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-900 dark:text-neutral-100'
                                     }`}>
                                     {isIncome ? '+' : '-'}{formatCurrency(transaction.amount)}
                                   </span>
                                   {(transaction.paymentMethod || transaction.recurringTransactionId) && (
                                     <div className="flex gap-1">
                                       {transaction.paymentMethod && (
-                                        <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[8px] font-bold">
+                                        <span className="bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-300 px-1.5 py-0.5 rounded text-[8px] font-bold">
                                           {transaction.paymentMethod}
                                         </span>
                                       )}
                                       {transaction.recurringTransactionId && (
-                                        <span className="bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded text-[8px] font-bold flex items-center gap-0.5">
+                                        <span className="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded text-[8px] font-bold flex items-center gap-0.5">
                                           <RefreshCw className="h-2 w-2" />
                                         </span>
                                       )}
@@ -849,7 +849,7 @@ export default function RegularTransactionList({
             </div>
           )
         ) : (
-          <div className="text-center py-8 text-slate-500">
+          <div className="text-center py-8 text-slate-500 dark:text-neutral-400">
             <p>No regular transactions found.</p>
             <p className="text-sm">Try adjusting your search or filter criteria.</p>
           </div>
@@ -867,34 +867,33 @@ export default function RegularTransactionList({
         />
       )}
 
-            {/* Enhanced Date Range Picker Modal */}
             {showDateRangePicker && typeof document !== 'undefined' && createPortal(
-              <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur">
-                <div className="w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
-                  <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+              <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/50 dark:bg-neutral-950/80 p-4 backdrop-blur">
+                <div className="w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-2xl">
+                  <div className="flex items-center justify-between border-b border-slate-200 dark:border-neutral-800 px-6 py-4">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Statement Export</p>
-                      <h4 className="text-lg font-semibold text-slate-900">Download Data as CSV</h4>
+                      <p className="text-xs uppercase tracking-[0.2em] text-slate-400 dark:text-neutral-500">Statement Export</p>
+                      <h4 className="text-lg font-semibold text-slate-900 dark:text-white">Download Data as CSV</h4>
                     </div>
                     <button
                       onClick={() => setShowDateRangePicker(false)}
-                      className="rounded-lg border border-slate-200 px-3 py-1 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+                      className="rounded-lg border border-slate-200 dark:border-neutral-700 px-3 py-1 text-sm font-semibold text-slate-600 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-800"
                     >
                       Close
                     </button>
                   </div>
 
                   <div className="px-6 py-5 space-y-5">
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
-                      <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Statement Range</p>
-                      <p className="mt-1 text-sm text-slate-600">Choose the time window and grouping.</p>
+                    <div className="rounded-2xl border border-slate-200 dark:border-neutral-700 bg-slate-50/70 dark:bg-neutral-800/50 p-4">
+                      <p className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-neutral-400">Statement Range</p>
+                      <p className="mt-1 text-sm text-slate-600 dark:text-neutral-400">Choose the time window and grouping.</p>
 
                       <div className="mt-4 grid grid-cols-2 gap-2 [&>*:last-child:nth-child(odd)]:col-span-2">
                         <button
                           onClick={() => setPdfExportType('category-current')}
                           className={`rounded-lg border px-3 py-2 text-sm font-semibold ${pdfExportType === 'category-current'
-                              ? 'border-blue-400 bg-blue-50 text-blue-800'
-                              : 'border-slate-200 text-slate-600 hover:bg-white'
+                              ? 'border-blue-400 dark:border-blue-500/50 bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
+                              : 'border-slate-200 dark:border-neutral-700 text-slate-600 dark:text-neutral-400 hover:bg-white dark:hover:bg-neutral-800'
                             }`}
                         >
                           Current View (Category)
@@ -902,8 +901,8 @@ export default function RegularTransactionList({
                         <button
                           onClick={() => setPdfExportType('category-month')}
                           className={`rounded-lg border px-3 py-2 text-sm font-semibold ${pdfExportType === 'category-month'
-                              ? 'border-blue-400 bg-blue-50 text-blue-800'
-                              : 'border-slate-200 text-slate-600 hover:bg-white'
+                              ? 'border-blue-400 dark:border-blue-500/50 bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
+                              : 'border-slate-200 dark:border-neutral-700 text-slate-600 dark:text-neutral-400 hover:bg-white dark:hover:bg-neutral-800'
                             }`}
                         >
                           Category by Month
@@ -911,8 +910,8 @@ export default function RegularTransactionList({
                         <button
                           onClick={() => setPdfExportType('category-year')}
                           className={`rounded-lg border px-3 py-2 text-sm font-semibold ${pdfExportType === 'category-year'
-                              ? 'border-blue-400 bg-blue-50 text-blue-800'
-                              : 'border-slate-200 text-slate-600 hover:bg-white'
+                              ? 'border-blue-400 dark:border-blue-500/50 bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
+                              : 'border-slate-200 dark:border-neutral-700 text-slate-600 dark:text-neutral-400 hover:bg-white dark:hover:bg-neutral-800'
                             }`}
                         >
                           Category by Year
@@ -920,8 +919,8 @@ export default function RegularTransactionList({
                         <button
                           onClick={() => setPdfExportType('category-custom')}
                           className={`rounded-lg border px-3 py-2 text-sm font-semibold ${pdfExportType === 'category-custom'
-                              ? 'border-blue-400 bg-blue-50 text-blue-800'
-                              : 'border-slate-200 text-slate-600 hover:bg-white'
+                              ? 'border-blue-400 dark:border-blue-500/50 bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
+                              : 'border-slate-200 dark:border-neutral-700 text-slate-600 dark:text-neutral-400 hover:bg-white dark:hover:bg-neutral-800'
                             }`}
                         >
                           Category (Custom Range)
@@ -929,8 +928,8 @@ export default function RegularTransactionList({
                         <button
                           onClick={() => setPdfExportType('month')}
                           className={`rounded-lg border px-3 py-2 text-sm font-semibold ${pdfExportType === 'month'
-                              ? 'border-slate-400 bg-white text-slate-800'
-                              : 'border-slate-200 text-slate-600 hover:bg-white'
+                              ? 'border-slate-400 dark:border-neutral-500 bg-white dark:bg-neutral-800 text-slate-800 dark:text-neutral-200'
+                              : 'border-slate-200 dark:border-neutral-700 text-slate-600 dark:text-neutral-400 hover:bg-white dark:hover:bg-neutral-800'
                             }`}
                         >
                           Statement Month
@@ -938,8 +937,8 @@ export default function RegularTransactionList({
                         <button
                           onClick={() => setPdfExportType('year')}
                           className={`rounded-lg border px-3 py-2 text-sm font-semibold ${pdfExportType === 'year'
-                              ? 'border-slate-400 bg-white text-slate-800'
-                              : 'border-slate-200 text-slate-600 hover:bg-white'
+                              ? 'border-slate-400 dark:border-neutral-500 bg-white dark:bg-neutral-800 text-slate-800 dark:text-neutral-200'
+                              : 'border-slate-200 dark:border-neutral-700 text-slate-600 dark:text-neutral-400 hover:bg-white dark:hover:bg-neutral-800'
                             }`}
                         >
                           Statement Year
@@ -947,8 +946,8 @@ export default function RegularTransactionList({
                         <button
                           onClick={() => setPdfExportType('custom')}
                           className={`col-span-2 rounded-lg border px-3 py-2 text-sm font-semibold ${pdfExportType === 'custom'
-                              ? 'border-slate-400 bg-white text-slate-800'
-                              : 'border-slate-200 text-slate-600 hover:bg-white'
+                              ? 'border-slate-400 dark:border-neutral-500 bg-white dark:bg-neutral-800 text-slate-800 dark:text-neutral-200'
+                              : 'border-slate-200 dark:border-neutral-700 text-slate-600 dark:text-neutral-400 hover:bg-white dark:hover:bg-neutral-800'
                             }`}
                         >
                           Statement Custom Range
@@ -961,11 +960,11 @@ export default function RegularTransactionList({
                       pdfExportType === 'category-year') && (
                         <div className="grid grid-cols-2 gap-3 [&>*:last-child:nth-child(odd)]:col-span-2">
                           <div>
-                            <label className="block text-xs uppercase tracking-[0.2em] text-slate-500">Year</label>
+                            <label className="block text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-neutral-400">Year</label>
                             <select
                               value={pdfSelectedYear}
                               onChange={(e) => setPdfSelectedYear(parseInt(e.target.value))}
-                              className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm"
+                              className="mt-2 w-full rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-3 py-2 text-sm text-slate-900 dark:text-neutral-200 shadow-sm"
                             >
                               {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map(year => (
                                 <option key={year} value={year}>{year}</option>
@@ -974,11 +973,11 @@ export default function RegularTransactionList({
                           </div>
                           {(pdfExportType === 'month' || pdfExportType === 'category-month') && (
                             <div>
-                              <label className="block text-xs uppercase tracking-[0.2em] text-slate-500">Month</label>
+                              <label className="block text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-neutral-400">Month</label>
                               <select
                                 value={pdfSelectedMonth}
                                 onChange={(e) => setPdfSelectedMonth(parseInt(e.target.value))}
-                                className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm"
+                                className="mt-2 w-full rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-3 py-2 text-sm text-slate-900 dark:text-neutral-200 shadow-sm"
                               >
                                 {Array.from({ length: 12 }, (_, i) => (
                                   <option key={i} value={i}>
@@ -994,15 +993,15 @@ export default function RegularTransactionList({
                     {(pdfExportType === 'custom' || pdfExportType === 'category-custom') && (
                       <div className="grid grid-cols-2 gap-3 [&>*:last-child:nth-child(odd)]:col-span-2">
                         <div>
-                          <label className="block text-xs uppercase tracking-[0.2em] text-slate-500 mb-2">Start Date</label>
+                          <label className="block text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-neutral-400 mb-2">Start Date</label>
                           <div className="relative w-full">
-                            <div className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm flex items-center justify-between pointer-events-none transition-colors">
-                              <span className={pdfStartDate ? 'text-slate-900' : 'text-slate-400'}>
+                            <div className="w-full rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-3 py-2 text-sm text-slate-900 dark:text-neutral-200 shadow-sm flex items-center justify-between pointer-events-none transition-colors">
+                              <span className={pdfStartDate ? 'text-slate-900 dark:text-neutral-200' : 'text-slate-400 dark:text-neutral-500'}>
                                 {pdfStartDate
                                   ? new Date(pdfStartDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
                                   : 'Select Date'}
                               </span>
-                              <CalendarIcon className="h-4 w-4 text-slate-400" />
+                              <CalendarIcon className="h-4 w-4 text-slate-400 dark:text-neutral-500" />
                             </div>
                             <input
                               type="date"
@@ -1013,15 +1012,15 @@ export default function RegularTransactionList({
                           </div>
                         </div>
                         <div>
-                          <label className="block text-xs uppercase tracking-[0.2em] text-slate-500 mb-2">End Date</label>
+                          <label className="block text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-neutral-400 mb-2">End Date</label>
                           <div className="relative w-full">
-                            <div className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm flex items-center justify-between pointer-events-none transition-colors">
-                              <span className={pdfEndDate ? 'text-slate-900' : 'text-slate-400'}>
+                            <div className="w-full rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-3 py-2 text-sm text-slate-900 dark:text-neutral-200 shadow-sm flex items-center justify-between pointer-events-none transition-colors">
+                              <span className={pdfEndDate ? 'text-slate-900 dark:text-neutral-200' : 'text-slate-400 dark:text-neutral-500'}>
                                 {pdfEndDate
                                   ? new Date(pdfEndDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
                                   : 'Select Date'}
                               </span>
-                              <CalendarIcon className="h-4 w-4 text-slate-400" />
+                              <CalendarIcon className="h-4 w-4 text-slate-400 dark:text-neutral-500" />
                             </div>
                             <input
                               type="date"
@@ -1037,13 +1036,13 @@ export default function RegularTransactionList({
                     <div className="flex gap-3 pt-2">
                       <button
                         onClick={() => setShowDateRangePicker(false)}
-                        className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+                        className="flex-1 rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-4 py-2 text-sm font-semibold text-slate-600 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-700"
                       >
                         Cancel
                       </button>
                       <button
                         onClick={exportToPDF}
-                        className="flex-1 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+                        className="flex-1 rounded-xl bg-emerald-600 dark:bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 dark:hover:bg-emerald-600"
                       >
                         Download CSV
                       </button>
@@ -1065,8 +1064,8 @@ export default function RegularTransactionList({
 
             {/* Edit Transaction Modal */}
             {editingTransaction && typeof document !== 'undefined' && createPortal(
-              <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[200] flex items-center justify-center p-4" onClick={() => setEditingTransaction(null)}>
-                <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md flex flex-col max-h-[90vh] sm:max-h-[85vh] overflow-hidden border border-slate-200" onClick={(e) => e.stopPropagation()}>
+              <div className="fixed inset-0 bg-slate-900/40 dark:bg-neutral-950/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4" onClick={() => setEditingTransaction(null)}>
+                <div className="bg-white dark:bg-neutral-900 rounded-3xl shadow-2xl w-full max-w-md flex flex-col max-h-[90vh] sm:max-h-[85vh] overflow-hidden border border-slate-200 dark:border-neutral-800" onClick={(e) => e.stopPropagation()}>
                   <AddTransactionForm
                     initialData={{
                       id: editingTransaction.id,

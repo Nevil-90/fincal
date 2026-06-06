@@ -60,8 +60,8 @@ const SpendGauge = React.memo(function SpendGauge({ pct }: { pct: number }) {
         transform="rotate(-90 80 80)"
         style={{ transition: 'stroke-dashoffset 0.8s ease, stroke 0.4s ease' }}
       />
-      <text x="80" y="74" textAnchor="middle" fontSize="24" fontWeight="900" fill="#0f172a">{Math.round(clamped)}%</text>
-      <text x="80" y="96" textAnchor="middle" fontSize="12" fontWeight="700" fill="#94a3b8">of budget</text>
+      <text x="80" y="74" textAnchor="middle" fontSize="24" fontWeight="900" className="fill-slate-900 dark:fill-white">{Math.round(clamped)}%</text>
+      <text x="80" y="96" textAnchor="middle" fontSize="12" fontWeight="700" className="fill-slate-400 dark:fill-neutral-400">of budget</text>
     </svg>
   )
 })
@@ -147,10 +147,10 @@ export default React.memo(function OverviewTab({
   const availableYears = (summary?.availableYears || [now.getFullYear()]) as number[]
 
   const STATUS_CONFIG = {
-    over:  { bar: 'bg-red-500',    label: 'Over budget',   badge: 'bg-red-50 text-red-700 border-red-200' },
-    warn:  { bar: 'bg-orange-500', label: 'Near limit',    badge: 'bg-orange-50 text-orange-700 border-orange-200' },
-    ok:    { bar: 'bg-yellow-400', label: 'On track',      badge: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
-    safe:  { bar: 'bg-emerald-500',label: 'Under control', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+    over:  { bar: 'bg-red-500',    label: 'Over budget',   badge: 'bg-red-50 dark:bg-red-900/20  text-red-700 dark:text-red-400  border-red-200' },
+    warn:  { bar: 'bg-orange-500', label: 'Near limit',    badge: 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 border-orange-200' },
+    ok:    { bar: 'bg-yellow-400', label: 'On track',      badge: 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 border-yellow-200' },
+    safe:  { bar: 'bg-emerald-500',label: 'Under control', badge: 'bg-emerald-50 dark:bg-emerald-900/20  text-emerald-700 dark:text-emerald-400  border-emerald-200' },
   }
 
   const [showInsights, setShowInsights] = useState(false)
@@ -199,27 +199,27 @@ export default React.memo(function OverviewTab({
       {/* ── PERIOD SELECTOR BAR ── */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900">Budget Command Center</h1>
-          <p className="text-xs text-slate-500 mt-0.5">Track real spending against your budget limits in real time.</p>
+          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white ">Budget Command Center</h1>
+          <p className="text-xs text-slate-500 dark:text-neutral-400  mt-0.5">Track real spending against your budget limits in real time.</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <select
             value={activeYear}
             onChange={e => onPeriodChange({ year: Number(e.target.value), month: overviewPeriod.month })}
-            className="bg-white border border-slate-200 text-slate-800 text-xs font-bold rounded-xl px-2.5 py-2 outline-none cursor-pointer shadow-sm"
+            className="bg-white dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700  text-slate-800 dark:text-neutral-200  text-xs font-bold rounded-xl px-2.5 py-2 outline-none cursor-pointer shadow-sm"
           >
             {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
           </select>
           <select
             value={activeMonth}
             onChange={e => onPeriodChange({ year: activeYear, month: Number(e.target.value) })}
-            className="bg-white border border-slate-200 text-slate-800 text-xs font-bold rounded-xl px-2.5 py-2 outline-none cursor-pointer shadow-sm"
+            className="bg-white dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700  text-slate-800 dark:text-neutral-200  text-xs font-bold rounded-xl px-2.5 py-2 outline-none cursor-pointer shadow-sm"
           >
             {MONTH_NAMES.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
           </select>
           <button
             onClick={onShowAddTransaction}
-            className="flex items-center gap-1.5 bg-slate-900 text-white text-xs font-bold px-3.5 py-2 rounded-xl cursor-pointer hover:bg-slate-800 transition-colors shadow-sm"
+            className="flex items-center gap-1.5 bg-slate-900 dark:bg-neutral-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl cursor-pointer hover:bg-slate-800 dark:hover:bg-neutral-600 transition-colors shadow-sm"
           >
             <Plus className="h-3.5 w-3.5" /> Add
           </button>
@@ -233,12 +233,12 @@ export default React.memo(function OverviewTab({
         <div className="space-y-4 sm:space-y-5">
 
           {/* Overall Gauge Card */}
-          <div className="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm">
+          <div className="rounded-2xl border border-slate-200 dark:border-neutral-700/80  bg-white dark:bg-neutral-800 p-4 sm:p-5 shadow-sm">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
               {/* Gauge */}
               <div className="flex flex-col items-center gap-2 shrink-0 w-full sm:w-auto">
                 <SpendGauge pct={overallBudgetPct} />
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Overall Budget Usage</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-500">Overall Budget Usage</p>
               </div>
 
               {/* Stats */}
@@ -247,35 +247,35 @@ export default React.memo(function OverviewTab({
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-1.5">
-                      <Clock className="h-3.5 w-3.5 text-slate-400" />
-                      <span className="text-xs font-bold text-slate-500">Month Progress</span>
+                      <Clock className="h-3.5 w-3.5 text-slate-400 dark:text-neutral-500" />
+                      <span className="text-xs font-bold text-slate-500 dark:text-neutral-400 ">Month Progress</span>
                     </div>
-                    <span className="text-xs font-black text-slate-700">Day {dayOfMonth} / {daysInMonth}</span>
+                    <span className="text-xs font-black text-slate-700 dark:text-neutral-300 ">Day {dayOfMonth} / {daysInMonth}</span>
                   </div>
-                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-slate-400 rounded-full transition-all duration-700" style={{ width: `${monthProgress}%` }} />
+                  <div className="h-2 bg-slate-100 dark:bg-neutral-700 rounded-full overflow-hidden">
+                    <div className="h-full bg-slate-400 dark:bg-neutral-500 rounded-full transition-all duration-700" style={{ width: `${monthProgress}%` }} />
                   </div>
                 </div>
 
                 {/* Key numbers */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 [&>*:last-child:nth-child(odd)]:col-span-2 sm:[&>*:last-child:nth-child(odd)]:col-span-1">
-                  <div className="rounded-xl bg-rose-50 border border-rose-100 p-3">
-                    <p className="text-[10px] font-bold text-rose-500 uppercase tracking-wider">Spent</p>
-                    <p className="text-base font-black text-rose-700 mt-0.5 tabular-nums">{formatCurrency(balanceInfo.periodExpenses)}</p>
+                  <div className="rounded-xl bg-rose-50 dark:bg-rose-900/20  border border-rose-100 dark:border-rose-900/50 p-3">
+                    <p className="text-[10px] font-bold text-rose-500 dark:text-rose-400 uppercase tracking-wider">Spent</p>
+                    <p className="text-base font-black text-rose-700 dark:text-rose-400  mt-0.5 tabular-nums">{formatCurrency(balanceInfo.periodExpenses)}</p>
                   </div>
-                  <div className="rounded-xl bg-emerald-50 border border-emerald-100 p-3">
-                    <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Income</p>
-                    <p className="text-base font-black text-emerald-700 mt-0.5 tabular-nums">{formatCurrency(balanceInfo.periodIncome)}</p>
+                  <div className="rounded-xl bg-emerald-50 dark:bg-emerald-900/20   border border-emerald-100 dark:border-emerald-900/50 p-3">
+                    <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400  uppercase tracking-wider">Income</p>
+                    <p className="text-base font-black text-emerald-700 dark:text-emerald-400   mt-0.5 tabular-nums">{formatCurrency(balanceInfo.periodIncome)}</p>
                   </div>
-                  <div className="rounded-xl bg-blue-50 border border-blue-100 p-3">
-                    <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Rollover</p>
-                    <p className="text-base font-black text-blue-700 mt-0.5 tabular-nums">+{formatCurrency(carryOver)}</p>
+                  <div className="rounded-xl bg-blue-50 dark:bg-blue-900/20   border border-blue-100 dark:border-blue-900/50 p-3">
+                    <p className="text-[10px] font-bold text-blue-600 dark:text-blue-400  uppercase tracking-wider">Rollover</p>
+                    <p className="text-base font-black text-blue-700 dark:text-blue-400   mt-0.5 tabular-nums">+{formatCurrency(carryOver)}</p>
                   </div>
-                  <div className="rounded-xl bg-slate-50 border border-slate-100 p-3">
-                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Daily Burn</p>
-                    <p className="text-base font-black text-slate-800 mt-0.5 tabular-nums">{formatCurrency(actualDailyBurn)}/d</p>
+                  <div className="rounded-xl bg-slate-50 dark:bg-neutral-700/50 border border-slate-100 dark:border-neutral-600 p-3">
+                    <p className="text-[10px] font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider">Daily Burn</p>
+                    <p className="text-base font-black text-slate-800 dark:text-neutral-200  mt-0.5 tabular-nums">{formatCurrency(actualDailyBurn)}/d</p>
                     {expectedDailyBurn > 0 && (
-                      <p className={`text-[10px] font-bold mt-0.5 ${actualDailyBurn > expectedDailyBurn ? 'text-rose-500' : 'text-emerald-600'}`}>
+                      <p className={`text-[10px] font-bold mt-0.5 ${actualDailyBurn > expectedDailyBurn ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400 '}`}>
                         {actualDailyBurn > expectedDailyBurn ? '▲' : '▼'} Budget: {formatCurrency(expectedDailyBurn)}/d
                       </p>
                     )}
@@ -286,19 +286,19 @@ export default React.memo(function OverviewTab({
                 {(overCount > 0 || warnCount > 0) && (
                   <div className="flex flex-wrap gap-2">
                     {overCount > 0 && (
-                      <span className="flex items-center gap-1 text-[10px] font-bold bg-red-50 text-red-700 border border-red-200 px-2.5 py-1 rounded-full">
+                      <span className="flex items-center gap-1 text-[10px] font-bold bg-red-50 dark:bg-red-900/20  text-red-700 dark:text-red-400  border border-red-200 px-2.5 py-1 rounded-full">
                         <AlertTriangle className="h-3 w-3" /> {overCount} over budget
                       </span>
                     )}
                     {warnCount > 0 && (
-                      <span className="flex items-center gap-1 text-[10px] font-bold bg-orange-50 text-orange-700 border border-orange-200 px-2.5 py-1 rounded-full">
+                      <span className="flex items-center gap-1 text-[10px] font-bold bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 border border-orange-200 px-2.5 py-1 rounded-full">
                         <Zap className="h-3 w-3" /> {warnCount} near limit
                       </span>
                     )}
                   </div>
                 )}
                 {overCount === 0 && warnCount === 0 && budgetRows.length > 0 && (
-                  <span className="flex items-center gap-1 text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-full w-fit">
+                  <span className="flex items-center gap-1 text-[10px] font-bold bg-emerald-50 dark:bg-emerald-900/20  text-emerald-700 dark:text-emerald-400  border border-emerald-200 px-2.5 py-1 rounded-full w-fit">
                     <CheckCircle className="h-3 w-3" /> All budgets on track
                   </span>
                 )}
@@ -308,11 +308,11 @@ export default React.memo(function OverviewTab({
 
           {/* Monthly Spending Goal (Global) */}
           {monthlySpendingGoal > 0 && (
-            <div className="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm">
+            <div className="rounded-2xl border border-slate-200 dark:border-neutral-700/80  bg-white dark:bg-neutral-800 p-4 sm:p-5 shadow-sm">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <Target className="h-4 w-4 text-indigo-600" />
-                  <h3 className="text-sm font-bold text-slate-800">Monthly Spending Goal</h3>
+                  <Target className="h-4 w-4 text-indigo-600 dark:text-indigo-400 " />
+                  <h3 className="text-sm font-bold text-slate-800 dark:text-neutral-200 ">Monthly Spending Goal</h3>
                 </div>
                 <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${STATUS_CONFIG[monthlySpendingGoalStatus].badge}`}>
                   {STATUS_CONFIG[monthlySpendingGoalStatus].label}
@@ -321,15 +321,15 @@ export default React.memo(function OverviewTab({
               
               <div className="flex items-end justify-between mb-2">
                 <div>
-                  <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Spent so far</p>
-                  <p className="text-lg font-black text-slate-900 leading-none mt-1">
+                  <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-neutral-400  font-bold">Spent so far</p>
+                  <p className="text-lg font-black text-slate-900 dark:text-white  leading-none mt-1">
                     {formatCurrency(balanceInfo.periodExpenses)}
-                    <span className="text-sm font-medium text-slate-400 ml-1">/ {formatCurrency(monthlySpendingGoal)}</span>
+                    <span className="text-sm font-medium text-slate-400 dark:text-neutral-500  ml-1">/ {formatCurrency(monthlySpendingGoal)}</span>
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Remaining</p>
-                  <p className={`text-sm font-bold mt-1 ${monthlySpendingGoalStatus === 'over' ? 'text-red-600' : 'text-emerald-600'}`}>
+                  <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-neutral-400  font-bold">Remaining</p>
+                  <p className={`text-sm font-bold mt-1 ${monthlySpendingGoalStatus === 'over' ? 'text-red-600 dark:text-red-400  ' : 'text-emerald-600 dark:text-emerald-400  '}`}>
                     {monthlySpendingGoalStatus === 'over' 
                       ? `-${formatCurrency(balanceInfo.periodExpenses - monthlySpendingGoal)}` 
                       : formatCurrency(monthlySpendingGoal - balanceInfo.periodExpenses)}
@@ -337,7 +337,7 @@ export default React.memo(function OverviewTab({
                 </div>
               </div>
               
-              <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden mt-3">
+              <div className="h-2.5 bg-slate-100 dark:bg-neutral-800 dark:bg-neutral-700 rounded-full overflow-hidden mt-3">
                 <div 
                   className={`h-full rounded-full transition-all duration-700 ${STATUS_CONFIG[monthlySpendingGoalStatus].bar}`} 
                   style={{ width: `${Math.min(100, monthlySpendingGoalPct)}%` }} 
@@ -348,58 +348,58 @@ export default React.memo(function OverviewTab({
 
           {/* Budget Rows */}
           {budgetRows.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
-              <ClipboardList className="h-8 w-8 text-slate-400 mx-auto mb-3" />
-              <h3 className="text-sm font-bold text-slate-700">No budgets configured</h3>
-              <p className="text-xs text-slate-500 mt-1 mb-4">Set budget limits in Settings to track spending here.</p>
+            <div className="rounded-2xl border border-dashed border-slate-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 p-8 text-center">
+              <ClipboardList className="h-8 w-8 text-slate-400 dark:text-neutral-500  mx-auto mb-3" />
+              <h3 className="text-sm font-bold text-slate-700 dark:text-neutral-300 ">No budgets configured</h3>
+              <p className="text-xs text-slate-500 dark:text-neutral-400  mt-1 mb-4">Set budget limits in Settings to track spending here.</p>
               <button
                 onClick={onOpenSettings}
-                className="text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-xl transition-colors cursor-pointer"
+                className="text-xs font-bold text-indigo-600 dark:text-indigo-400  bg-indigo-50 dark:bg-indigo-900/20 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:bg-indigo-900/40 dark:hover:bg-indigo-900/50 px-4 py-2 rounded-xl transition-colors cursor-pointer"
               >
                 Go to Settings →
               </button>
             </div>
           ) : (
-            <div className="rounded-2xl border border-slate-200/80 bg-white shadow-sm overflow-hidden">
-              <div className="px-4 sm:px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+            <div className="rounded-2xl border border-slate-200 dark:border-neutral-700/80  bg-white dark:bg-neutral-800 shadow-sm overflow-hidden">
+              <div className="px-4 sm:px-5 py-4 border-b border-slate-100 dark:border-neutral-800 dark:border-neutral-700 flex items-center justify-between">
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Budget vs Actual</p>
-                  <h3 className="text-base font-black text-slate-900 mt-0.5">Category Breakdown</h3>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-500 ">Budget vs Actual</p>
+                  <h3 className="text-base font-black text-slate-900 dark:text-white  mt-0.5">Category Breakdown</h3>
                 </div>
                 <button
                   onClick={onOpenSettings}
-                  className="text-[10px] font-bold text-slate-500 hover:text-slate-800 bg-slate-50 hover:bg-slate-100 px-2.5 py-1.5 rounded-xl cursor-pointer transition-colors"
+                  className="text-[10px] font-bold text-slate-500 dark:text-neutral-400  hover:text-slate-800 dark:text-neutral-200 dark:hover:text-neutral-200 bg-slate-50 dark:bg-neutral-800/50 dark:bg-neutral-700 hover:bg-slate-100 dark:bg-neutral-800 dark:hover:bg-neutral-600 px-2.5 py-1.5 rounded-xl cursor-pointer transition-colors"
                 >
                   Manage Limits
                 </button>
               </div>
 
-              <div className="divide-y divide-slate-100 max-h-[420px] overflow-y-auto overscroll-contain">
+              <div className="divide-y divide-slate-100 dark:divide-neutral-700 max-h-[420px] overflow-y-auto overscroll-contain">
                 {budgetRows.map(row => {
                   const cfg = STATUS_CONFIG[row.status]
                   return (
-                    <div key={row.id} className="px-4 sm:px-5 py-3.5 hover:bg-slate-50/60 transition-colors">
+                    <div key={row.id} className="px-4 sm:px-5 py-3.5 hover:bg-slate-50 dark:bg-neutral-800/50 dark:hover:bg-neutral-700/30 transition-colors">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2 min-w-0 flex-1">
                           <span className={`text-[9px] font-black px-1.5 py-0.5 rounded border ${cfg.badge} shrink-0`}>
                             {cfg.label}
                           </span>
-                          <span className="text-xs sm:text-sm font-semibold text-slate-800 truncate">{row.category}</span>
+                          <span className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-neutral-200  truncate">{row.category}</span>
                         </div>
                         <div className="text-right shrink-0 ml-3">
-                          <span className="text-xs font-black text-slate-900 tabular-nums">{formatCurrency(row.spent)}</span>
-                          <span className="text-[10px] text-slate-400 font-medium"> / {formatCurrency(row.limit)}</span>
+                          <span className="text-xs font-black text-slate-900 dark:text-white  tabular-nums">{formatCurrency(row.spent)}</span>
+                          <span className="text-[10px] text-slate-400 dark:text-neutral-500  font-medium"> / {formatCurrency(row.limit)}</span>
                         </div>
                       </div>
-                      <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-2 bg-slate-100 dark:bg-neutral-800 dark:bg-neutral-700 rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full transition-all duration-700 ${cfg.bar}`}
                           style={{ width: `${Math.min(row.pct, 100)}%` }}
                         />
                       </div>
                       <div className="flex justify-between mt-1">
-                        <span className="text-[10px] text-slate-400 font-medium">{Math.round(row.pct)}% used</span>
-                        <span className={`text-[10px] font-bold ${row.remaining < 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                        <span className="text-[10px] text-slate-400 dark:text-neutral-500  font-medium">{Math.round(row.pct)}% used</span>
+                        <span className={`text-[10px] font-bold ${row.remaining < 0 ? 'text-red-600 dark:text-red-400  ' : 'text-emerald-600 dark:text-emerald-400  '}`}>
                           {row.remaining < 0 ? `${formatCurrency(Math.abs(row.remaining))} over` : `${formatCurrency(row.remaining)} left`}
                         </span>
                       </div>
@@ -415,10 +415,10 @@ export default React.memo(function OverviewTab({
         <div className="space-y-4 sm:space-y-5">
 
           {/* Savings & Burn Rate Card */}
-          <div className="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm space-y-4">
+          <div className="rounded-2xl border border-slate-200 dark:border-neutral-700/80  bg-white dark:bg-neutral-800 p-4 sm:p-5 shadow-sm space-y-4">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">This Month's Health</p>
-              <h3 className="text-base font-black text-slate-900 mt-0.5">Financial Pulse</h3>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-500 ">This Month's Health</p>
+              <h3 className="text-base font-black text-slate-900 dark:text-white  mt-0.5">Financial Pulse</h3>
             </div>
 
             {/* Savings Rate ring */}
@@ -436,53 +436,53 @@ export default React.memo(function OverviewTab({
                     transform="rotate(-90 32 32)"
                   />
                 </svg>
-                <span className="absolute inset-0 flex items-center justify-center text-[11px] font-black text-slate-800">{savingsRate}%</span>
+                <span className="absolute inset-0 flex items-center justify-center text-[11px] font-black text-slate-800 dark:text-neutral-200 ">{savingsRate}%</span>
               </div>
               <div>
-                <p className="text-sm font-black text-slate-900">Savings Rate</p>
-                <p className={`text-xs font-bold mt-0.5 ${savingsRate >= 20 ? 'text-emerald-600' : savingsRate >= 10 ? 'text-yellow-600' : 'text-red-600'}`}>
+                <p className="text-sm font-black text-slate-900 dark:text-white ">Savings Rate</p>
+                <p className={`text-xs font-bold mt-0.5 ${savingsRate >= 20 ? 'text-emerald-600 dark:text-emerald-400 ' : savingsRate >= 10 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400 '}`}>
                   {savingsRate >= 20 ? '✓ Excellent — above 20% target' : savingsRate >= 10 ? '~ Good — near target' : savingsRate >= 0 ? '↓ Low — aim for 20%' : '✗ Overspending this month'}
                 </p>
               </div>
             </div>
 
-            <div className="border-t border-slate-100 pt-3 space-y-2">
+            <div className="border-t border-slate-100 dark:border-neutral-800 dark:border-neutral-700 pt-3 space-y-2">
               <div className="flex items-center justify-between text-xs">
-                <span className="flex items-center gap-1.5 text-slate-500 font-medium"><TrendingUp className="h-3.5 w-3.5 text-emerald-500" /> Period Income</span>
-                <span className="font-black text-slate-900 tabular-nums">{formatCurrency(balanceInfo.periodIncome)}</span>
+                <span className="flex items-center gap-1.5 text-slate-500 dark:text-neutral-400  font-medium"><TrendingUp className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400 " /> Period Income</span>
+                <span className="font-black text-slate-900 dark:text-white  tabular-nums">{formatCurrency(balanceInfo.periodIncome)}</span>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <span className="flex items-center gap-1.5 text-slate-500 font-medium"><TrendingDown className="h-3.5 w-3.5 text-rose-500" /> Period Expenses</span>
-                <span className="font-black text-slate-900 tabular-nums">{formatCurrency(balanceInfo.periodExpenses)}</span>
+                <span className="flex items-center gap-1.5 text-slate-500 dark:text-neutral-400  font-medium"><TrendingDown className="h-3.5 w-3.5 text-rose-500 dark:text-rose-400" /> Period Expenses</span>
+                <span className="font-black text-slate-900 dark:text-white  tabular-nums">{formatCurrency(balanceInfo.periodExpenses)}</span>
               </div>
-              <div className="flex items-center justify-between text-xs border-t border-slate-100 pt-2 mt-1">
-                <span className="font-bold text-slate-700">Net Saved</span>
-                <span className={`font-black tabular-nums ${balanceInfo.periodBalance >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>{formatCurrency(balanceInfo.periodBalance)}</span>
+              <div className="flex items-center justify-between text-xs border-t border-slate-100 dark:border-neutral-800 dark:border-neutral-700 pt-2 mt-1">
+                <span className="font-bold text-slate-700 dark:text-neutral-300 ">Net Saved</span>
+                <span className={`font-black tabular-nums ${balanceInfo.periodBalance >= 0 ? 'text-emerald-700 dark:text-emerald-400 ' : 'text-red-700 dark:text-red-400 '}`}>{formatCurrency(balanceInfo.periodBalance)}</span>
               </div>
             </div>
           </div>
 
           {/* Unbudgeted Spending */}
           {unbudgetedSpend.length > 0 && (
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
+            <div className="rounded-2xl border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-900/20   p-4 shadow-sm">
               <div className="flex items-start gap-2 mb-3">
-                <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400  dark:text-amber-500   shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-xs font-black text-amber-800">Unbudgeted Categories</p>
-                  <p className="text-[10px] text-amber-600 font-medium mt-0.5">Spending without budget limits set</p>
+                  <p className="text-xs font-black text-amber-800 dark:text-amber-400">Unbudgeted Categories</p>
+                  <p className="text-[10px] text-amber-600 dark:text-amber-400  dark:text-amber-500   font-medium mt-0.5">Spending without budget limits set</p>
                 </div>
               </div>
               <div className="space-y-1.5">
                 {unbudgetedSpend.map(([cat, amount]) => (
                   <div key={cat} className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-amber-900 truncate">{cat}</span>
-                    <span className="text-xs font-black text-amber-800 tabular-nums ml-2 shrink-0">{formatCurrency(amount)}</span>
+                    <span className="text-xs font-semibold text-amber-900 dark:text-amber-300 truncate">{cat}</span>
+                    <span className="text-xs font-black text-amber-800 dark:text-amber-400 tabular-nums ml-2 shrink-0">{formatCurrency(amount)}</span>
                   </div>
                 ))}
               </div>
               <button
                 onClick={onOpenSettings}
-                className="mt-3 w-full text-[10px] font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 border border-amber-200 px-3 py-2 rounded-xl cursor-pointer transition-colors"
+                className="mt-3 w-full text-[10px] font-bold text-amber-700 dark:text-amber-400   bg-amber-100 dark:bg-amber-900/40   hover:bg-amber-200 dark:hover:bg-amber-900/60 border border-amber-200 dark:border-amber-800 px-3 py-2 rounded-xl cursor-pointer transition-colors"
               >
                 Set Budget Limits →
               </button>
@@ -490,53 +490,53 @@ export default React.memo(function OverviewTab({
           )}
 
           {/* Recent 5 transactions */}
-          <div className="rounded-2xl border border-slate-200/80 bg-white shadow-sm overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3.5 border-b border-slate-100">
-              <p className="text-xs font-black text-slate-900">Recent Activity</p>
+          <div className="rounded-2xl border border-slate-200 dark:border-neutral-700/80  bg-white dark:bg-neutral-800 shadow-sm overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3.5 border-b border-slate-100 dark:border-neutral-800 dark:border-neutral-700">
+              <p className="text-xs font-black text-slate-900 dark:text-white ">Recent Activity</p>
               <button
                 onClick={() => onTabChange('transactions')}
-                className="text-[10px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1.5 rounded-xl cursor-pointer transition-colors"
+                className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400  bg-indigo-50 dark:bg-indigo-900/20 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:bg-indigo-900/40 dark:hover:bg-indigo-900/50 px-2.5 py-1.5 rounded-xl cursor-pointer transition-colors"
               >
                 All →
               </button>
             </div>
-            <div className="divide-y divide-slate-100 max-h-[240px] overflow-y-auto overscroll-contain">
+            <div className="divide-y divide-slate-100 dark:divide-neutral-700 max-h-[240px] overflow-y-auto overscroll-contain">
               {periodTxns.slice(0, 8).map(t => (
                 <div key={t.id} className="flex items-center gap-2.5 px-4 py-2.5">
-                  <div className={`h-7 w-7 rounded-xl flex items-center justify-center text-xs shrink-0 ${t.type === 'income' ? 'bg-emerald-50' : 'bg-rose-50'}`}>
-                    {t.type === 'income' ? <ArrowDownLeft className="h-4 w-4 text-emerald-600" /> : <ArrowUpRight className="h-4 w-4 text-rose-600" />}
+                  <div className={`h-7 w-7 rounded-xl flex items-center justify-center text-xs shrink-0 ${t.type === 'income' ? 'bg-emerald-50 dark:bg-emerald-900/20  ' : 'bg-rose-50 dark:bg-rose-900/20 '}`}>
+                    {t.type === 'income' ? <ArrowDownLeft className="h-4 w-4 text-emerald-600 dark:text-emerald-400  dark:text-emerald-500  " /> : <ArrowUpRight className="h-4 w-4 text-rose-600 dark:text-rose-400 dark:text-rose-500 " />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-slate-900 truncate">{t.description || t.category}</p>
-                    <p className="text-[10px] text-slate-400 font-medium">{t.category}</p>
+                    <p className="text-xs font-semibold text-slate-900 dark:text-white  truncate">{t.description || t.category}</p>
+                    <p className="text-[10px] text-slate-400 dark:text-neutral-500  font-medium">{t.category}</p>
                   </div>
-                  <span className={`text-xs font-black tabular-nums shrink-0 ${t.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                  <span className={`text-xs font-black tabular-nums shrink-0 ${t.type === 'income' ? 'text-emerald-600 dark:text-emerald-400  dark:text-emerald-500  ' : 'text-rose-600 dark:text-rose-400 dark:text-rose-500 '}`}>
                     {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
                   </span>
                 </div>
               ))}
               {periodTxns.length === 0 && (
-                <div className="px-4 py-6 text-center text-xs text-slate-400 font-semibold">No transactions this period</div>
+                <div className="px-4 py-6 text-center text-xs text-slate-400 dark:text-neutral-500  font-semibold">No transactions this period</div>
               )}
             </div>
           </div>
 
           {/* Monthly Insights Card */}
-          <div className="bg-white border border-slate-200/70 rounded-3xl shadow-sm overflow-hidden">
+          <div className="bg-white dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700/70  rounded-3xl shadow-sm overflow-hidden">
             <button
               onClick={() => setShowInsights(v => !v)}
-              className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50 transition-colors"
+              className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50 dark:bg-neutral-800/50 dark:hover:bg-neutral-700/50 transition-colors"
             >
               <div className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-blue-500" />
-                <span className="text-sm font-bold text-slate-800">Monthly Insights Report</span>
+                <BarChart3 className="h-5 w-5 text-blue-500 dark:text-blue-400 " />
+                <span className="text-sm font-bold text-slate-800 dark:text-neutral-200 ">Monthly Insights Report</span>
               </div>
-              <span className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-xl">
+              <span className="text-xs font-bold text-blue-600 dark:text-blue-400   bg-blue-50 dark:bg-blue-900/20  dark:bg-blue-900/30 px-3 py-1 rounded-xl">
                 {showInsights ? 'Hide ↑' : 'View →'}
               </span>
             </button>
             {showInsights && (
-              <div className="border-t border-slate-100 p-5">
+              <div className="border-t border-slate-100 dark:border-neutral-800 dark:border-neutral-700 p-5">
                 <MonthlyInsights
                   periodTxns={periodTxns}
                   categorySpend={categorySpend}

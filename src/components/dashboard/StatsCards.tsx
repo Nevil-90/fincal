@@ -25,21 +25,21 @@ export default function StatsCards({ balanceInfo, overviewPeriod }: StatsCardsPr
   return (
     <>
       <div className="sm:hidden grid grid-cols-2 gap-3 [&>*:last-child:nth-child(odd)]:col-span-2">
-        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-400">Period Income</p>
-          <p className="mt-1 text-lg font-bold text-emerald-600">{formatCurrency(balanceInfo.periodIncome)}</p>
+        <div className="rounded-2xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 px-4 py-3 shadow-sm">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-400 dark:text-neutral-500">Period Income</p>
+          <p className="mt-1 text-lg font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(balanceInfo.periodIncome)}</p>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-400">Period Expense</p>
-          <p className="mt-1 text-lg font-bold text-rose-600">{formatCurrency(balanceInfo.periodExpenses)}</p>
+        <div className="rounded-2xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 px-4 py-3 shadow-sm">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-400 dark:text-neutral-500">Period Expense</p>
+          <p className="mt-1 text-lg font-bold text-rose-600 dark:text-rose-400">{formatCurrency(balanceInfo.periodExpenses)}</p>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-400">Period Balance</p>
-          <p className="mt-1 text-lg font-bold text-slate-900">{formatCurrency(balanceInfo.periodBalance)}</p>
+        <div className="rounded-2xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 px-4 py-3 shadow-sm">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-400 dark:text-neutral-500">Period Balance</p>
+          <p className="mt-1 text-lg font-bold text-slate-900 dark:text-white">{formatCurrency(balanceInfo.periodBalance)}</p>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-400">Total Balance</p>
-          <p className="mt-1 text-lg font-bold text-slate-900">{formatCurrency(balanceInfo.totalBalance)}</p>
+        <div className="rounded-2xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 px-4 py-3 shadow-sm">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-400 dark:text-neutral-500">Total Balance</p>
+          <p className="mt-1 text-lg font-bold text-slate-900 dark:text-white">{formatCurrency(balanceInfo.totalBalance)}</p>
         </div>
       </div>
 

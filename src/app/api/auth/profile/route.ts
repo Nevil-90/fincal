@@ -26,3 +26,25 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 })
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const currentUserId = request.headers.get('x-user-id')
+    if (!currentUserId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    
+    // Cascade delete in Prisma handles related records
+    await prisma.user.delete({
+      where: { id: currentUserId }
+    })
+
+    const response = NextResponse.json({ success: true, message: 'Account deleted successfully' })
+    response.cookies.set('session', '', { maxAge: 0 })
+    return response
+
+  } catch (error) {
+    console.error('Error deleting profile:', error)
+    return NextResponse.json({ error: 'Failed to delete account' }, { status: 500 })
+  }
+}

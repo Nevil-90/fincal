@@ -35,6 +35,6 @@ export const RADAR_COLORS = { stroke: '#8B5CF6', fill: '#8B5CF6' }
 export const SCATTER_COLORS = { normal: '#3B82F6', anomaly: '#EF4444' }
 
 // Clean, flat UI styles
-export const cardClasses = "rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-export const headerClasses = "text-lg font-bold text-slate-950"
-export const subHeaderClasses = "text-xs text-slate-500 mt-1"
+export const cardClasses = "rounded-2xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-5 shadow-sm"
+export const headerClasses = "text-lg font-bold text-slate-950 dark:text-white"
+export const subHeaderClasses = "text-xs text-slate-500 dark:text-neutral-400 mt-1"

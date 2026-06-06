@@ -21,7 +21,7 @@ import BottomNav from './dashboard/BottomNav'
 import Sidebar from './dashboard/Sidebar'
 import DashboardHeader from './dashboard/DashboardHeader'
 import OverviewTab from './dashboard/OverviewTab'
-const AnalyticsTab = dynamic(() => import('./analytics/AnalyticsTab'), { ssr: false, loading: () => <div className="animate-pulse bg-slate-100 rounded-2xl h-[400px] w-full" /> })
+const AnalyticsTab = dynamic(() => import('./analytics/AnalyticsTab'), { ssr: false, loading: () => <div className="animate-pulse bg-slate-100 dark:bg-neutral-800 rounded-2xl h-[400px] w-full" /> })
 import { SkeletonDashboard } from './ui/SkeletonCard'
 
 
@@ -313,18 +313,11 @@ export default function ModernDashboard() {
   }, [])
 
   if (loading) {
-    return (
-      <div className="flex h-screen w-full overflow-hidden bg-slate-50">
-        <div className="hidden md:flex w-64 shrink-0 bg-white border-r border-slate-200 animate-pulse" />
-        <div className="flex-1 overflow-hidden">
-          <SkeletonDashboard />
-        </div>
-      </div>
-    )
+    return <SkeletonDashboard />
   }
 
   return (
-    <div className="flex min-h-screen w-full bg-white text-slate-900">
+    <div className="flex min-h-screen w-full bg-white dark:bg-neutral-950 text-slate-900 dark:text-neutral-100 transition-colors duration-200">
       <Sidebar
         sidebarOpen={sidebarOpen}
         activeTab={activeTab}
@@ -336,7 +329,7 @@ export default function ModernDashboard() {
       />
 
       <div className="flex min-w-0 flex-1 flex-col min-h-screen relative">
-        <div className="sticky top-0 z-[60] bg-white">
+        <div className="sticky top-0 z-[60] bg-white dark:bg-neutral-950 transition-colors duration-200">
           <DashboardHeader
             activeTab={activeTab as any}
             onToggleSidebar={handleToggleSidebar}
@@ -382,26 +375,26 @@ export default function ModernDashboard() {
 
           {activeTab === 'transactions' && (
             <div className="space-y-6">
-              <div className="rounded-2xl md:rounded-[28px] border border-slate-200/70 bg-white/90 p-4 sm:p-6 shadow-[0_20px_50px_-35px_rgba(15,23,42,0.5)]">
+              <div className="rounded-2xl md:rounded-[28px] border border-slate-200/70 dark:border-neutral-800/70 bg-white/90 dark:bg-neutral-900/90 p-4 sm:p-6 shadow-[0_20px_50px_-35px_rgba(15,23,42,0.5)] dark:shadow-none">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                   <div>
-                    <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-blue-600">Transactions</p>
-                    <h3 className="mt-2 text-2xl sm:text-3xl font-semibold tracking-tight text-slate-950">Ledger Command Center</h3>
-                    <p className="mt-1 text-sm text-slate-500">Filter, inspect, and audit income and expense flows.</p>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-blue-600 dark:text-blue-500">Transactions</p>
+                    <h3 className="mt-2 text-2xl sm:text-3xl font-semibold tracking-tight text-slate-950 dark:text-white">Ledger Command Center</h3>
+                    <p className="mt-1 text-sm text-slate-500 dark:text-neutral-400">Filter, inspect, and audit income and expense flows.</p>
 
-                    <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                      <div className="rounded-xl bg-slate-100 px-2.5 py-1.5 font-medium text-slate-700">
+                    <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-neutral-400">
+                      <div className="rounded-xl bg-slate-100 dark:bg-neutral-800 px-2.5 py-1.5 font-medium text-slate-700 dark:text-neutral-300">
                         {filteredSummary.count} Transactions
                       </div>
 
                       {advancedFilters.year && (
-                        <div className="rounded-xl bg-blue-50 px-2.5 py-1.5 font-medium text-blue-700">
+                        <div className="rounded-xl bg-blue-50 dark:bg-blue-900/30 px-2.5 py-1.5 font-medium text-blue-700 dark:text-blue-400">
                           Year: {advancedFilters.year}
                         </div>
                       )}
 
                       {advancedFilters.month !== undefined && (
-                        <div className="rounded-xl bg-indigo-50 px-2.5 py-1.5 font-medium text-indigo-700">
+                        <div className="rounded-xl bg-indigo-50 dark:bg-indigo-900/30 px-2.5 py-1.5 font-medium text-indigo-700 dark:text-indigo-400">
                           Month: {advancedFilters.month + 1}
                         </div>
                       )}
@@ -415,7 +408,7 @@ export default function ModernDashboard() {
                         const year = e.target.value === 'all' ? undefined : parseInt(e.target.value)
                         setAdvancedFilters(prev => ({ ...prev, year, month: undefined }))
                       }}
-                      className="flex-1 lg:flex-initial min-w-[110px] rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-800 shadow-sm transition-all focus:border-slate-300 focus:bg-white focus:outline-none"
+                      className="flex-1 lg:flex-initial min-w-[110px] rounded-xl border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 px-3 py-2 text-xs font-semibold text-slate-800 dark:text-neutral-200 shadow-sm transition-all focus:border-slate-300 dark:focus:border-neutral-500 focus:bg-white dark:focus:bg-neutral-900 focus:outline-none"
                     >
                       <option value="all">All Years</option>
                       {availableYears.map(year => (
@@ -432,7 +425,7 @@ export default function ModernDashboard() {
                           const month = e.target.value === 'all' ? undefined : parseInt(e.target.value)
                           setAdvancedFilters(prev => ({ ...prev, month }))
                         }}
-                        className="flex-1 lg:flex-initial min-w-[110px] rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-800 shadow-sm transition-all focus:border-slate-300 focus:bg-white focus:outline-none"
+                        className="flex-1 lg:flex-initial min-w-[110px] rounded-xl border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 px-3 py-2 text-xs font-semibold text-slate-800 dark:text-neutral-200 shadow-sm transition-all focus:border-slate-300 dark:focus:border-neutral-500 focus:bg-white dark:focus:bg-neutral-900 focus:outline-none"
                       >
                         <option value="all">All Months</option>
                         {Array.from({ length: 12 }, (_, i) => (
@@ -446,7 +439,7 @@ export default function ModernDashboard() {
                     {(advancedFilters.year || advancedFilters.month !== undefined) && (
                       <button
                         onClick={() => setAdvancedFilters({})}
-                        className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50"
+                        className="rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-neutral-300 shadow-sm transition-all hover:bg-slate-50 dark:hover:bg-neutral-700"
                       >
                         Clear
                       </button>
@@ -455,21 +448,21 @@ export default function ModernDashboard() {
                 </div>
 
                 <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4 [&>*:last-child:nth-child(odd)]:col-span-2 lg:[&>*:last-child:nth-child(odd)]:col-span-1">
-                  <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Income</p>
-                    <p className="mt-0.5 text-base font-black text-emerald-600">{formatCurrency(filteredSummary.income)}</p>
+                  <div className="rounded-xl border border-slate-200 dark:border-neutral-700/50 bg-white dark:bg-neutral-800/50 p-3 shadow-sm">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Income</p>
+                    <p className="mt-0.5 text-base font-black text-emerald-600 dark:text-emerald-500">{formatCurrency(filteredSummary.income)}</p>
                   </div>
-                  <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Expense</p>
-                    <p className="mt-0.5 text-base font-black text-rose-600">{formatCurrency(filteredSummary.expense)}</p>
+                  <div className="rounded-xl border border-slate-200 dark:border-neutral-700/50 bg-white dark:bg-neutral-800/50 p-3 shadow-sm">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Expense</p>
+                    <p className="mt-0.5 text-base font-black text-rose-600 dark:text-rose-500">{formatCurrency(filteredSummary.expense)}</p>
                   </div>
-                  <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Net</p>
-                    <p className="mt-0.5 text-base font-black text-slate-900">{formatCurrency(filteredSummary.net)}</p>
+                  <div className="rounded-xl border border-slate-200 dark:border-neutral-700/50 bg-white dark:bg-neutral-800/50 p-3 shadow-sm">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Net</p>
+                    <p className="mt-0.5 text-base font-black text-slate-900 dark:text-white">{formatCurrency(filteredSummary.net)}</p>
                   </div>
-                  <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Latest Entry</p>
-                    <p className="mt-0.5 text-base font-black text-slate-900 truncate">{filteredSummary.latestDate}</p>
+                  <div className="rounded-xl border border-slate-200 dark:border-neutral-700/50 bg-white dark:bg-neutral-800/50 p-3 shadow-sm">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Latest Entry</p>
+                    <p className="mt-0.5 text-base font-black text-slate-900 dark:text-white truncate">{filteredSummary.latestDate}</p>
                   </div>
                 </div>
               </div>
@@ -485,7 +478,7 @@ export default function ModernDashboard() {
 
           {activeTab === 'recurring' && (
             <div className="space-y-6">
-              <div className="rounded-[28px] border border-slate-200/70 bg-white/85 p-5 shadow-[0_20px_50px_-35px_rgba(15,23,42,0.5)] backdrop-blur sm:p-6">
+              <div className="rounded-[28px] border border-slate-200/70 dark:border-neutral-800/70 bg-white/85 dark:bg-neutral-900/90 p-5 shadow-[0_20px_50px_-35px_rgba(15,23,42,0.5)] dark:shadow-none backdrop-blur sm:p-6">
                 <RecurringTransactions />
               </div>
             </div>
@@ -519,8 +512,8 @@ export default function ModernDashboard() {
       />
 
       {showAddTransaction && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/45 p-3 sm:p-4 backdrop-blur-sm overflow-hidden">
-          <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white shadow-2xl flex flex-col max-h-[90vh] sm:max-h-[85vh] overflow-hidden">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/45 dark:bg-neutral-950/80 p-3 sm:p-4 backdrop-blur-sm overflow-hidden">
+          <div className="w-full max-w-md rounded-3xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-2xl flex flex-col max-h-[90vh] sm:max-h-[85vh] overflow-hidden">
             <AddTransactionForm
               onTransactionAdded={onTransactionAdded}
               onClose={() => setShowAddTransaction(false)}
