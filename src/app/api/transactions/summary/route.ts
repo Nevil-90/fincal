@@ -13,20 +13,12 @@ export async function GET(request: NextRequest) {
     const yearParam = searchParams.get('year')
 
     // 1. Global (All-time) Summary and 2. Available Years
-    // We can get distinct years by fetching the min and max date to figure out the range of years.
-    const [allTimeAgg, allTimeIncomeAgg, allTimeExpenseAgg, dateAgg] = await Promise.all([
-      prisma.transaction.aggregate({
+    const [globalGrouped, dateAgg] = await Promise.all([
+      prisma.transaction.groupBy({
+        by: ['type'],
         where: { userId: currentUserId, deletedAt: null },
         _sum: { amount: true },
         _count: { id: true }
-      }),
-      prisma.transaction.aggregate({
-        where: { userId: currentUserId, deletedAt: null, type: 'income' },
-        _sum: { amount: true }
-      }),
-      prisma.transaction.aggregate({
-        where: { userId: currentUserId, deletedAt: null, type: 'expense' },
-        _sum: { amount: true }
       }),
       prisma.transaction.aggregate({
         where: { userId: currentUserId, deletedAt: null },
@@ -35,8 +27,16 @@ export async function GET(request: NextRequest) {
       })
     ])
 
-    const globalIncome = Number(allTimeIncomeAgg._sum.amount || 0)
-    const globalExpense = Number(allTimeExpenseAgg._sum.amount || 0)
+    let globalIncome = 0
+    let globalExpense = 0
+    let globalCount = 0
+
+    globalGrouped.forEach(g => {
+      globalCount += g._count.id
+      if (g.type === 'income') globalIncome = Number(g._sum.amount || 0)
+      if (g.type === 'expense') globalExpense = Number(g._sum.amount || 0)
+    })
+
     const globalBalance = globalIncome - globalExpense
 
     const availableYears: number[] = []
@@ -60,13 +60,10 @@ export async function GET(request: NextRequest) {
       const yearStart = new Date(year, 0, 1)
       const yearEnd   = new Date(year, 11, 31, 23, 59, 59, 999)
 
-      const [yearIncomeAgg, yearExpenseAgg, yearCountAgg] = await Promise.all([
-        prisma.transaction.aggregate({
-          where: { userId: currentUserId, deletedAt: null, type: 'income', date: { gte: yearStart, lte: yearEnd } },
-          _sum: { amount: true }
-        }),
-        prisma.transaction.aggregate({
-          where: { userId: currentUserId, deletedAt: null, type: 'expense', date: { gte: yearStart, lte: yearEnd } },
+      const [yearGrouped, yearCountAgg] = await Promise.all([
+        prisma.transaction.groupBy({
+          by: ['type'],
+          where: { userId: currentUserId, deletedAt: null, date: { gte: yearStart, lte: yearEnd } },
           _sum: { amount: true }
         }),
         prisma.transaction.count({
@@ -74,8 +71,13 @@ export async function GET(request: NextRequest) {
         })
       ])
 
-      const yIncome  = Number(yearIncomeAgg._sum.amount  || 0)
-      const yExpense = Number(yearExpenseAgg._sum.amount || 0)
+      let yIncome = 0
+      let yExpense = 0
+      yearGrouped.forEach(g => {
+        if (g.type === 'income') yIncome = Number(g._sum.amount || 0)
+        if (g.type === 'expense') yExpense = Number(g._sum.amount || 0)
+      })
+
       yearInfo = { income: yIncome, expense: yExpense, balance: yIncome - yExpense, count: yearCountAgg }
     }
 
@@ -96,21 +98,12 @@ export async function GET(request: NextRequest) {
       const prevStartDate = new Date(prevYear, prevMonth - 1, 1)
       const prevEndDate = new Date(prevYear, prevMonth, 0, 23, 59, 59, 999)
 
-      const [periodIncomeAgg, periodExpenseAgg, prevExpenseAgg, categoryAgg] = await Promise.all([
-        prisma.transaction.aggregate({
+      const [periodGrouped, prevExpenseAgg, categoryAgg] = await Promise.all([
+        prisma.transaction.groupBy({
+          by: ['type'],
           where: {
             userId: currentUserId,
             deletedAt: null,
-            type: 'income',
-            date: { gte: startDate, lte: endDate }
-          },
-          _sum: { amount: true }
-        }),
-        prisma.transaction.aggregate({
-          where: {
-            userId: currentUserId,
-            deletedAt: null,
-            type: 'expense',
             date: { gte: startDate, lte: endDate }
           },
           _sum: { amount: true }
@@ -136,8 +129,13 @@ export async function GET(request: NextRequest) {
         })
       ])
 
-      const periodIncome = Number(periodIncomeAgg._sum.amount || 0)
-      const periodExpense = Number(periodExpenseAgg._sum.amount || 0)
+      let periodIncome = 0
+      let periodExpense = 0
+      periodGrouped.forEach(g => {
+        if (g.type === 'income') periodIncome = Number(g._sum.amount || 0)
+        if (g.type === 'expense') periodExpense = Number(g._sum.amount || 0)
+      })
+
       const prevExpense = Number(prevExpenseAgg._sum.amount || 0)
 
       periodInfo = {
@@ -158,7 +156,7 @@ export async function GET(request: NextRequest) {
         income: globalIncome,
         expense: globalExpense,
         balance: globalBalance,
-        count: allTimeAgg._count.id
+        count: globalCount
       },
       availableYears,
       year:   yearInfo,

@@ -238,7 +238,7 @@ function CalendarTab({}: CalendarTabProps) {
       >
         <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${theme.dot}`} />
         <span className="truncate">{t.description || t.category}</span>
-        <span className="ml-auto font-bold whitespace-nowrap">
+        <span className={`ml-auto font-bold whitespace-nowrap ${t.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}`}>
           {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
         </span>
       </button>
@@ -263,7 +263,7 @@ function CalendarTab({}: CalendarTabProps) {
           <p className="text-[11px] text-slate-500 mt-0.5">{t.category} · {format(new Date(t.date), 'hh:mm a')}</p>
         </div>
         <div className="text-right shrink-0">
-          <p className={`text-sm font-black ${theme.text}`}>
+          <p className={`text-sm font-black ${t.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}`}>
             {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
           </p>
           {t.paymentMethod && (
@@ -654,7 +654,7 @@ function CalendarTab({}: CalendarTabProps) {
                             {daysAway === 0 ? 'Today' : daysAway === 1 ? 'Tomorrow' : `In ${daysAway} days`}
                           </p>
                         </div>
-                        <span className={`text-xs font-black ${theme.text}`}>
+                        <span className={`text-xs font-black ${t.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}`}>
                           {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
                         </span>
                       </button>
@@ -685,7 +685,7 @@ function CalendarTab({}: CalendarTabProps) {
 
       {/* ─── Day Detail Sheet (when clicking a day in month view) ─── */}
       {selectedDay && (
-        <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center" onClick={() => setSelectedDay(null)}>
+        <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-[200] flex items-end sm:items-center justify-center" onClick={() => setSelectedDay(null)}>
           <div
             className="bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl shadow-2xl overflow-hidden max-h-[80vh]"
             onClick={e => e.stopPropagation()}
@@ -722,7 +722,7 @@ function CalendarTab({}: CalendarTabProps) {
 
       {/* ─── Transaction Detail Sheet ─── */}
       {selectedTransaction && (
-        <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center" onClick={() => setSelectedTransaction(null)}>
+        <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-[200] flex items-end sm:items-center justify-center" onClick={() => setSelectedTransaction(null)}>
           <div
             className="bg-white w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl shadow-2xl overflow-hidden"
             onClick={e => e.stopPropagation()}
@@ -749,7 +749,7 @@ function CalendarTab({}: CalendarTabProps) {
                       </button>
                     </div>
 
-                    <p className={`text-3xl font-black mt-4 ${theme.text}`}>
+                    <p className={`text-3xl font-black mt-4 ${t.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}`}>
                       {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
                     </p>
                   </div>

@@ -97,7 +97,7 @@ export default function ModernDashboard() {
     month: new Date().getMonth() + 1
   })
   
-  const { summary, isLoading: loadingSummary, mutate: mutateSummary } = useTransactionSummary(overviewPeriod.month, overviewPeriod.year)
+  const { summary, isLoading: loadingSummary, mutate: mutateSummary } = useTransactionSummary(overviewPeriod.month, overviewPeriod.year, true)
   const { transactions: periodTxns, mutate: mutatePeriodTxns } = useTransactions(1, 10, { month: overviewPeriod.month, year: overviewPeriod.year })
   
   // For the transactions tab
@@ -123,9 +123,12 @@ export default function ModernDashboard() {
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   
-  // loadingTxSummary intentionally excluded — it's a secondary filter-only fetch.
-  // Including it caused a full skeleton flash every time the year filter changed.
-  const loading = loadingSummary || isLoadingUser || isLoadingGoals
+  // Only show the full page skeleton on the true initial load (when data is completely missing).
+  // SWR's isLoading can sometimes flicker during key transitions; this check makes it bulletproof.
+  const isInitialSummaryLoading = !summary && loadingSummary
+  const isInitialUserLoading = !user && isLoadingUser
+  const isInitialGoalsLoading = !goals && isLoadingGoals
+  const loading = isInitialSummaryLoading || isInitialUserLoading || isInitialGoalsLoading
 
   useScrollLock(showAddTransaction || showOnboarding)
 
@@ -358,6 +361,7 @@ export default function ModernDashboard() {
                 onPeriodChange={setOverviewPeriod}
                 onTabChange={setActiveTab}
                 onShowAddTransaction={handleShowAddTransaction}
+                onOpenSettings={handleOpenSettings}
               />
             </div>
           )}

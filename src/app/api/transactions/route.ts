@@ -152,12 +152,9 @@ export async function GET(request: NextRequest) {
     const calculateOpening = includeOpeningBalance && whereClause.date?.gte
     if (calculateOpening) {
       queries.push(
-        prisma.transaction.aggregate({
-          where: { userId: currentUserId, deletedAt: null, date: { lt: whereClause.date?.gte }, type: 'income' },
-          _sum: { amount: true }
-        }),
-        prisma.transaction.aggregate({
-          where: { userId: currentUserId, deletedAt: null, date: { lt: whereClause.date?.gte }, type: 'expense' },
+        prisma.transaction.groupBy({
+          by: ['type'],
+          where: { userId: currentUserId, deletedAt: null, date: { lt: whereClause.date?.gte } },
           _sum: { amount: true }
         })
       )
@@ -171,10 +168,15 @@ export async function GET(request: NextRequest) {
     
     // Calculate opening balance
     let openingBalance = 0
-    if (calculateOpening) {
-      const priorIncome = results[2]
-      const priorExpense = results[3]
-      openingBalance = Number(priorIncome._sum.amount || 0) - Number(priorExpense._sum.amount || 0)
+    if (calculateOpening && results[2]) {
+      const openingGrouped = results[2]
+      let openingIncome = 0
+      let openingExpense = 0
+      openingGrouped.forEach((g: any) => {
+        if (g.type === 'income') openingIncome = Number(g._sum.amount || 0)
+        if (g.type === 'expense') openingExpense = Number(g._sum.amount || 0)
+      })
+      openingBalance = openingIncome - openingExpense
     }
     
     // Calculate pagination info

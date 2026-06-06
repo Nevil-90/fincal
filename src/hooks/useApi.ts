@@ -101,7 +101,7 @@ export function useTravelEntries(page: number = 1, limit: number = 10) {
     shouldRetryOnError: false
   })
   return {
-    entries: data?.entries || [],
+    entries: data?.travelEntries || [],
     pagination: data?.pagination,
     isLoading,
     isError: error,
