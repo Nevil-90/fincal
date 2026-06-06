@@ -109,9 +109,11 @@ export default function ModernDashboard() {
   }>({})
 
   const hasAdvancedFilter = advancedFilters.year !== undefined
-  const { summary: txSummary, isLoading: loadingTxSummary } = useTransactionSummary(
+  // keepPreviousData: shows old data while new filter loads → prevents UI jerk
+  const { summary: txSummary } = useTransactionSummary(
     hasAdvancedFilter ? (advancedFilters.month !== undefined ? advancedFilters.month + 1 : undefined) : null,
-    hasAdvancedFilter ? advancedFilters.year : null
+    hasAdvancedFilter ? advancedFilters.year : null,
+    true // keepPreviousData
   )
 
   const { goals, isLoading: isLoadingGoals, mutate: mutateGoals } = useGoals()
@@ -121,7 +123,9 @@ export default function ModernDashboard() {
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   
-  const loading = loadingSummary || loadingTxSummary || isLoadingUser || isLoadingGoals
+  // loadingTxSummary intentionally excluded — it's a secondary filter-only fetch.
+  // Including it caused a full skeleton flash every time the year filter changed.
+  const loading = loadingSummary || isLoadingUser || isLoadingGoals
 
   useScrollLock(showAddTransaction || showOnboarding)
 
@@ -137,20 +141,35 @@ export default function ModernDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
 
   const filteredSummary = useMemo(() => {
-    // Determine the summary data source based on if filters are applied
-    const source = (advancedFilters.month !== undefined || advancedFilters.year !== undefined) 
-      ? txSummary?.period 
-      : txSummary?.global
+    const yearOnly  = advancedFilters.year !== undefined && advancedFilters.month === undefined
+    const monthOnly = advancedFilters.month !== undefined
+    const noFilter  = !advancedFilters.year && !advancedFilters.month
+
+    // Choose the right aggregate based on active filter:
+    //  - no filter   → summary.global (always-fetched overview data, never undefined)
+    //  - year only   → txSummary.year (year-level aggregate from filter fetch)
+    //  - month+year  → txSummary.period (month-level aggregate)
+    // Fallback chain ensures ₹0 never shows on initial load.
+    let source
+    if (noFilter) {
+      source = summary?.global          // always available — no extra fetch needed
+    } else if (monthOnly) {
+      source = txSummary?.period ?? summary?.global
+    } else if (yearOnly) {
+      source = txSummary?.year ?? summary?.global
+    } else {
+      source = summary?.global
+    }
 
     return {
-      income: source?.income || 0,
-      expense: source?.expense || 0,
-      net: source?.balance || 0,
-      categories: 0, // Cannot easily compute without full dataset, not critical for summary
-      latestDate: '—', // Or fetch a single latest transaction
-      count: source?.count || 0
+      income:     source?.income   || 0,
+      expense:    source?.expense  || 0,
+      net:        source?.balance  || 0,
+      categories: 0,
+      latestDate: '—',
+      count:      source?.count    || 0
     }
-  }, [txSummary, advancedFilters])
+  }, [txSummary, summary, advancedFilters])
 
   const balanceInfo = useMemo(() => {
     return {

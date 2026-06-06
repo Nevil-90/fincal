@@ -51,14 +51,23 @@ export function useTransactions(page: number = 1, limit: number = 50, filters: R
   }
 }
 
-export function useTransactionSummary(month?: number | null, year?: number | null) {
-  const shouldFetch = month !== null && year !== null
-  let url = shouldFetch ? '/api/transactions/summary' : null
-  if (shouldFetch && month && year) {
-    url += `?month=${month}&year=${year}`
-  }
+export function useTransactionSummary(month?: number | null, year?: number | null, keepPreviousData = false) {
+  // Don't fetch at all if both are explicitly null (disabled)
+  const shouldFetch = !(month === null && year === null)
+
+  const url = shouldFetch
+    ? (() => {
+        const u = '/api/transactions/summary'
+        const params: string[] = []
+        if (year)  params.push(`year=${year}`)
+        if (month) params.push(`month=${month}`)
+        return params.length > 0 ? `${u}?${params.join('&')}` : u
+      })()
+    : null
+
   const { data, error, isLoading, mutate } = useSWR(url, fetcher, {
-    shouldRetryOnError: false
+    shouldRetryOnError: false,
+    keepPreviousData,   // prevents flash-to-empty when filter changes
   })
   
   return {

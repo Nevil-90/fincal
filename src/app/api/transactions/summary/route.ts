@@ -53,7 +53,33 @@ export async function GET(request: NextRequest) {
       availableYears.sort((a, b) => b - a)
     }
 
-    // 3. Period Summary (If month and year provided)
+    // 3a. Year-only summary (when only year is selected, no month)
+    let yearInfo = null
+    if (yearParam && !monthParam) {
+      const year = parseInt(yearParam, 10)
+      const yearStart = new Date(year, 0, 1)
+      const yearEnd   = new Date(year, 11, 31, 23, 59, 59, 999)
+
+      const [yearIncomeAgg, yearExpenseAgg, yearCountAgg] = await Promise.all([
+        prisma.transaction.aggregate({
+          where: { userId: currentUserId, deletedAt: null, type: 'income', date: { gte: yearStart, lte: yearEnd } },
+          _sum: { amount: true }
+        }),
+        prisma.transaction.aggregate({
+          where: { userId: currentUserId, deletedAt: null, type: 'expense', date: { gte: yearStart, lte: yearEnd } },
+          _sum: { amount: true }
+        }),
+        prisma.transaction.count({
+          where: { userId: currentUserId, deletedAt: null, date: { gte: yearStart, lte: yearEnd } }
+        })
+      ])
+
+      const yIncome  = Number(yearIncomeAgg._sum.amount  || 0)
+      const yExpense = Number(yearExpenseAgg._sum.amount || 0)
+      yearInfo = { income: yIncome, expense: yExpense, balance: yIncome - yExpense, count: yearCountAgg }
+    }
+
+    // 3b. Month+Year period summary
     let periodInfo = null
     const categorySpend: Record<string, number> = {}
 
@@ -135,6 +161,7 @@ export async function GET(request: NextRequest) {
         count: allTimeAgg._count.id
       },
       availableYears,
+      year:   yearInfo,
       period: periodInfo,
       categorySpend
     })
