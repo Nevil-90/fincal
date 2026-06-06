@@ -1,151 +1,277 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { 
-  format, subDays, subMonths, startOfMonth, endOfMonth, 
-  startOfYear, isAfter, isBefore, differenceInDays, 
-  addDays, eachDayOfInterval 
+import {
+  format, subDays, subMonths, startOfMonth, endOfMonth,
+  startOfYear, differenceInDays, addDays, eachDayOfInterval
 } from 'date-fns'
+
+// ─── Raw-query result types ────────────────────────────────────────────────
+type MonthlyRow  = { month: string; type: string; total: number; sort_key: Date }
+type DailyRow    = { day: string;   income: number; expense: number }
+type CategoryRow = { category: string; total: number }
+type PaymentRow  = { method: string;   total: number }
+type WeekdayRow  = { dow: number;   total: number; cnt: number }
+type CatMonthRow = { category: string; month: string; sort_key: Date; total: number }
+type PeriodAgg   = { type: string;  total: number; cnt: number; first_date?: Date; last_date?: Date }
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const userId = request.headers.get('x-user-id')
-    
+
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-    
-    const dateFilter = searchParams.get('dateFilter') || 'this_month'
-    const compareYearStr = searchParams.get('compareYear')
-    const compareMonthStr = searchParams.get('compareMonth')
-    const compareYear = compareYearStr ? parseInt(compareYearStr) : new Date().getFullYear()
-    const compareMonth = compareMonthStr ? parseInt(compareMonthStr) : new Date().getMonth() + 1
 
-    // --- TRANSLATING useAnalyticsData LOGIC TO SERVER ---
+    const dateFilter    = searchParams.get('dateFilter') || 'this_month'
+    const compareYear   = parseInt(searchParams.get('compareYear')  || String(new Date().getFullYear()))
+    const compareMonth  = parseInt(searchParams.get('compareMonth') || String(new Date().getMonth() + 1))
+
+    // ─── Date window calculation ───────────────────────────────────────────
     const now = new Date()
-
-    // ─── Compute the selected dateFilter window first ───
     let startDate: Date
     let endDate: Date = now
 
     switch (dateFilter) {
-      case 'this_month':
-        startDate = startOfMonth(now)
-        endDate = endOfMonth(now)
-        break
-      case 'last_3_months':
-        startDate = startOfMonth(subMonths(now, 2))
-        break
-      case 'last_6_months':
-        startDate = startOfMonth(subMonths(now, 5))
-        break
-      case 'last_12_months':
-        startDate = startOfMonth(subMonths(now, 11))
-        break
-      case 'ytd':
-        startDate = startOfYear(now)
-        break
-      case 'all_time':
-      default:
-        startDate = new Date(0)
-        break
+      case 'this_month':     startDate = startOfMonth(now);          endDate = endOfMonth(now); break
+      case 'last_3_months':  startDate = startOfMonth(subMonths(now, 2)); break
+      case 'last_6_months':  startDate = startOfMonth(subMonths(now, 5)); break
+      case 'last_12_months': startDate = startOfMonth(subMonths(now, 11)); break
+      case 'ytd':            startDate = startOfYear(now); break
+      default:               startDate = new Date(0); break
     }
 
-    // ─── Compute the widest date window needed across ALL features ───
-    // Heatmap needs last 365 days
-    const heatmapStart = subDays(now, 364)
-    // Compare tab may need "same month last year", so up to compareYear - 1
-    const compareStart = new Date(compareYear - 1, compareMonth - 2, 1)
+    const heatmapStart   = subDays(now, 364)
+    const pivotStart     = startOfMonth(subMonths(now, 5))
+    const prevMonth      = compareMonth === 1 ? 12 : compareMonth - 1
+    const prevYear       = compareMonth === 1 ? compareYear - 1 : compareYear
 
-    // Take the earliest of all windows so every feature has its data
-    const globalStart = new Date(
-      Math.min(
-        startDate.getTime(),
-        heatmapStart.getTime(),
-        compareStart.getTime()
-      )
-    )
+    // ═══════════════════════════════════════════════════════════════════════
+    // Phase 1 — 12 parallel SQL aggregations (tiny result sets, no row dumps)
+    //   Before: 1 query returning ALL rows → JS computed everything
+    //   After:  SQL does the grouping → Node only receives aggregated numbers
+    // ═══════════════════════════════════════════════════════════════════════
+    const [
+      monthlyRows,    // monthly income/expense for trend chart
+      dailyRows,      // daily totals for heatmap (365 days)
+      categoryRows,   // expense by category for treemap/sankey/radar
+      paymentRows,    // expense by payment method
+      weekdayRows,    // expense by day-of-week
+      catMonthRows,   // category × month for pivot table
+      kpiRows,        // income + expense aggregates for selected period
+      currentRows,    // compare: current month
+      prevRows,       // compare: previous month
+      sameYearRows,   // compare: same month last year
+      goals,          // savings goals (small, needed for forecast)
+      recentAgg,      // last-3-months aggregate for goal projection
+    ] = await Promise.all([
 
-    // 1. Fetch transactions within the computed window (not ALL rows ever)
-    const [allTransactions, goals] = await Promise.all([
-      prisma.transaction.findMany({
-        where: {
-          userId,
-          deletedAt: null,
-          date: { gte: globalStart }
-        },
-        select: {
-          id: true,
-          type: true,
-          amount: true,
-          category: true,
-          description: true,
-          date: true,
-          paymentMethod: true
-        },
-        orderBy: { date: 'asc' }
-      }),
-      prisma.savingsGoal.findMany({
-        where: { userId }
-      })
+      // 1. Monthly trend — SQL groups by month, returns ~12 rows max
+      prisma.$queryRaw<MonthlyRow[]>`
+        SELECT
+          TO_CHAR(DATE_TRUNC('month', date), 'Mon YYYY') AS month,
+          type,
+          SUM(amount::numeric)                           AS total,
+          DATE_TRUNC('month', date)                      AS sort_key
+        FROM transactions
+        WHERE "userId" = ${userId}
+          AND "deletedAt" IS NULL
+          AND date >= ${startOfMonth(subMonths(now, 11))}
+        GROUP BY DATE_TRUNC('month', date), type
+        ORDER BY DATE_TRUNC('month', date) ASC
+      `,
+
+      // 2. Daily heatmap — 365 aggregated rows instead of all individual rows
+      prisma.$queryRaw<DailyRow[]>`
+        SELECT
+          TO_CHAR(date, 'YYYY-MM-DD')                                            AS day,
+          SUM(CASE WHEN type = 'income'  THEN amount::numeric ELSE 0 END)        AS income,
+          SUM(CASE WHEN type = 'expense' THEN amount::numeric ELSE 0 END)        AS expense
+        FROM transactions
+        WHERE "userId" = ${userId}
+          AND "deletedAt" IS NULL
+          AND date >= ${heatmapStart}
+        GROUP BY TO_CHAR(date, 'YYYY-MM-DD')
+      `,
+
+      // 3. Category breakdown for selected period
+      prisma.$queryRaw<CategoryRow[]>`
+        SELECT
+          COALESCE(category, 'Unknown') AS category,
+          SUM(amount::numeric)          AS total
+        FROM transactions
+        WHERE "userId" = ${userId}
+          AND "deletedAt" IS NULL
+          AND type    = 'expense'
+          AND date   >= ${startDate}
+          AND date   <= ${endDate}
+        GROUP BY category
+        ORDER BY total DESC
+      `,
+
+      // 4. Payment methods for selected period
+      prisma.$queryRaw<PaymentRow[]>`
+        SELECT
+          COALESCE("paymentMethod", 'Unknown') AS method,
+          SUM(amount::numeric)                 AS total
+        FROM transactions
+        WHERE "userId" = ${userId}
+          AND "deletedAt" IS NULL
+          AND type    = 'expense'
+          AND date   >= ${startDate}
+          AND date   <= ${endDate}
+        GROUP BY "paymentMethod"
+        ORDER BY total DESC
+      `,
+
+      // 5. Weekday habits — 7 rows
+      prisma.$queryRaw<WeekdayRow[]>`
+        SELECT
+          EXTRACT(DOW FROM date)::int  AS dow,
+          SUM(amount::numeric)         AS total,
+          COUNT(*)::int                AS cnt
+        FROM transactions
+        WHERE "userId" = ${userId}
+          AND "deletedAt" IS NULL
+          AND type    = 'expense'
+          AND date   >= ${startDate}
+          AND date   <= ${endDate}
+        GROUP BY EXTRACT(DOW FROM date)
+      `,
+
+      // 6. Category × month pivot (last 6 months)
+      prisma.$queryRaw<CatMonthRow[]>`
+        SELECT
+          COALESCE(category, 'Unknown')              AS category,
+          TO_CHAR(DATE_TRUNC('month', date), 'Mon YYYY') AS month,
+          DATE_TRUNC('month', date)                  AS sort_key,
+          SUM(amount::numeric)                       AS total
+        FROM transactions
+        WHERE "userId" = ${userId}
+          AND "deletedAt" IS NULL
+          AND type    = 'expense'
+          AND date   >= ${pivotStart}
+        GROUP BY category, DATE_TRUNC('month', date)
+        ORDER BY DATE_TRUNC('month', date) ASC
+      `,
+
+      // 7. KPI aggregates for selected period (income + expense sums + date range)
+      prisma.$queryRaw<PeriodAgg[]>`
+        SELECT
+          type,
+          SUM(amount::numeric)  AS total,
+          COUNT(*)::int         AS cnt,
+          MIN(date)             AS first_date,
+          MAX(date)             AS last_date
+        FROM transactions
+        WHERE "userId" = ${userId}
+          AND "deletedAt" IS NULL
+          AND date >= ${startDate}
+          AND date <= ${endDate}
+        GROUP BY type
+      `,
+
+      // 8. Compare: current month
+      prisma.$queryRaw<PeriodAgg[]>`
+        SELECT type, SUM(amount::numeric) AS total, COUNT(*)::int AS cnt
+        FROM transactions
+        WHERE "userId" = ${userId} AND "deletedAt" IS NULL
+          AND EXTRACT(YEAR  FROM date)::int = ${compareYear}
+          AND EXTRACT(MONTH FROM date)::int = ${compareMonth}
+        GROUP BY type
+      `,
+
+      // 9. Compare: previous month
+      prisma.$queryRaw<PeriodAgg[]>`
+        SELECT type, SUM(amount::numeric) AS total, COUNT(*)::int AS cnt
+        FROM transactions
+        WHERE "userId" = ${userId} AND "deletedAt" IS NULL
+          AND EXTRACT(YEAR  FROM date)::int = ${prevYear}
+          AND EXTRACT(MONTH FROM date)::int = ${prevMonth}
+        GROUP BY type
+      `,
+
+      // 10. Compare: same month last year
+      prisma.$queryRaw<PeriodAgg[]>`
+        SELECT type, SUM(amount::numeric) AS total, COUNT(*)::int AS cnt
+        FROM transactions
+        WHERE "userId" = ${userId} AND "deletedAt" IS NULL
+          AND EXTRACT(YEAR  FROM date)::int = ${compareYear - 1}
+          AND EXTRACT(MONTH FROM date)::int = ${compareMonth}
+        GROUP BY type
+      `,
+
+      // 11. Goals (small table, needed for projection)
+      prisma.savingsGoal.findMany({ where: { userId } }),
+
+      // 12. Last 3-month aggregate for goal forecast
+      prisma.$queryRaw<PeriodAgg[]>`
+        SELECT type, SUM(amount::numeric) AS total
+        FROM transactions
+        WHERE "userId" = ${userId} AND "deletedAt" IS NULL
+          AND date >= ${subMonths(now, 3)}
+        GROUP BY type
+      `,
     ])
 
-    // ─── Filtered Transactions (apply the selected dateFilter window) ───
-    const filteredTransactions = allTransactions.filter(t => {
-      const d = new Date(t.date)
-      return isAfter(d, startDate) && isBefore(d, addDays(endDate, 1))
+    // ═══════════════════════════════════════════════════════════════════════
+    // Phase 2 — Fetch individual rows ONLY for the selected period
+    //   Needed for: anomaly detection (needs per-row amounts) + cash flow timeline
+    //   Scoped to selected period only (not the full year like before)
+    // ═══════════════════════════════════════════════════════════════════════
+    const detailedTransactions = await prisma.transaction.findMany({
+      where: {
+        userId,
+        deletedAt: null,
+        date: { gte: startDate, lte: endDate },
+      },
+      select: {
+        id: true, type: true, amount: true,
+        category: true, description: true, date: true, paymentMethod: true,
+      },
+      orderBy: { date: 'asc' },
     })
 
-    const expenses = filteredTransactions.filter(t => t.type === 'expense')
-    const incomes = filteredTransactions.filter(t => t.type === 'income')
+    const expenses = detailedTransactions.filter(t => t.type === 'expense')
 
-    // ─── Executive KPIs ───
-    const income = incomes.reduce((sum, t) => sum + Number(t.amount), 0)
-    const expense = expenses.reduce((sum, t) => sum + Number(t.amount), 0)
-    const netFlow = income - expense
+    // ─── KPIs ─────────────────────────────────────────────────────────────
+    const incomeAgg  = kpiRows.find(r => r.type === 'income')
+    const expenseAgg = kpiRows.find(r => r.type === 'expense')
+    const income     = Number(incomeAgg?.total  ?? 0)
+    const expense    = Number(expenseAgg?.total ?? 0)
+    const netFlow    = income - expense
     const savingsRate = income > 0 ? (netFlow / income) * 100 : 0
-    const daysInPeriod = filteredTransactions.length > 0
-      ? Math.max(1, differenceInDays(
-        new Date(filteredTransactions[filteredTransactions.length - 1].date),
-        new Date(filteredTransactions[0].date)
-      ))
-      : 1
-    const burnRate = expense / daysInPeriod
-    const kpis = { income, expense, netFlow, savingsRate, burnRate }
+    const fd = incomeAgg?.first_date ?? expenseAgg?.first_date
+    const ld = incomeAgg?.last_date  ?? expenseAgg?.last_date
+    const daysInPeriod = fd && ld ? Math.max(1, differenceInDays(new Date(ld), new Date(fd))) : 1
+    const burnRate   = expense / daysInPeriod
+    const kpis       = { income, expense, netFlow, savingsRate, burnRate }
 
-    // ─── Overview: Monthly Trend ───
-    const monthlyData: Record<string, { month: string; income: number; expense: number; sortKey: number }> = {}
-    allTransactions.forEach(t => {
-      const date = new Date(t.date)
-      const monthKey = format(date, 'MMM yyyy')
-      if (!monthlyData[monthKey]) {
-        monthlyData[monthKey] = { month: monthKey, income: 0, expense: 0, sortKey: startOfMonth(date).getTime() }
+    // ─── Monthly Trend (last 6) ────────────────────────────────────────────
+    const monthMap: Record<string, { month: string; income: number; expense: number; sortKey: number }> = {}
+    for (const row of monthlyRows) {
+      if (!monthMap[row.month]) {
+        monthMap[row.month] = { month: row.month, income: 0, expense: 0, sortKey: new Date(row.sort_key).getTime() }
       }
-      if (t.type === 'income') monthlyData[monthKey].income += Number(t.amount)
-      else monthlyData[monthKey].expense += Number(t.amount)
-    })
-    const monthlyTrendData = Object.values(monthlyData).sort((a, b) => a.sortKey - b.sortKey).slice(-6)
+      if (row.type === 'income') monthMap[row.month].income = Number(row.total)
+      else                       monthMap[row.month].expense = Number(row.total)
+    }
+    const monthlyTrendData = Object.values(monthMap).sort((a, b) => a.sortKey - b.sortKey).slice(-6)
 
-    // ─── Overview: Heatmap ───
-    const today = new Date()
+    // ─── Heatmap (365-day grid from SQL daily aggregates) ─────────────────
+    const today          = new Date()
     const heatmapStartDate = subDays(today, 364)
-    const days = eachDayOfInterval({ start: heatmapStartDate, end: today })
-    const dailyTotals: Record<string, { income: number; expense: number }> = {}
-    
-    allTransactions.forEach(t => {
-      const k = format(new Date(t.date), 'yyyy-MM-dd')
-      if (!dailyTotals[k]) dailyTotals[k] = { income: 0, expense: 0 }
-      if (t.type === 'income') dailyTotals[k].income += Number(t.amount)
-      else dailyTotals[k].expense += Number(t.amount)
-    })
+    const days           = eachDayOfInterval({ start: heatmapStartDate, end: today })
+    const dailyMap: Record<string, { income: number; expense: number }> = {}
+    for (const row of dailyRows) {
+      dailyMap[row.day] = { income: Number(row.income), expense: Number(row.expense) }
+    }
     const heatmapData = days.map(d => {
-      const k = format(d, 'yyyy-MM-dd')
-      const totals = dailyTotals[k] || { income: 0, expense: 0 }
+      const k      = format(d, 'yyyy-MM-dd')
+      const totals = dailyMap[k] || { income: 0, expense: 0 }
       return { date: d, key: k, income: totals.income, expense: totals.expense, total: totals.income + totals.expense }
     })
-    
-    // Grid Generation (for heatmap rendering)
-    const firstDow = heatmapData[0].date.getDay()
+    const firstDow   = heatmapData[0].date.getDay()
     const padded: (typeof heatmapData[0] | null)[] = Array(firstDow).fill(null).concat(heatmapData)
     const totalWeeks = Math.ceil(padded.length / 7)
     const rows: (typeof heatmapData[0] | null)[][] = Array.from({ length: 7 }, () => [])
@@ -155,21 +281,21 @@ export async function GET(request: Request) {
         rows[d].push(idx < padded.length ? padded[idx] : null)
       }
     }
-    const months: { label: string; col: number }[] = []
+    const heatmapMonths: { label: string; col: number }[] = []
     let lastMonth = -1
     rows[0].forEach((cell, colIdx) => {
       if (cell && cell.date.getMonth() !== lastMonth) {
         lastMonth = cell.date.getMonth()
-        months.push({ label: format(cell.date, 'MMM'), col: colIdx })
+        heatmapMonths.push({ label: format(cell.date, 'MMM'), col: colIdx })
       }
     })
-    const heatmapGrid = { rows, months, totalWeeks }
+    const heatmapGrid     = { rows, months: heatmapMonths, totalWeeks }
     const heatmapMaxTotal = Math.max(...heatmapData.map(d => d.total), 1)
 
-    // ─── Cash Flow: Timeline ───
+    // ─── Cash Flow Timeline (from per-row data — needed for running balance) ─
     const timelineDailyMap: Record<string, { date: string; income: number; expense: number; balance: number }> = {}
     let runningBalance = 0
-    filteredTransactions.forEach(t => {
+    for (const t of detailedTransactions) {
       const dKey = format(new Date(t.date), 'yyyy-MM-dd')
       if (!timelineDailyMap[dKey]) {
         timelineDailyMap[dKey] = { date: format(new Date(t.date), 'MMM dd'), income: 0, expense: 0, balance: runningBalance }
@@ -182,156 +308,102 @@ export async function GET(request: Request) {
         runningBalance -= Number(t.amount)
       }
       timelineDailyMap[dKey].balance = runningBalance
-    })
+    }
     const timelineData = Object.values(timelineDailyMap)
 
-    // ─── Cash Flow: Sankey ───
+    // ─── Sankey (from SQL category aggregates) ────────────────────────────
     let sankeyData: { nodes: { name: string }[]; links: { source: number; target: number; value: number }[] } | null = null
-    if (incomes.length > 0 || expenses.length > 0) {
-      const totalIncome = Math.max(kpis.income, 1)
-      const totalExpense = kpis.expense
-      const savings = Math.max(0, totalIncome - totalExpense)
-
-      const catMap: Record<string, number> = {}
-      expenses.forEach(t => {
-        catMap[t.category || 'Unknown'] = (catMap[t.category || 'Unknown'] || 0) + Number(t.amount)
-      })
-
-      const sortedCats = Object.entries(catMap).sort((a, b) => b[1] - a[1])
-      const topCats = sortedCats.slice(0, 5)
-      const otherCatsAmount = sortedCats.slice(5).reduce((sum, [, amt]) => sum + amt, 0)
-
-      const nodes = [{ name: 'Total Income' }, { name: 'Expenses' }, { name: 'Savings' }]
-      const links = []
-
-      if (totalExpense > 0) links.push({ source: 0, target: 1, value: totalExpense })
-      if (savings > 0) links.push({ source: 0, target: 2, value: savings })
-
+    if (income > 0 || expense > 0) {
+      const savings = Math.max(0, income - expense)
+      const nodes   = [{ name: 'Total Income' }, { name: 'Expenses' }, { name: 'Savings' }]
+      const links: { source: number; target: number; value: number }[] = []
+      if (expense  > 0) links.push({ source: 0, target: 1, value: expense })
+      if (savings  > 0) links.push({ source: 0, target: 2, value: savings })
       let nodeIndex = 3
-      topCats.forEach(([catName, amt]) => {
-        nodes.push({ name: catName })
-        links.push({ source: 1, target: nodeIndex, value: amt })
-        nodeIndex++
+      categoryRows.slice(0, 5).forEach(row => {
+        nodes.push({ name: row.category })
+        links.push({ source: 1, target: nodeIndex++, value: Number(row.total) })
       })
-      if (otherCatsAmount > 0) {
+      const otherAmount = categoryRows.slice(5).reduce((s, r) => s + Number(r.total), 0)
+      if (otherAmount > 0) {
         nodes.push({ name: 'Other Expenses' })
-        links.push({ source: 1, target: nodeIndex, value: otherCatsAmount })
+        links.push({ source: 1, target: nodeIndex, value: otherAmount })
       }
-
-      const deficit = totalExpense - kpis.income
+      const deficit = expense - income
       if (deficit > 0) {
-        const defNodeIdx = nodes.push({ name: 'Deficit (Overspend)' }) - 1
-        links.push({ source: defNodeIdx, target: 1, value: deficit })
+        const di = nodes.push({ name: 'Deficit (Overspend)' }) - 1
+        links.push({ source: di, target: 1, value: deficit })
       }
       sankeyData = { nodes, links }
     }
 
-    // ─── Categories: Treemap ───
-    const catMapTree: Record<string, number> = {}
-    expenses.forEach(t => {
-      catMapTree[t.category || 'Unknown'] = (catMapTree[t.category || 'Unknown'] || 0) + Number(t.amount)
-    })
-    const children = Object.entries(catMapTree).map(([name, size]) => ({ name, size })).sort((a, b) => b.size - a.size)
+    // ─── Treemap (from SQL category aggregates) ───────────────────────────
+    const children   = categoryRows.map(r => ({ name: r.category, size: Number(r.total) }))
     const treemapData = children.length > 0 ? [{ name: 'Expenses', children }] : []
 
-    // ─── Categories: Pivot Table ───
-    const pivotMonthKeys = Array.from(new Set(allTransactions.map(t => format(new Date(t.date), 'MMM yyyy'))))
-      .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
-      .slice(-6)
+    // ─── Pivot Table (from SQL catMonth aggregates) ───────────────────────
+    const pivotMonthKeys = [...new Set(catMonthRows.map(r => r.month))].slice(-6)
     const pivotCatMap: Record<string, Record<string, number>> = {}
-    allTransactions.filter(t => t.type === 'expense').forEach(t => {
-      const mKey = format(new Date(t.date), 'MMM yyyy')
-      if (pivotMonthKeys.includes(mKey)) {
-        if (!pivotCatMap[t.category || 'Unknown']) pivotCatMap[t.category || 'Unknown'] = {}
-        pivotCatMap[t.category || 'Unknown'][mKey] = (pivotCatMap[t.category || 'Unknown'][mKey] || 0) + Number(t.amount)
-      }
-    })
+    for (const row of catMonthRows) {
+      if (!pivotCatMap[row.category]) pivotCatMap[row.category] = {}
+      pivotCatMap[row.category][row.month] = Number(row.total)
+    }
     const pivotRows = Object.entries(pivotCatMap).map(([category, monthsData]) => {
       const rowData: Record<string, string | number> = { category }
       let total = 0
-      pivotMonthKeys.forEach(m => {
-        rowData[m] = monthsData[m] || 0
-        total += rowData[m]
-      })
+      pivotMonthKeys.forEach(m => { rowData[m] = monthsData[m] || 0; total += Number(rowData[m]) })
       rowData.total = total
       return rowData
     }).sort((a, b) => Number(b.total) - Number(a.total))
     const pivotTableData = { columns: pivotMonthKeys, rows: pivotRows }
 
-    // ─── Payment Methods ───
-    const paymentMethodMap: Record<string, number> = {}
-    expenses.forEach(t => {
-      const method = t.paymentMethod || 'Unknown'
-      paymentMethodMap[method] = (paymentMethodMap[method] || 0) + Number(t.amount)
-    })
-    const paymentMethodData = Object.entries(paymentMethodMap)
-      .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value)
+    // ─── Payment Methods (from SQL) ───────────────────────────────────────
+    const paymentMethodData = paymentRows.map(r => ({ name: r.method, value: Number(r.total) }))
 
-    // ─── Behaviors: Anomaly Detection ───
+    // ─── Anomaly Detection (needs per-row amounts for stdDev) ────────────
     interface Anomaly {
-      id: string
-      index: number
-      date: string
-      rawDate: number
-      amount: number
-      category: string | null
-      description: string
-      isAnomaly: boolean
+      id: string; index: number; date: string; rawDate: number
+      amount: number; category: string | null; description: string; isAnomaly: boolean
     }
     let anomalyData: Anomaly[] = []
     if (expenses.length > 0) {
       const amounts = expenses.map(t => Number(t.amount))
-      const mean = amounts.reduce((a, b) => a + b, 0) / amounts.length
-      const stdDev = Math.sqrt(amounts.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b, 0) / amounts.length)
-      
-      anomalyData = expenses.map((t, i) => {
+      const mean    = amounts.reduce((a, b) => a + b, 0) / amounts.length
+      const stdDev  = Math.sqrt(amounts.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b, 0) / amounts.length)
+      anomalyData   = expenses.map((t, i) => {
         const amt = Number(t.amount)
-        const isAnomaly = amt > mean + (stdDev * 1.5)
         return {
-          id: t.id,
-          index: i,
+          id: t.id, index: i,
           date: format(new Date(t.date), 'MMM dd'),
-          rawDate: new Date(t.date).getTime() + i, 
-          amount: amt,
-          category: t.category,
+          rawDate: new Date(t.date).getTime() + i,
+          amount: amt, category: t.category,
           description: t.description || 'Unknown',
-          isAnomaly
+          isAnomaly: amt > mean + (stdDev * 1.5),
         }
       })
     }
 
-    // ─── Behaviors: Radar ───
-    const radarCatMap: Record<string, { total: number; count: number }> = {}
-    expenses.forEach(t => {
-      const cat = t.category || 'Unknown'
-      if (!radarCatMap[cat]) radarCatMap[cat] = { total: 0, count: 0 }
-      radarCatMap[cat].total += Number(t.amount)
-      radarCatMap[cat].count += 1
-    })
-    const averageExpense = kpis.expense / (Object.keys(radarCatMap).length || 1)
-    const radarData = Object.entries(radarCatMap)
-      .map(([subject, data]) => ({ subject, amount: data.total, fullMark: Math.max(data.total, averageExpense * 2) }))
-      .sort((a, b) => b.amount - a.amount)
-      .slice(0, 6)
-
-    // ─── Behaviors: Weekday Habits ───
-    const daysArr = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-    const totals = [0, 0, 0, 0, 0, 0, 0]
-    const counts = [0, 0, 0, 0, 0, 0, 0]
-    expenses.forEach(t => {
-      const dayIdx = new Date(t.date).getDay()
-      totals[dayIdx] += Number(t.amount)
-      counts[dayIdx] += 1
-    })
-    const weekdayData = daysArr.map((day, i) => ({
-      day: day.substring(0, 3),
-      total: totals[i],
-      count: counts[i],
-      average: counts[i] > 0 ? totals[i] / counts[i] : 0
+    // ─── Radar (from SQL category aggregates) ────────────────────────────
+    const avgExpensePerCat = expense / (categoryRows.length || 1)
+    const radarData = categoryRows.slice(0, 6).map(r => ({
+      subject:  r.category,
+      amount:   Number(r.total),
+      fullMark: Math.max(Number(r.total), avgExpensePerCat * 2),
     }))
 
-    // ─── Forecasting: Goal Projection ───
+    // ─── Weekday Habits (from SQL) ────────────────────────────────────────
+    const daysArr   = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    const weekdayData = daysArr.map((day, i) => {
+      const row = weekdayRows.find(r => Number(r.dow) === i)
+      return {
+        day:     day.substring(0, 3),
+        total:   row ? Number(row.total) : 0,
+        count:   row ? Number(row.cnt)   : 0,
+        average: row && Number(row.cnt) > 0 ? Number(row.total) / Number(row.cnt) : 0,
+      }
+    })
+
+    // ─── Goal Forecast (from SQL recent aggregate) ────────────────────────
     interface GoalForecast {
       goalName: string
       data: { date: string; amount: number; target: number }[]
@@ -341,25 +413,19 @@ export async function GET(request: Request) {
     if (goals.length > 0) {
       const activeGoal = [...goals].sort((a, b) => b.priority - a.priority).find(g => !g.isCompleted)
       if (activeGoal) {
-        const historyMonths = 3
-        const recentDate = subMonths(now, historyMonths)
-        const recentTx = allTransactions.filter(t => isAfter(new Date(t.date), recentDate))
-        const inc = recentTx.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0)
-        const exp = recentTx.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0)
-        const avgMonthlySavings = Math.max(0, (inc - exp) / historyMonths)
-
+        const recentIncome  = Number(recentAgg.find(r => r.type === 'income')?.total  ?? 0)
+        const recentExpense = Number(recentAgg.find(r => r.type === 'expense')?.total ?? 0)
+        const avgMonthlySavings = Math.max(0, (recentIncome - recentExpense) / 3)
         if (avgMonthlySavings > 0) {
-          let current = Number(activeGoal.currentAmount)
-          const target = Number(activeGoal.targetAmount)
-          const projection = []
-          let projectionDate = new Date()
-
+          let current          = Number(activeGoal.currentAmount)
+          const target         = Number(activeGoal.targetAmount)
+          const projection: { date: string; amount: number; target: number }[] = []
+          let projectionDate   = new Date()
           projection.push({ date: format(projectionDate, 'MMM yyyy'), amount: current, target })
-
           let failsafe = 0
           while (current < target && failsafe < 24) {
             projectionDate = addDays(projectionDate, 30)
-            current += avgMonthlySavings
+            current       += avgMonthlySavings
             projection.push({ date: format(projectionDate, 'MMM yyyy'), amount: Math.min(current, target), target })
             failsafe++
           }
@@ -368,56 +434,39 @@ export async function GET(request: Request) {
       }
     }
 
-    // ─── Compare Tab Logic ───
-    const asDate = (val: Date | string) => new Date(val)
-    const calcSummary = (entries: { type: string; amount: any; date: Date | string }[]) => {
-      const income = entries.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.amount), 0)
-      const expenses = entries.filter(t => t.type === 'expense').reduce((sum, t) => sum + Number(t.amount), 0)
-      const savings = income - expenses
-      const count = entries.length
-      const avgValue = count > 0 ? entries.reduce((sum, t) => sum + Number(t.amount), 0) / count : 0
-      return { income, expenses, savings, count, avgValue }
-    }
-    const filterByPeriod = (entries: { type: string; amount: any; date: Date | string }[], year: number, month?: number) => {
-      return entries.filter(entry => {
-        const date = asDate(entry.date)
-        if (date.getFullYear() !== year) return false
-        if (month && date.getMonth() + 1 !== month) return false
-        return true
-      })
+    // ─── Compare Tab ──────────────────────────────────────────────────────
+    const buildSummary = (agg: PeriodAgg[]) => {
+      const inc = Number(agg.find(r => r.type === 'income')?.total   ?? 0)
+      const exp = Number(agg.find(r => r.type === 'expense')?.total  ?? 0)
+      const cnt = Number(agg.find(r => r.type === 'income')?.cnt ?? 0)
+              + Number(agg.find(r => r.type === 'expense')?.cnt ?? 0)
+      return { income: inc, expenses: exp, savings: inc - exp, count: cnt, avgValue: cnt > 0 ? (inc + exp) / cnt : 0 }
     }
     const calcDelta = (current: number, previous: number) => {
       const delta = current - previous
-      const pct = previous === 0 ? null : (delta / previous) * 100
-      const direction = delta === 0 ? 'flat' : delta > 0 ? 'up' : 'down'
-      return { delta, pct, direction }
+      const pct   = previous === 0 ? null : (delta / previous) * 100
+      return { delta, pct, direction: delta === 0 ? 'flat' : delta > 0 ? 'up' : 'down' }
     }
 
-    const currentPeriodTransactions = filterByPeriod(allTransactions, compareYear, compareMonth)
-    const prevMonth = compareMonth === 1 ? 12 : compareMonth - 1
-    const prevYear = compareMonth === 1 ? compareYear - 1 : compareYear
-    const previousPeriodTransactions = filterByPeriod(allTransactions, prevYear, prevMonth)
-    const sameMonthLastYearTransactions = filterByPeriod(allTransactions, compareYear - 1, compareMonth)
-
-    const currentSummary = calcSummary(currentPeriodTransactions)
-    const previousSummary = calcSummary(previousPeriodTransactions)
-    const sameMonthLastYearSummary = calcSummary(sameMonthLastYearTransactions)
+    const currentSummary          = buildSummary(currentRows)
+    const previousSummary         = buildSummary(prevRows)
+    const sameMonthLastYearSummary = buildSummary(sameYearRows)
 
     const compareMetrics = [
-      { label: 'Total Income', current: currentSummary.income, previous: previousSummary.income, isCurrency: true },
-      { label: 'Total Expenses', current: currentSummary.expenses, previous: previousSummary.expenses, isCurrency: true },
-      { label: 'Net Savings', current: currentSummary.savings, previous: previousSummary.savings, isCurrency: true },
-      { label: 'Transaction Count', current: currentSummary.count, previous: previousSummary.count, isCurrency: false },
-      { label: 'Average Transaction', current: currentSummary.avgValue, previous: previousSummary.avgValue, isCurrency: true }
-    ].map(metric => ({
-      ...metric,
-      delta: calcDelta(metric.current, metric.previous)
-    }))
+      { label: 'Total Income',         current: currentSummary.income,   previous: previousSummary.income,   isCurrency: true },
+      { label: 'Total Expenses',       current: currentSummary.expenses, previous: previousSummary.expenses, isCurrency: true },
+      { label: 'Net Savings',          current: currentSummary.savings,  previous: previousSummary.savings,  isCurrency: true },
+      { label: 'Transaction Count',    current: currentSummary.count,    previous: previousSummary.count,    isCurrency: false },
+      { label: 'Average Transaction',  current: currentSummary.avgValue, previous: previousSummary.avgValue, isCurrency: true },
+    ].map(m => ({ ...m, delta: calcDelta(m.current, m.previous) }))
 
-    // Available years for dropdown
-    const yrs = [...new Set(allTransactions.map(t => asDate(t.date).getFullYear()))]
-    if (!yrs.includes(new Date().getFullYear())) yrs.push(new Date().getFullYear())
-    const availableYears = yrs.sort((a, b) => b - a)
+    // Available years for dropdown (from monthly trend data)
+    const availableYears = [
+      ...new Set([
+        ...monthlyRows.map(r => new Date(r.sort_key).getFullYear()),
+        new Date().getFullYear(),
+      ]),
+    ].sort((a, b) => b - a)
 
     return NextResponse.json({
       kpis,
@@ -439,13 +488,16 @@ export async function GET(request: Request) {
         currentSummary,
         previousSummary,
         sameMonthLastYearSummary,
-        availableYears
+        availableYears,
       },
-      filteredTransactionsCount: filteredTransactions.length
+      filteredTransactionsCount: detailedTransactions.length,
     })
 
   } catch (error: unknown) {
     console.error('Failed to fetch analytics:', error)
-    return NextResponse.json({ error: error instanceof Error ? error.message : String(error) }, { status: 500 })
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : String(error) },
+      { status: 500 }
+    )
   }
 }
