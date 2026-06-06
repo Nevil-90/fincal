@@ -6,7 +6,7 @@ import {
 } from 'lucide-react'
 import { useNavPreferences } from '@/hooks/useNavPreferences'
 
-type DashboardTab = 'overview' | 'analytics' | 'transactions' | 'goals' | 'recurring' | 'calendar' | 'traveling' | 'settings' | 'admin'
+type DashboardTab = 'overview' | 'analytics' | 'transactions' | 'goals' | 'recurring' | 'calendar' | 'traveling' | 'admin'
 
 interface BottomNavProps {
   activeTab: DashboardTab
@@ -22,7 +22,6 @@ const TAB_MAPPING: Record<string, { icon: any, label: string }> = {
   'analytics': { icon: PieChart, label: 'Analytics' },
   'calendar': { icon: Calendar, label: 'Calendar' },
   'traveling': { icon: Car, label: 'Traveling' },
-  'settings': { icon: Settings, label: 'Settings' },
   'admin': { icon: Shield, label: 'Admin' }
 }
 

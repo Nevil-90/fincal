@@ -149,9 +149,9 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
   }
 
   return (
-    <div className="flex flex-col h-full max-h-[90vh] sm:max-h-[85vh] overflow-hidden">
+    <div className="flex flex-col w-full h-full overflow-hidden bg-white">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 shrink-0">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 shrink-0">
         <h3 className="text-base font-bold text-slate-900">{initialData ? 'Edit Transaction' : 'Add Transaction'}</h3>
         <button
           onClick={onClose}
@@ -161,9 +161,11 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar">
+      <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 bg-white">
+        <div className="flex-1 overflow-y-auto p-5 custom-scrollbar">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-4">
         {/* Transaction Type */}
-        <div>
+        <div className="col-span-2">
           <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
             Type
           </label>
@@ -194,7 +196,7 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
         </div>
 
         {/* Description — before category so suggestion can pre-fill */}
-        <div>
+        <div className="col-span-2">
           <label htmlFor="description" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
             Description (Optional)
           </label>
@@ -260,8 +262,8 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
 
         {/* Source */}
         <div>
-          <label htmlFor="source" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
-            {type === 'income' ? 'Source of Money' : 'Purpose/Where it went'} (Optional)
+          <label htmlFor="source" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1 truncate" title={type === 'income' ? 'Source of Money (Optional)' : 'Purpose/Where it went (Optional)'}>
+            {type === 'income' ? 'Source' : 'Purpose'} (Optional)
           </label>
           <select
             id="source"
@@ -296,7 +298,7 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
         </div>
 
         {/* Date */}
-        <div>
+        <div className="col-span-2">
           <label htmlFor="date" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
             Date
           </label>
@@ -321,8 +323,11 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
           </div>
         </div>
 
+          </div>
+        </div>
+
         {/* Buttons (Footer) */}
-        <div className="flex gap-3 pt-3 border-t border-slate-100 shrink-0 bg-white">
+        <div className="flex gap-3 p-4 border-t border-slate-100 shrink-0 bg-white">
           <button
             type="button"
             onClick={onClose}

@@ -31,6 +31,7 @@ export async function middleware(request: NextRequest) {
   const isPublicPage = ['/login', '/register', '/verify-otp', '/set-password', '/forgot-password', '/reset-password'].includes(path)
   const isPublicApi = path.startsWith('/api/auth/') && 
                       !['/api/auth/me', '/api/auth/logout'].includes(path)
+  const isCronJob = path === '/api/admin/cleanup'
   
   if (
     path.startsWith('/_next') ||
@@ -49,7 +50,7 @@ export async function middleware(request: NextRequest) {
   }
 
   if (!payload) {
-    if (isPublicPage || isPublicApi) {
+    if (isPublicPage || isPublicApi || isCronJob) {
       return NextResponse.next()
     }
     

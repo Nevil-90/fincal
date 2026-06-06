@@ -71,7 +71,6 @@ type DashboardTab =
   | 'recurring'
   | 'calendar'
   | 'traveling'
-  | 'settings'
   | 'admin'
 
 const DASHBOARD_TABS: DashboardTab[] = [
@@ -82,7 +81,6 @@ const DASHBOARD_TABS: DashboardTab[] = [
   'recurring',
   'calendar',
   'traveling',
-  'settings',
   'admin'
 ]
 

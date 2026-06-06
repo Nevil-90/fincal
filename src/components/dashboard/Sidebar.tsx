@@ -6,9 +6,9 @@ import { formatCurrency } from '@/lib/financial-utils'
 
 interface SidebarProps {
   sidebarOpen: boolean
-  activeTab: 'overview' | 'analytics' | 'transactions' | 'goals' | 'recurring' | 'calendar' | 'traveling' | 'settings' | 'admin'
+  activeTab: 'overview' | 'analytics' | 'transactions' | 'goals' | 'recurring' | 'calendar' | 'traveling' | 'admin'
   availableBalance: number
-  onTabChange: (tab: 'overview' | 'analytics' | 'transactions' | 'goals' | 'recurring' | 'calendar' | 'traveling' | 'settings' | 'admin') => void
+  onTabChange: (tab: 'overview' | 'analytics' | 'transactions' | 'goals' | 'recurring' | 'calendar' | 'traveling' | 'admin') => void
   onClose?: () => void
   user?: { firstName: string; lastName: string; email: string; role?: string } | null
   onLogout?: () => void

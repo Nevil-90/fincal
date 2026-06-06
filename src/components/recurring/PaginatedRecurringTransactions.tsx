@@ -119,7 +119,7 @@ export default function PaginatedRecurringTransactions() {
   })
 
   // Fetch data with pagination and filters
-  const fetchRecurringTransactions = useCallback(async (page: number = 1) => {
+  const fetchRecurringTransactions = useCallback(async (page: number = 1, signal?: AbortSignal) => {
     setLoading(true)
     try {
       const params = new URLSearchParams({
@@ -130,7 +130,7 @@ export default function PaginatedRecurringTransactions() {
         )
       })
 
-      const response = await fetch(`/api/recurring/paginated?${params}`)
+      const response = await fetch(`/api/recurring/paginated?${params}`, { signal })
       if (response.ok) {
         const data = await response.json()
         setRecurringData(data)
@@ -138,47 +138,26 @@ export default function PaginatedRecurringTransactions() {
       } else {
         console.error('Failed to fetch recurring transactions')
       }
-    } catch (error) {
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        console.log('Fetch aborted due to React Strict Mode or component unmount');
+        return; // Ignore abort errors
+      }
       console.error('Error fetching recurring transactions:', error)
     } finally {
       setLoading(false)
     }
   }, [pageSize, filters]) // Include filters dependency
 
-  // Effect to fetch data when filters change (reset to page 1) - but skip on initial load
-  const [isInitialLoad, setIsInitialLoad] = useState(true)
-  
   useEffect(() => {
-    if (!isInitialLoad) {
-      // Create params inside useEffect to avoid dependency issues
-      const page = 1
-      setLoading(true)
-      const params = new URLSearchParams({
-        page: page.toString(),
-        limit: pageSize.toString(),
-        ...Object.fromEntries(
-          Object.entries(filters).filter(([, value]) => value && value !== 'all')
-        )
-      })
-
-      fetch(`/api/recurring/paginated?${params}`)
-        .then(response => response.json())
-        .then(data => {
-          setRecurringData(data)
-          setCurrentPage(page)
-        })
-        .catch(error => console.error('Error fetching recurring transactions:', error))
-        .finally(() => setLoading(false))
+    const controller = new AbortController()
+    fetchRecurringTransactions(1, controller.signal)
+    
+    return () => {
+      // Abort the fetch if the component unmounts or effect re-runs (React Strict Mode)
+      controller.abort()
     }
-  }, [filters, pageSize, isInitialLoad]) // Keep filters and pageSize but avoid function dependency
-
-  // Initial data fetch only once on mount
-  useEffect(() => {
-    fetchRecurringTransactions(1).then(() => {
-      setIsInitialLoad(false)
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []) // Empty dependency array for initial load only
+  }, [fetchRecurringTransactions])
 
   // Filter handlers
   const handleFilterChange = (key: keyof Filters, value: string) => {
@@ -437,14 +416,16 @@ export default function PaginatedRecurringTransactions() {
     }
   }
 
-  const { activeSubscriptions, inactiveCount, monthlyCost, totalSpent } = useMemo(() => {
+  const { activeSubscriptions, inactiveCount, monthlyCost, monthlyIncome, totalSpent } = useMemo(() => {
     if (!recurringData || !recurringData.data.length) {
-      return { activeSubscriptions: [], inactiveCount: 0, monthlyCost: 0, totalSpent: 0 }
+      return { activeSubscriptions: [], inactiveCount: 0, monthlyCost: 0, monthlyIncome: 0, totalSpent: 0 }
     }
     const active = recurringData.data.filter(r => r.isActive)
     const inactive = recurringData.data.filter(r => !r.isActive).length
     
     let totalMonthlyCost = 0
+    let totalMonthlyIncome = 0
+    
     active.forEach(subscription => {
       let cost = 0
       if (subscription.frequency.toLowerCase() === 'daily') {
@@ -459,15 +440,22 @@ export default function PaginatedRecurringTransactions() {
         }
         cost = subscription.amount * monthlyMultiplier
       }
-      totalMonthlyCost += cost
+      
+      if (subscription.type === 'expense') {
+        totalMonthlyCost += cost
+      } else if (subscription.type === 'income') {
+        totalMonthlyIncome += cost
+      }
     })
 
     let totalSpentAmount = 0
     recurringData.data.forEach(recurring => {
-      totalSpentAmount += recurring.totalSpent || 0
+      if (recurring.type === 'expense') {
+        totalSpentAmount += recurring.totalSpent || 0
+      }
     })
 
-    return { activeSubscriptions: active, inactiveCount: inactive, monthlyCost: totalMonthlyCost, totalSpent: totalSpentAmount }
+    return { activeSubscriptions: active, inactiveCount: inactive, monthlyCost: totalMonthlyCost, monthlyIncome: totalMonthlyIncome, totalSpent: totalSpentAmount }
   }, [recurringData])
 
   if (loading && !recurringData) {
@@ -582,50 +570,77 @@ export default function PaginatedRecurringTransactions() {
         </div>
       )}
 
-      {/* Summary Cards */}
+      {/* Premium Cashflow Widget */}
       {recurringData && recurringData.data.length > 0 && (
-        <div className="grid gap-4 mb-6 grid-cols-2 lg:grid-cols-3 [&>*:last-child:nth-child(odd)]:col-span-2 lg:[&>*:last-child:nth-child(odd)]:col-span-1">
-              <>
-                <div className="bg-white rounded-2xl shadow-sm ring-1 ring-gray-100 p-3 sm:p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-100 rounded-xl text-blue-600">
-                      <Repeat className="w-4 h-4" />
+        (() => {
+          const expensePercentage = monthlyIncome > 0 ? Math.min(100, (monthlyCost / monthlyIncome) * 100) : (monthlyCost > 0 ? 100 : 0);
+          const incomePercentage = Math.max(0, 100 - expensePercentage);
+          const netRemaining = monthlyIncome - monthlyCost;
+          const isNegative = netRemaining < 0;
+
+          return (
+            <div className="bg-white rounded-2xl p-4 sm:p-5 mb-6 shadow-sm ring-1 ring-gray-100">
+              <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 items-start lg:items-center">
+                
+                {/* Left: Net Remaining */}
+                <div className="flex-1 w-full min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="text-gray-500 text-[11px] font-bold uppercase tracking-wider">Net Cashflow</h3>
+                    <span className={`text-[10px] font-bold flex items-center px-1.5 py-0.5 rounded-md ${isNegative ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                      {isNegative ? 'Deficit' : 'Surplus'}
+                    </span>
+                  </div>
+                  <span className="text-2xl sm:text-3xl font-black tracking-tight text-gray-900 truncate block">
+                    {isNegative ? '-' : ''}{formatCurrency(Math.abs(netRemaining))}
+                  </span>
+                </div>
+
+                {/* Middle: Progress Bar */}
+                <div className="w-full lg:w-[45%] bg-gray-50 p-3 sm:p-4 rounded-xl ring-1 ring-gray-200/60 shrink-0">
+                  <div className="flex justify-between items-end mb-2">
+                    <div className="min-w-0">
+                      <p className="text-emerald-600 text-[10px] font-bold uppercase tracking-wider">Income</p>
+                      <p className="text-sm sm:text-base font-bold text-gray-900 leading-none mt-0.5 truncate">{formatCurrency(monthlyIncome)}</p>
                     </div>
-                    <div>
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Active Subscriptions</p>
-                      <p className="text-lg font-bold text-blue-600">{activeSubscriptions.length}</p>
-                      {inactiveCount > 0 && (
-                        <p className="text-[11px] text-slate-500">Paused {inactiveCount}</p>
-                      )}
+                    <div className="text-right min-w-0 pl-2">
+                      <p className="text-rose-600 text-[10px] font-bold uppercase tracking-wider">Cost</p>
+                      <p className="text-sm sm:text-base font-bold text-gray-900 leading-none mt-0.5 truncate">{formatCurrency(monthlyCost)}</p>
                     </div>
                   </div>
-                </div>
-                <div className="bg-white rounded-2xl shadow-sm ring-1 ring-gray-100 p-3 sm:p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-green-100 rounded-xl">
-                      <ArrowDownLeft className="h-5 w-5 text-emerald-600" />
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Monthly Cost</p>
-                      <p className="text-lg font-bold text-green-600">{formatCurrency(monthlyCost)}</p>
-                      <p className="text-[11px] text-slate-500 hidden sm:block">Estimated based on active subscriptions</p>
-                    </div>
+                  
+                  <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden flex">
+                    <div className="h-full bg-emerald-500 transition-all duration-1000 ease-out" style={{ width: `${incomePercentage}%` }}></div>
+                    <div className="h-full bg-rose-500 transition-all duration-1000 ease-out" style={{ width: `${expensePercentage}%` }}></div>
+                  </div>
+                  
+                  <div className="flex justify-between items-center text-[10px] font-medium text-gray-500 pt-2">
+                    <p>Utilizing {expensePercentage.toFixed(1)}%</p>
+                    {expensePercentage > 50 && monthlyIncome > 0 && (
+                      <span className={`${expensePercentage > 80 ? 'text-rose-600 font-bold' : 'text-amber-600'}`}>
+                        {expensePercentage > 80 ? 'Critical usage' : 'High usage'}
+                      </span>
+                    )}
                   </div>
                 </div>
-                <div className="bg-white rounded-2xl shadow-sm ring-1 ring-gray-100 p-3 sm:p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-purple-100 rounded-xl">
-                      <ArrowUpRight className="h-5 w-5 text-rose-600" />
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Total Amount Spent</p>
-                      <p className="text-lg font-bold text-purple-600">{formatCurrency(totalSpent)}</p>
-                      <p className="text-[11px] text-slate-500 hidden sm:block">Sum of all actual spending</p>
-                    </div>
+
+                {/* Right: Sub/Spent Stats */}
+                <div className="flex-1 w-full flex lg:flex-col justify-between lg:justify-center gap-4 lg:gap-3 border-t border-gray-100 pt-4 lg:border-t-0 lg:pt-0 lg:pl-4 lg:border-l min-w-0">
+                  <div className="min-w-0">
+                    <p className="text-gray-500 text-[10px] font-bold uppercase tracking-wider mb-0.5 truncate">Active Subs</p>
+                    <p className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-1.5 truncate">
+                      {activeSubscriptions.length} <Repeat className="w-3 h-3 text-blue-500 shrink-0" />
+                    </p>
+                  </div>
+                  <div className="text-right lg:text-left min-w-0">
+                    <p className="text-gray-500 text-[10px] font-bold uppercase tracking-wider mb-0.5 truncate">Lifetime Spent</p>
+                    <p className="text-base sm:text-lg font-bold text-gray-900 truncate">{formatCurrency(totalSpent)}</p>
                   </div>
                 </div>
-              </>
-        </div>
+
+              </div>
+            </div>
+          )
+        })()
       )}
 
       {/* Recurring Transactions List */}

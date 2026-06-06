@@ -481,7 +481,7 @@ export default React.memo(function OverviewTab({
                 ))}
               </div>
               <button
-                onClick={() => onTabChange('settings')}
+                onClick={onOpenSettings}
                 className="mt-3 w-full text-[10px] font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 border border-amber-200 px-3 py-2 rounded-xl cursor-pointer transition-colors"
               >
                 Set Budget Limits →
