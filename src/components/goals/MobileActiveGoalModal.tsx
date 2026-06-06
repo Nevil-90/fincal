@@ -124,13 +124,13 @@ export function MobileActiveGoalModal({
             <div className="flex p-1 bg-gray-200/50 dark:bg-neutral-800/50 rounded-xl">
               <button
                 onClick={() => setDetailTab('quick')}
-                className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${detailTab === 'quick' ? 'bg-white dark:bg-neutral-900 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-300'}`}
+                className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${detailTab === 'quick' ? 'bg-white dark:bg-neutral-700 text-gray-900 dark:text-white shadow-sm ring-1 ring-black/5 dark:ring-white/10' : 'text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-300'}`}
               >
                 Quick Add
               </button>
               <button
                 onClick={() => setDetailTab('history')}
-                className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${detailTab === 'history' ? 'bg-white dark:bg-neutral-900 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-300'}`}
+                className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${detailTab === 'history' ? 'bg-white dark:bg-neutral-700 text-gray-900 dark:text-white shadow-sm ring-1 ring-black/5 dark:ring-white/10' : 'text-gray-500 dark:text-neutral-400 hover:text-gray-700 dark:hover:text-neutral-300'}`}
               >
                 History
               </button>
@@ -155,7 +155,7 @@ export function MobileActiveGoalModal({
                       />
                     </div>
                     {monthlySavingPotential > 0 && (
-                      <p className="text-[10px] text-gray-500 mt-1 flex items-center gap-1 bg-gray-100/50 p-1.5 rounded-md">
+                      <p className="text-[10px] text-gray-500 dark:text-neutral-400 mt-1 flex items-center gap-1 bg-gray-100/50 dark:bg-neutral-800/50 p-1.5 rounded-md">
                         <span className="flex items-center gap-1"><Lightbulb className="h-3.5 w-3.5" /> Can safely add up to {formatCurrency(monthlySavingPotential)}.</span>
                       </p>
                     )}
@@ -224,10 +224,10 @@ export function MobileActiveGoalModal({
                     {[...Array(3)].map((_, i) => (
                       <div key={i} className="animate-pulse flex justify-between">
                         <div>
-                          <div className="h-5 bg-gray-200 rounded w-24 mb-2"></div>
-                          <div className="h-3 bg-gray-100 rounded w-32"></div>
+                          <div className="h-5 bg-gray-200 dark:bg-neutral-800 rounded w-24 mb-2"></div>
+                          <div className="h-3 bg-gray-100 dark:bg-neutral-700 rounded w-32"></div>
                         </div>
-                        <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
+                        <div className="h-8 w-8 bg-gray-200 dark:bg-neutral-800 rounded-full"></div>
                       </div>
                     ))}
                   </div>
@@ -251,7 +251,7 @@ export function MobileActiveGoalModal({
                           <button
                             type="button"
                             onClick={() => handleDeleteContribution(c.id, selectedGoal)}
-                            className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                            className="p-2 text-gray-300 dark:text-neutral-600 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors"
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
@@ -259,11 +259,11 @@ export function MobileActiveGoalModal({
                       ))
                     ) : (
                       <div className="text-center py-8">
-                        <div className="h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                          <History className="h-6 w-6 text-gray-400" />
+                        <div className="h-12 w-12 bg-gray-100 dark:bg-neutral-800/50 rounded-full flex items-center justify-center mx-auto mb-3">
+                          <History className="h-6 w-6 text-gray-400 dark:text-neutral-500" />
                         </div>
-                        <p className="text-gray-500 font-medium">No activity yet</p>
-                        <p className="text-sm text-gray-400">Add a contribution to get started!</p>
+                        <p className="text-gray-500 dark:text-neutral-400 font-medium">No activity yet</p>
+                        <p className="text-sm text-gray-400 dark:text-neutral-500">Add a contribution to get started!</p>
                       </div>
                     )}
                   </div>
