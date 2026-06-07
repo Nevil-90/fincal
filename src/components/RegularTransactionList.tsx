@@ -201,6 +201,7 @@ export default function RegularTransactionList({
           next.delete(id)
           return next
         })
+        mutate()
         onTransactionDeleted()
       } catch {
         setPendingDeleteIds(prev => {
@@ -247,6 +248,7 @@ export default function RegularTransactionList({
         })
       })
       if (response.ok) {
+        mutate()
         onTransactionDeleted()
       }
     } catch (e) {
