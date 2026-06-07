@@ -242,7 +242,7 @@ export default function RegularTransactionList({
           description: (t.description || '') + ' (Copy)',
           paymentMethod: t.paymentMethod,
           source: t.source,
-          date: new Date().toISOString(),
+          date: t.date,
           recurringTransactionId: t.recurringTransactionId
         })
       })
