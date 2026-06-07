@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { useTheme } from 'next-themes'
-import { Plus, Menu, User, Settings, Shield, LogOut, Car, Calendar, PieChart, BarChart3, CreditCard, Target, RefreshCw, Sun, Moon } from 'lucide-react'
+import { Plus, Menu, User, Settings, Shield, LogOut, Car, Calendar, PieChart, BarChart3, CreditCard, Target, RefreshCw, Sun, Moon, Search } from 'lucide-react'
 import { useScrollLock } from '@/hooks/useScrollLock'
 import { useNavPreferences } from '@/hooks/useNavPreferences'
 import ProfileModal from '@/components/ProfileModal'
@@ -87,6 +87,24 @@ export default React.memo(function DashboardHeader({
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
+            {/* Command Palette Trigger */}
+            <button
+              onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}
+              className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 dark:bg-neutral-800 text-slate-500 dark:text-neutral-400 hover:bg-slate-200 dark:hover:bg-neutral-700 transition-colors text-sm"
+            >
+              <Search className="h-4 w-4" />
+              <span>Search...</span>
+              <kbd className="hidden md:inline-flex items-center gap-1 font-mono text-[10px] font-medium opacity-70 ml-2">
+                <span className="text-xs">⌘</span>K
+              </kbd>
+            </button>
+            <button
+              onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}
+              className="sm:hidden p-2 rounded-lg text-slate-500 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors"
+            >
+              <Search className="h-5 w-5" />
+            </button>
+
             {/* Desktop Add Transaction Button */}
             <button
               onClick={onShowAddTransaction}

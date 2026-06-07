@@ -30,6 +30,7 @@ export const viewport: Viewport = {
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { SwrProvider } from "@/components/providers/SwrProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { Toaster } from "sonner";
 
 export default function RootLayout({
   children,
@@ -46,6 +47,7 @@ export default function RootLayout({
             <ErrorBoundary>
               {children}
             </ErrorBoundary>
+            <Toaster position="bottom-right" richColors theme="system" />
           </SwrProvider>
         </ThemeProvider>
       </body>

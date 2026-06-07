@@ -20,6 +20,7 @@ const AdminTab = dynamic(() => import('./dashboard/AdminTab'), { ssr: false })
 import OnboardingWizard from './OnboardingWizard'
 import BottomNav from './dashboard/BottomNav'
 
+import CommandPalette from '@/components/ui/CommandPalette'
 import Sidebar from './dashboard/Sidebar'
 import DashboardHeader from './dashboard/DashboardHeader'
 import OverviewTab from './dashboard/OverviewTab'
@@ -496,6 +497,12 @@ export default function ModernDashboard() {
           )}
         </main>
       </div>
+
+      <CommandPalette 
+        onNavigate={handleTabChange} 
+        onAddTransaction={handleShowAddTransaction} 
+        isAdmin={user?.role === 'ADMIN'} 
+      />
 
       <BottomNav
         activeTab={activeTab}

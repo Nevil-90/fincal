@@ -5,10 +5,12 @@ import { useState, useMemo, useEffect } from 'react'
 import { useTheme } from 'next-themes'
 
 import { Plus, Edit2, Trash2, Download, Upload, Eye, EyeOff, Save, X, Tag, PiggyBank, CreditCard, Briefcase, Compass, DollarSign, Search, Settings, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, BookOpen, AlertTriangle, LayoutTemplate, ArrowUp, ArrowDown, BarChart3, Target, RefreshCw, PieChart, Calendar, Car, Shield, GripHorizontal, Lightbulb, Moon, Sun, Monitor, Palette } from 'lucide-react'
+import { toast } from 'sonner'
 import { NavSettingsDnd } from './NavSettingsDnd'
 import { useEnhancedStaticData, StaticDataType, StaticDataItem, BudgetItem } from '@/lib/enhanced-static-data-manager'
 import { useScrollLock } from '@/hooks/useScrollLock'
 import { useNavPreferences } from '@/hooks/useNavPreferences'
+import { SpreadsheetEditor } from './ui/SpreadsheetEditor'
 
 interface EditingItem {
   type: StaticDataType
@@ -151,13 +153,26 @@ function AppearanceSettingsPanel() {
 export function SettingsPanel({ onDataChange, isAdmin, isOpen, onClose }: SettingsPanelProps) {
   const { data, manager, isLoading: isDataLoading, error } = useEnhancedStaticData()
   const { slots, updateSlots, isLoading: isNavLoading } = useNavPreferences()
-  const [activeSection, setActiveSection] = useState<StaticDataType | 'navigation' | 'travelSettings'>('expenseCategories')
+  const [activeSection, setActiveSection] = useState<StaticDataType | 'navigation' | 'travelSettings' | 'dataBackup'>('expenseCategories')
   const [editingItem, setEditingItem] = useState<EditingItem | null>(null)
   const [importData, setImportData] = useState('')
   const [showImport, setShowImport] = useState(false)
   const [showDocs, setShowDocs] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
+  
+  // Drag and drop import states
+  const [isDragging, setIsDragging] = useState(false)
+  const [parsedPreview, setParsedPreview] = useState<{
+    transactions: number
+    savingsGoals: number
+    monthlyBudgets: number
+    staticDataCategories: number
+    recurringTransactions: number
+  } | null>(null)
+  const [importMode, setImportMode] = useState<'preview' | 'spreadsheet'>('preview')
+  const [editableData, setEditableData] = useState<Record<string, any[]> | null>(null)
 
   useScrollLock(!!editingItem || showImport || isOpen)
 
@@ -195,7 +210,7 @@ export function SettingsPanel({ onDataChange, isAdmin, isOpen, onClose }: Settin
   }
 
 
-  const handleSectionChange = (section: StaticDataType | 'navigation' | 'travelSettings') => {
+  const handleSectionChange = (section: StaticDataType | 'navigation' | 'travelSettings' | 'dataBackup') => {
     setActiveSection(section)
     setSearchQuery('')
     setIsMobileMenuOpen(false)
@@ -249,53 +264,153 @@ export function SettingsPanel({ onDataChange, isAdmin, isOpen, onClose }: Settin
     }
   }
 
-  const handleExport = () => {
-    const exportData = manager.export()
-    const blob = new Blob([exportData], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `fintracker-static-data-${new Date().toISOString().split('T')[0]}.json`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
+  const handleExport = async () => {
+    setIsExporting(true)
+    try {
+      const response = await fetch('/api/backup/export')
+      if (!response.ok) throw new Error('Export failed')
+      
+      const data = await response.json()
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `finacal_backup_${new Date().toISOString().split('T')[0]}.json`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      toast.success('Data exported successfully')
+    } catch (error) {
+      toast.error('Failed to export data')
+    } finally {
+      setIsExporting(false)
+    }
   }
 
-  const handleImport = () => {
-    if (manager.import(importData)) {
-      alert('Static settings data imported successfully!')
-      setImportData('')
+  const handleImport = async (customData?: any) => {
+    try {
+      // Use the edited data if available, otherwise fallback to parsed importData
+      const payloadData = customData || editableData || (importData ? JSON.parse(importData).data || JSON.parse(importData) : null)
+      
+      if (!payloadData) throw new Error('No data available to import')
+      
+      const response = await fetch('/api/backup/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: payloadData })
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Import failed')
+      }
+
+      toast.success('Data restored successfully! Refreshing local configurations...')
       setShowImport(false)
+      setImportData('')
+      setParsedPreview(null)
+      setEditableData(null)
+      
+      setTimeout(() => {
+        null
+      }, 0)
+      
+      await manager.refresh()
       onDataChange?.()
-    } else {
-      alert('Failed to import data. Please check the JSON format.')
+    } catch (error: any) {
+      toast.error(`Restore failed: ${error.message || 'Invalid JSON format.'}`)
     }
+  }
+
+  const parseAndPreviewJSON = (text: string) => {
+    try {
+      const parsed = JSON.parse(text)
+      const actualData = parsed.data || parsed
+      setImportData(text)
+      setEditableData(actualData)
+      setParsedPreview({
+        transactions: actualData.transactions?.length || 0,
+        savingsGoals: actualData.savingsGoals?.length || 0,
+        monthlyBudgets: actualData.monthlyBudgets?.length || 0,
+        staticDataCategories: actualData.staticDataCategories?.length || 0,
+        recurringTransactions: actualData.recurringTransactions?.length || 0
+      })
+      toast.success('File parsed successfully! Review the data before applying.')
+    } catch (e) {
+      toast.error('Invalid JSON file format. Could not parse data.')
+    }
+  }
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.type !== 'application/json' && !file.name.endsWith('.json')) {
+      toast.error('Please upload a valid .json file')
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = (e) => parseAndPreviewJSON(e.target?.result as string)
+    reader.readAsText(file)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+    const file = e.dataTransfer.files?.[0]
+    if (!file) return
+    if (file.type !== 'application/json' && !file.name.endsWith('.json')) {
+      toast.error('Please drop a valid .json file')
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = (event) => parseAndPreviewJSON(event.target?.result as string)
+    reader.readAsText(file)
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
   }
 
   const handleSaveAll = async () => {
     try {
       await manager.refresh()
-      alert('All settings synchronized successfully with the database!')
+      toast.success('All settings synchronized successfully with the database!')
       onDataChange?.()
     } catch (err) {
-      alert(`Synchronization failed: ${err}`)
+      toast.error(`Synchronization failed: ${err}`)
     }
   }
 
-  const handleDeleteAll = async () => {
-    if (confirm('[WARNING]: This will purge ALL static data from localStorage!\n\nThis cannot be undone. Are you absolutely sure?')) {
-      if (confirm('Final warning: Local categories, budgets, and payment methods will be reset to database configurations.')) {
-        try {
-          localStorage.removeItem('fintracker_static_data')
-          alert('Local settings cache cleared. Restoring configurations from database...')
-          await manager.refresh()
-          onDataChange?.()
-        } catch (err) {
-          alert(`Failed to restore data: ${err}`)
+  const handleDeleteAll = () => {
+    toast.error('Are you absolutely sure you want to reset the local cache?', {
+      description: 'All local categories, budgets, and payment methods will be completely reset to your database configurations.',
+      duration: 8000,
+      action: {
+        label: 'Confirm Reset',
+        onClick: async () => {
+          try {
+            localStorage.removeItem('fincal_static_data')
+            localStorage.removeItem('fintracker_static_data') // Legacy key
+            toast.success('Local cache cleared. Restoring configurations from database...')
+            await manager.refresh()
+            onDataChange?.()
+          } catch (err) {
+            toast.error(`Failed to restore data: ${err}`)
+          }
         }
+      },
+      cancel: {
+        label: 'Cancel',
+        onClick: () => {}
       }
-    }
+    })
   }
 
   const toggleItemStatus = (type: StaticDataType, id: string, currentStatus: boolean) => {
@@ -304,7 +419,7 @@ export function SettingsPanel({ onDataChange, isAdmin, isOpen, onClose }: Settin
   }
 
   const filteredItems = useMemo(() => {
-    if (activeSection === 'navigation' || activeSection === 'travelSettings') return []
+    if (activeSection === 'navigation' || activeSection === 'travelSettings' || activeSection === 'dataBackup') return []
     return ((data as any)[activeSection] || []).filter((item: any) =>
       item.name?.toLowerCase().includes(searchQuery.toLowerCase())
     )
@@ -349,6 +464,7 @@ export function SettingsPanel({ onDataChange, isAdmin, isOpen, onClose }: Settin
                 {(() => {
                   if (activeSection === 'navigation') return <><LayoutTemplate className="h-5 w-5 text-indigo-600"/> Bottom Nav</>;
                   if (activeSection === 'travelSettings') return <><Car className="h-5 w-5 text-orange-500"/> Travel Config</>;
+                  if (activeSection === 'dataBackup') return <><Download className="h-5 w-5 text-emerald-500"/> Backup & Restore</>;
                   const meta = sectionMeta[activeSection as StaticDataType];
                   const Icon = meta?.icon || Settings;
                   return <><Icon className="h-5 w-5 text-indigo-600"/> {meta?.label || 'Settings'}</>;
@@ -403,6 +519,17 @@ export function SettingsPanel({ onDataChange, isAdmin, isOpen, onClose }: Settin
                 <Car className={`h-4 w-4 ${activeSection === 'travelSettings' ? 'text-indigo-600 dark:text-indigo-400' : 'text-orange-500 dark:text-orange-400'}`} />
                 <span className="truncate">Travel Config</span>
               </button>
+              <button
+                onClick={() => handleSectionChange('dataBackup')}
+                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                  activeSection === 'dataBackup'
+                    ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 shadow-sm ring-1 ring-indigo-100 dark:ring-indigo-900/50'
+                    : 'text-slate-600 dark:text-neutral-400 hover:bg-slate-50 dark:hover:bg-neutral-800/50 border border-transparent'
+                }`}
+              >
+                <Download className={`h-4 w-4 ${activeSection === 'dataBackup' ? 'text-indigo-600 dark:text-indigo-400' : 'text-emerald-500 dark:text-emerald-400'}`} />
+                <span className="truncate">Backup & Restore</span>
+              </button>
             </div>
           </div>
 
@@ -416,7 +543,47 @@ export function SettingsPanel({ onDataChange, isAdmin, isOpen, onClose }: Settin
                 </div>
               ) : (
                 <div className="max-w-3xl mx-auto space-y-6">
-                  {activeSection === 'navigation' ? (
+                  {activeSection === 'dataBackup' ? (
+                    <div className="space-y-6">
+                      <div className="border-b border-slate-100 dark:border-neutral-800 pb-5">
+                        <h2 className="text-lg font-bold text-slate-900 dark:text-white">Backup & Restore</h2>
+                        <p className="text-xs text-slate-500 dark:text-neutral-400 mt-1">Export your configurations or restore from a file.</p>
+                      </div>
+                      <div className="flex flex-col gap-4">
+                        <button onClick={handleExport} disabled={isExporting} className="w-full flex items-center gap-3 p-4 bg-white dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded-xl text-left hover:border-indigo-500 transition-colors disabled:opacity-70 disabled:cursor-not-allowed">
+                          {isExporting ? (
+                            <div className="h-5 w-5 shrink-0 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-500" />
+                          ) : (
+                            <Download className="h-5 w-5 text-indigo-500 shrink-0" />
+                          )}
+                          <div>
+                            <div className="text-sm font-bold text-slate-900 dark:text-white">
+                              {isExporting ? 'Exporting Data...' : 'Export Data'}
+                            </div>
+                            <div className="text-xs text-slate-500">
+                              {isExporting ? (
+                                <span className="text-indigo-600 dark:text-indigo-400 font-medium">Please wait and do not refresh the page.</span>
+                              ) : 'Download current settings to a JSON file.'}
+                            </div>
+                          </div>
+                        </button>
+                        <button onClick={() => setShowImport(!showImport)} className="w-full flex items-center gap-3 p-4 bg-white dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded-xl text-left hover:border-indigo-500 transition-colors">
+                          <Upload className="h-5 w-5 text-emerald-500" />
+                          <div>
+                            <div className="text-sm font-bold text-slate-900 dark:text-white">Import Data</div>
+                            <div className="text-xs text-slate-500">Upload and apply settings from a JSON file.</div>
+                          </div>
+                        </button>
+                        <button onClick={handleDeleteAll} className="w-full flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 rounded-xl text-left hover:border-red-500 transition-colors">
+                          <Trash2 className="h-5 w-5 text-red-500" />
+                          <div>
+                            <div className="text-sm font-bold text-red-700 dark:text-red-400">Reset Local Cache</div>
+                            <div className="text-xs text-red-500/70">Wipe local data and re-sync from main source.</div>
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+                  ) : activeSection === 'navigation' ? (
                     <NavSettingsDnd slots={slots} updateSlots={updateSlots} isAdmin={isAdmin} />
                   ) : activeSection === 'travelSettings' ? (
                     <TravelSettingsPanel data={data} manager={manager} />
@@ -615,9 +782,9 @@ export function SettingsPanel({ onDataChange, isAdmin, isOpen, onClose }: Settin
       )}
 
       {/* Advanced Import Modal */}
-      {showImport && (
+      {showImport && importMode === 'preview' && (
         <div className="fixed inset-0 bg-slate-900/60 dark:bg-neutral-950/80 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-fadeIn">
-          <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-xl p-5 sm:p-6 w-full max-w-2xl border border-slate-200 dark:border-neutral-800">
+          <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-xl p-5 sm:p-6 w-full max-w-2xl border border-slate-200 dark:border-neutral-800 transition-all duration-300">
             <div className="flex justify-between items-center border-b border-slate-100 dark:border-neutral-800 pb-3 mb-4">
               <h3 className="text-sm font-bold uppercase tracking-wider text-slate-800 dark:text-neutral-200">
                 Import JSON Configurations
@@ -632,30 +799,87 @@ export function SettingsPanel({ onDataChange, isAdmin, isOpen, onClose }: Settin
             </div>
             
             <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400 mb-1.5">
-                  Import Payload Data
-                </label>
-                <textarea
-                  value={importData}
-                  onChange={(e) => setImportData(e.target.value)}
-                  className="w-full h-48 px-3.5 py-3 border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 hover:bg-slate-100/50 dark:hover:bg-neutral-700/50 focus:bg-white dark:focus:bg-neutral-950 rounded-xl outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 dark:focus:ring-indigo-900/50 text-slate-900 dark:text-neutral-100 font-mono text-xs sm:text-sm leading-relaxed"
-                  placeholder="Paste payload JSON exported from another fintracker device..."
-                />
-              </div>
-              
-              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200/50 dark:border-amber-900/50 rounded-xl p-3 flex items-start gap-2.5">
-                <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-                <p className="text-[10px] sm:text-xs text-amber-700 dark:text-amber-400 leading-normal font-medium">
-                  <strong>Warning:</strong> Importing configuration payloads replaces current categories, options, and budgets completely. Stash current configurations via Export if needed.
-                </p>
-              </div>
+              {!parsedPreview ? (
+                <div 
+                  onDrop={handleDrop}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  className={`w-full h-48 border-2 border-dashed rounded-xl flex flex-col items-center justify-center transition-all ${
+                    isDragging 
+                      ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' 
+                      : 'border-slate-300 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 hover:bg-slate-100/50 dark:hover:bg-neutral-700/50'
+                  }`}
+                >
+                  <Upload className={`h-8 w-8 mb-3 ${isDragging ? 'text-indigo-500' : 'text-slate-400'}`} />
+                  <p className="text-sm font-semibold text-slate-700 dark:text-neutral-300">
+                    {isDragging ? 'Drop JSON file here' : 'Drag & drop your finacal backup JSON file here'}
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-neutral-500 mt-1 mb-4">or click to browse from your computer</p>
+                  <label className="px-4 py-2 text-xs font-bold uppercase tracking-wider bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 text-slate-700 dark:text-neutral-300 rounded-lg cursor-pointer transition-colors shadow-sm">
+                    Select File
+                    <input type="file" accept=".json,application/json" className="hidden" onChange={handleFileUpload} />
+                  </label>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-900/50 rounded-xl">
+                    <div className="flex justify-between items-center mb-3">
+                      <h4 className="text-sm font-bold text-indigo-900 dark:text-indigo-300 flex items-center gap-2">
+                        <Search className="h-4 w-4" /> Import Preview
+                      </h4>
+                      <div className="flex bg-indigo-100/50 dark:bg-indigo-950 p-1 rounded-lg">
+                        <button
+                          type="button"
+                          onClick={() => setImportMode('preview')}
+                          className={`px-3 py-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-md transition-colors ${importMode === 'preview' ? 'bg-white dark:bg-neutral-800 text-indigo-700 dark:text-indigo-400 shadow-sm' : 'text-slate-500 dark:text-neutral-500 hover:text-slate-700 dark:hover:text-neutral-300'}`}
+                        >
+                          Visual Preview
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setImportMode('spreadsheet')}
+                          className={`px-3 py-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-md transition-colors ${importMode === 'spreadsheet' ? 'bg-white dark:bg-neutral-800 text-indigo-700 dark:text-indigo-400 shadow-sm' : 'text-slate-500 dark:text-neutral-500 hover:text-slate-700 dark:hover:text-neutral-300'}`}
+                        >
+                          Spreadsheet Editor
+                        </button>
+                      </div>
+                    </div>
+
+                    {importMode === 'preview' ? (
+                      <div className="grid grid-cols-2 gap-3 text-xs">
+                        <div className="flex justify-between items-center p-2 bg-white dark:bg-neutral-900 rounded-lg shadow-sm border border-slate-100 dark:border-neutral-800">
+                          <span className="text-slate-500 font-medium">Transactions</span>
+                          <span className="font-bold text-slate-900 dark:text-white">{parsedPreview.transactions}</span>
+                        </div>
+                        <div className="flex justify-between items-center p-2 bg-white dark:bg-neutral-900 rounded-lg shadow-sm border border-slate-100 dark:border-neutral-800">
+                          <span className="text-slate-500 font-medium">Savings Goals</span>
+                          <span className="font-bold text-slate-900 dark:text-white">{parsedPreview.savingsGoals}</span>
+                        </div>
+                        <div className="flex justify-between items-center p-2 bg-white dark:bg-neutral-900 rounded-lg shadow-sm border border-slate-100 dark:border-neutral-800">
+                          <span className="text-slate-500 font-medium">Monthly Budgets</span>
+                          <span className="font-bold text-slate-900 dark:text-white">{parsedPreview.monthlyBudgets}</span>
+                        </div>
+                        <div className="flex justify-between items-center p-2 bg-white dark:bg-neutral-900 rounded-lg shadow-sm border border-slate-100 dark:border-neutral-800">
+                          <span className="text-slate-500 font-medium">Categories</span>
+                          <span className="font-bold text-slate-900 dark:text-white">{parsedPreview.staticDataCategories}</span>
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200/50 dark:border-amber-900/50 rounded-xl p-3 flex items-start gap-2.5">
+                    <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                    <p className="text-[10px] sm:text-xs text-amber-700 dark:text-amber-400 leading-normal font-medium">
+                      <strong>Warning:</strong> Applying this import will securely wipe and replace your current data with the contents shown above. Make sure you have exported a recent backup if needed!
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
             
             <div className="flex justify-end gap-3 mt-6 border-t border-slate-100 dark:border-neutral-800 pt-4">
               <button
                 type="button"
-                onClick={() => { setShowImport(false); setImportData(''); }}
+                onClick={() => { setShowImport(false); setImportData(''); setParsedPreview(null); setEditableData(null); }}
                 className="px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400 border border-slate-200 dark:border-neutral-700 hover:bg-slate-50 dark:hover:bg-neutral-800 rounded-xl transition-colors cursor-pointer"
               >
                 Cancel
@@ -663,14 +887,34 @@ export function SettingsPanel({ onDataChange, isAdmin, isOpen, onClose }: Settin
               <button
                 type="button"
                 onClick={handleImport}
-                disabled={!importData.trim()}
+                disabled={!parsedPreview}
                 className="px-4 py-2 text-xs font-bold uppercase tracking-wider bg-purple-600 dark:bg-purple-700 hover:bg-purple-700 dark:hover:bg-purple-600 text-white rounded-xl disabled:bg-slate-200 dark:disabled:bg-neutral-800 disabled:text-slate-400 dark:disabled:text-neutral-600 disabled:cursor-not-allowed transition-all shadow-sm shadow-purple-600/10 cursor-pointer"
               >
-                Upload & Apply
+                Confirm & Apply Data
               </button>
             </div>
           </div>
         </div>
+      )}
+
+      {/* Spreadsheet Editor Full Screen App */}
+      {showImport && importMode === 'spreadsheet' && editableData && (
+        <SpreadsheetEditor
+          data={editableData}
+          onCancel={() => setImportMode('preview')}
+          onApply={(newData) => {
+            setEditableData(newData)
+            setParsedPreview({
+              transactions: newData.transactions?.length || 0,
+              savingsGoals: newData.savingsGoals?.length || 0,
+              monthlyBudgets: newData.monthlyBudgets?.length || 0,
+              staticDataCategories: newData.staticDataCategories?.length || 0,
+              recurringTransactions: newData.recurringTransactions?.length || 0
+            })
+            // Execute import immediately from full-screen app
+            handleImport(newData)
+          }}
+        />
       )}
     </div>
   )

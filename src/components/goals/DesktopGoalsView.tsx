@@ -411,7 +411,7 @@ export function DesktopGoalsView({
               <div className="flex-1 min-h-0 overflow-y-auto p-5 custom-scrollbar">
                 {filteredGoals.length === 0 ? (
                   <div className="text-center py-16 px-5 flex-1 flex flex-col justify-center items-center h-full">
-                    <div className="w-16 h-16 bg-purple-50 dark:bg-purple-900/20 rounded-full flex items-center justify-center mb-4">
+                    <div className="w-16 h-16 bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-800 shadow-sm rounded-2xl flex items-center justify-center mb-4">
                       <Target className="h-8 w-8 text-purple-500" />
                     </div>
                     <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1.5">No Active Goals</h3>
@@ -605,7 +605,7 @@ export function DesktopGoalsView({
               <div className="flex-1 min-h-0 overflow-y-auto p-5 custom-scrollbar">
                 {completedGoals.length === 0 ? (
                   <div className="text-center py-16 px-5 flex-1 flex flex-col justify-center items-center h-full">
-                    <div className="w-16 h-16 bg-green-50 dark:bg-emerald-900/20 rounded-full flex items-center justify-center mb-4">
+                    <div className="w-16 h-16 bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-800 shadow-sm rounded-2xl flex items-center justify-center mb-4">
                       <Trophy className="h-8 w-8 text-green-500 dark:text-emerald-400" />
                     </div>
                     <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1.5">No Achieved Goals Yet</h3>

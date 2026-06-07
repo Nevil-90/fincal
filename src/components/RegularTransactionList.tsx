@@ -5,8 +5,8 @@
 import { useEffect, useMemo, useState, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { Trash2, Edit2, Search, Filter, Calendar as CalendarIcon, Download, ChevronLeft, ChevronRight, Check, FileText, ArrowRight, X, AlertTriangle, ArrowUpRight, ArrowDownLeft, RefreshCw, CreditCard, Plug, ChevronDown, Copy } from 'lucide-react'
+import { toast } from 'sonner'
 import { formatCurrency } from '@/lib/financial-utils'
-import UndoToast from './ui/UndoToast'
 import SwipeableRow from './ui/SwipeableRow'
 import { useScrollLock } from '@/hooks/useScrollLock'
 import AddTransactionForm from './AddTransactionForm'
@@ -79,7 +79,6 @@ export default function RegularTransactionList({
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
   useScrollLock(showDateRangePicker)
 
-  const [undoToast, setUndoToast] = useState<{ message: string; onUndo: () => void; onExpire: () => void } | null>(null)
   const [pendingDeleteIds, setPendingDeleteIds] = useState<Set<string>>(new Set())
   const listContainerRef = useRef<HTMLDivElement>(null)
 
@@ -213,20 +212,22 @@ export default function RegularTransactionList({
       }
     }
 
-    setUndoToast({
-      message: 'Transaction deleted',
-      onUndo: () => {
-        setUndoToast(null)
-        setPendingDeleteIds(prev => {
-          const next = new Set(prev)
-          next.delete(id)
-          return next
-        })
+    let undoClicked = false
+    toast.success('Transaction deleted', {
+      action: {
+        label: 'Undo',
+        onClick: () => {
+          undoClicked = true
+          setPendingDeleteIds(prev => {
+            const next = new Set(prev)
+            next.delete(id)
+            return next
+          })
+        }
       },
-      onExpire: () => {
-        setUndoToast(null)
-        doDelete()
-      }
+      onAutoClose: () => { if (!undoClicked) doDelete() },
+      onDismiss: () => { if (!undoClicked) doDelete() },
+      duration: 5000
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onTransactionDeleted])
@@ -270,16 +271,18 @@ export default function RegularTransactionList({
       }
     }
 
-    setUndoToast({
-      message: `${ids.length} transactions deleted`,
-      onUndo: () => {
-        setUndoToast(null)
-        setSelectedTransactions(new Set(ids))
+    let undoClicked = false
+    toast.success(`${ids.length} transactions deleted`, {
+      action: {
+        label: 'Undo',
+        onClick: () => {
+          undoClicked = true
+          setSelectedTransactions(new Set(ids))
+        }
       },
-      onExpire: () => {
-        setUndoToast(null)
-        doMultiDelete()
-      }
+      onAutoClose: () => { if (!undoClicked) doMultiDelete() },
+      onDismiss: () => { if (!undoClicked) doMultiDelete() },
+      duration: 5000
     })
   }
 
@@ -341,7 +344,7 @@ export default function RegularTransactionList({
           params.append('startDate', pdfStartDate)
           params.append('endDate', pdfEndDate)
         } else {
-          alert('Please select both start and end dates for custom range')
+          toast.error('Please select both start and end dates for custom range')
           return
         }
         break
@@ -360,7 +363,7 @@ export default function RegularTransactionList({
           params.append('startDate', pdfStartDate)
           params.append('endDate', pdfEndDate)
         } else {
-          alert('Please select both start and end dates for custom range')
+          toast.error('Please select both start and end dates for custom range')
           return
         }
         break
@@ -827,9 +830,14 @@ export default function RegularTransactionList({
             </div>
           )
         ) : (
-          <div className="text-center py-8 text-slate-500 dark:text-neutral-400">
-            <p>No regular transactions found.</p>
-            <p className="text-sm">Try adjusting your search or filter criteria.</p>
+          <div className="flex flex-col items-center justify-center py-16 px-4 bg-slate-50/50 dark:bg-neutral-900/30 rounded-3xl border border-dashed border-slate-200 dark:border-neutral-800">
+            <div className="w-16 h-16 rounded-2xl bg-white dark:bg-neutral-900 shadow-sm border border-slate-100 dark:border-neutral-800 flex items-center justify-center mb-4">
+              <CreditCard className="h-8 w-8 text-slate-300 dark:text-neutral-600" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">No transactions found</h3>
+            <p className="text-sm text-slate-500 dark:text-neutral-400 text-center max-w-sm mb-6">
+              You haven't logged any transactions matching your current filters. Add a new transaction to see it here.
+            </p>
           </div>
         )}
       </div>
@@ -1029,15 +1037,6 @@ export default function RegularTransactionList({
                 </div>
               </div>,
               document.body
-            )}
-
-            {/* Undo Toast */}
-            {undoToast && (
-              <UndoToast
-                message={undoToast.message}
-                onUndo={undoToast.onUndo}
-                onExpire={undoToast.onExpire}
-              />
             )}
 
             {/* Edit Transaction Modal */}

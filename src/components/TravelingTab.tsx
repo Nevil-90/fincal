@@ -6,6 +6,7 @@
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { Plus, Car, Fuel, TrendingUp, Calendar, Trash2, X } from 'lucide-react'
+import { toast } from 'sonner'
 import { formatCurrency } from '@/lib/financial-utils'
 import { useScrollLock } from '@/hooks/useScrollLock'
 import { useEnhancedStaticData } from '@/lib/enhanced-static-data-manager'
@@ -191,11 +192,11 @@ export default function TravelingTab() {
         setShowAddForm(false)
       } else {
         const errorData = await response.json()
-        alert(`Error: ${errorData.error}`)
+        toast.error(`Error: ${errorData.error}`)
       }
     } catch (error) {
       console.error('Error adding travel entry:', error)
-      alert('Failed to add travel entry')
+      toast.error('Failed to add travel entry')
     }
   }
 
@@ -213,11 +214,11 @@ export default function TravelingTab() {
           refreshAnalytics()
         ])
       } else {
-        alert('Failed to delete travel entry')
+        toast.error('Failed to delete travel entry')
       }
     } catch (error) {
       console.error('Error deleting travel entry:', error)
-      alert('Failed to delete travel entry')
+      toast.error('Failed to delete travel entry')
     }
   }
 
@@ -241,11 +242,11 @@ export default function TravelingTab() {
           refreshAnalytics()
         ])
       } else {
-        alert('Some entries failed to delete')
+        toast.error('Some entries failed to delete')
       }
     } catch (error) {
       console.error('Error deleting travel entries:', error)
-      alert('Failed to delete travel entries')
+      toast.error('Failed to delete travel entries')
     }
   }
 

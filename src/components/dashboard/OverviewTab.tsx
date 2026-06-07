@@ -3,7 +3,7 @@
 'use client'
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react'
-import { Plus, BarChart2, BarChart3, Calendar, Target, AlertCircle, TrendingUp, TrendingDown, DollarSign, Wallet, CreditCard, ArrowRight, ArrowUpRight, ArrowDownRight, ArrowDownLeft, Activity, PieChart, ShieldAlert, Zap, AlertTriangle, CheckCircle, ClipboardList, Banknote, Clock } from 'lucide-react'
+import { Plus, BarChart2, BarChart3, Calendar, Target, AlertCircle, TrendingUp, TrendingDown, DollarSign, Wallet, CreditCard, ArrowRight, ArrowUpRight, ArrowDownRight, ArrowDownLeft, Activity, PieChart, ShieldAlert, Zap, AlertTriangle, CheckCircle, ClipboardList, Banknote, Clock, Sparkles } from 'lucide-react'
 import { formatCurrency } from '@/lib/financial-utils'
 import { useEnhancedStaticData } from '@/lib/enhanced-static-data-manager'
 import MonthlyInsights from './MonthlyInsights'
@@ -185,6 +185,42 @@ export default React.memo(function OverviewTab({
 
   const carryOver = rolloverAmount
 
+  const getDynamicInsight = () => {
+    if (overallBudgetPct >= 100) {
+      return {
+        icon: AlertTriangle,
+        color: 'text-rose-600 dark:text-rose-400',
+        bg: 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-900/50',
+        text: `You've exceeded your total budget by ${formatCurrency(totalSpentOnBudgeted - totalBudgeted)}. Consider adjusting your limits or tightening spending.`
+      }
+    }
+    if (monthProgress < 100 && overallBudgetPct > monthProgress + 15) {
+      return {
+        icon: TrendingUp,
+        color: 'text-amber-600 dark:text-amber-400',
+        bg: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-900/50',
+        text: `Your spending is outpacing the month. You've used ${Math.round(overallBudgetPct)}% of your budget, but we're only ${monthProgress}% through the month.`
+      }
+    }
+    if (savingsRate >= 20) {
+      return {
+        icon: Sparkles,
+        color: 'text-emerald-600 dark:text-emerald-400',
+        bg: 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-900/50',
+        text: `Excellent! You're saving ${savingsRate}% of your income this period. You're building solid financial habits.`
+      }
+    }
+    return {
+      icon: CheckCircle,
+      color: 'text-blue-600 dark:text-blue-400',
+      bg: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-900/50',
+      text: `You're on track. Spending is balanced and within your planned limits for this period.`
+    }
+  }
+
+  const insight = getDynamicInsight()
+  const InsightIcon = insight.icon
+
   return (
     <div className="space-y-4 sm:space-y-5 pb-24 md:pb-6">
 
@@ -214,6 +250,15 @@ export default React.memo(function OverviewTab({
           >
             <Plus className="h-3.5 w-3.5" /> Add
           </button>
+        </div>
+      </div>
+
+      {/* Dynamic Actionable Insight */}
+      <div className={`flex items-start gap-3 p-3.5 rounded-2xl border ${insight.bg} transition-colors animate-fade-in`}>
+        <InsightIcon className={`h-5 w-5 shrink-0 ${insight.color} mt-0.5`} />
+        <div>
+          <h4 className={`text-xs font-bold ${insight.color}`}>Smart Insight</h4>
+          <p className="text-sm font-medium text-slate-700 dark:text-neutral-300 mt-0.5">{insight.text}</p>
         </div>
       </div>
 

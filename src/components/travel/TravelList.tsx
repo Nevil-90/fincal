@@ -142,10 +142,12 @@ export default function TravelList({
             )
           })
         ) : (
-          <div className="px-6 py-16 text-center">
-            <Car className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-            <p className="text-sm font-medium text-slate-900 dark:text-white">No travel logs found</p>
-            <p className="text-sm text-slate-500 dark:text-neutral-400 mt-1">Add your first entry to start tracking fuel efficiency.</p>
+          <div className="px-6 py-20 text-center flex flex-col items-center bg-slate-50/50 dark:bg-neutral-900/30">
+            <div className="w-16 h-16 rounded-2xl bg-white dark:bg-neutral-900 shadow-sm border border-slate-100 dark:border-neutral-800 flex items-center justify-center mb-4">
+              <Car className="h-8 w-8 text-slate-300 dark:text-neutral-600" />
+            </div>
+            <p className="text-lg font-bold text-slate-900 dark:text-white">No travel logs found</p>
+            <p className="text-sm text-slate-500 dark:text-neutral-400 mt-1 max-w-[250px]">Add your first entry to start tracking fuel efficiency and travel costs.</p>
           </div>
         )}
       </div>
@@ -226,10 +228,14 @@ export default function TravelList({
               })
             ) : (
               <tr>
-                <td colSpan={8} className="px-6 py-16 text-center">
-                  <Car className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-                  <p className="text-sm font-medium text-slate-900 dark:text-white">No travel logs found</p>
-                  <p className="text-sm text-slate-500 dark:text-neutral-400 mt-1">Add your first entry to start tracking fuel efficiency.</p>
+                <td colSpan={8} className="px-6 py-24 text-center">
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="w-16 h-16 rounded-2xl bg-white dark:bg-neutral-900 shadow-sm border border-slate-100 dark:border-neutral-800 flex items-center justify-center mb-4">
+                      <Car className="h-8 w-8 text-slate-300 dark:text-neutral-600" />
+                    </div>
+                    <p className="text-lg font-bold text-slate-900 dark:text-white">No travel logs found</p>
+                    <p className="text-sm text-slate-500 dark:text-neutral-400 mt-1 max-w-[300px]">Add your first entry to start tracking fuel efficiency and travel costs.</p>
+                  </div>
                 </td>
               </tr>
             )}

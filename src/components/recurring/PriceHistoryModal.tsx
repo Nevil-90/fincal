@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useScrollLock } from '@/hooks/useScrollLock'
 import { PriceChange, RecurringTransaction } from './types'
 import { Calendar, Lightbulb } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface PriceHistoryModalProps {
   recurringTransaction: RecurringTransaction
@@ -103,14 +104,14 @@ export default function PriceHistoryModal({
 
       if (response.ok) {
         const result = await response.json()
-        alert(`[SUCCESS] Recalculation complete!\n\nUpdated ${result.updatedCount} out of ${result.totalTransactions} transactions.`)
+        toast.success(`Recalculation complete! Updated ${result.updatedCount} out of ${result.totalTransactions} transactions.`)
         onPriceChangeAdded() // Refresh the parent data
       } else {
-        alert('[ERROR] Failed to recalculate transactions. Please try again.')
+        toast.error('Failed to recalculate transactions. Please try again.')
       }
     } catch (error) {
       console.error('Error recalculating transactions:', error)
-      alert('[ERROR] Network error. Please try again.')
+      toast.error('Network error. Please try again.')
     } finally {
       setRecalculating(false)
     }
