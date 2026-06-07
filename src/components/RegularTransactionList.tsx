@@ -456,7 +456,7 @@ export default function RegularTransactionList({
         setCurrentPage={setCurrentPage}
       />
 
-      <div className="hidden md:block bg-white dark:bg-neutral-800 rounded-3xl border border-slate-200 dark:border-neutral-700/80 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden">
         {filteredTransactions.length > 0 ? (
           groupBy === 'none' ? (
             <div>
