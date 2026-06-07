@@ -140,10 +140,10 @@ export default React.memo(function OverviewTab({
   const availableYears = (summary?.availableYears || [now.getFullYear()]) as number[]
 
   const STATUS_CONFIG = {
-    over:  { bar: 'bg-red-500',    label: 'Over budget',   badge: 'bg-red-50 dark:bg-red-900/20  text-red-700 dark:text-red-400  border-red-200' },
-    warn:  { bar: 'bg-orange-500', label: 'Near limit',    badge: 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 border-orange-200' },
-    ok:    { bar: 'bg-yellow-400', label: 'On track',      badge: 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 border-yellow-200' },
-    safe:  { bar: 'bg-emerald-500',label: 'Under control', badge: 'bg-emerald-50 dark:bg-emerald-900/20  text-emerald-700 dark:text-emerald-400  border-emerald-200' },
+    over: { bar: 'bg-red-500', label: 'Over budget', badge: 'bg-red-50 dark:bg-red-900/20  text-red-700 dark:text-red-400  border-red-200' },
+    warn: { bar: 'bg-orange-500', label: 'Near limit', badge: 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 border-orange-200' },
+    ok: { bar: 'bg-yellow-400', label: 'On track', badge: 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 border-yellow-200' },
+    safe: { bar: 'bg-emerald-500', label: 'Under control', badge: 'bg-emerald-50 dark:bg-emerald-900/20  text-emerald-700 dark:text-emerald-400  border-emerald-200' },
   }
 
   const [showInsights, setShowInsights] = useState(false)
@@ -174,13 +174,13 @@ export default React.memo(function OverviewTab({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ month: activeMonth, year: activeYear })
     })
-    .then(res => res.json())
-    .then(data => {
-      if (data && data.carryOver !== undefined) {
-        setRolloverAmount(data.carryOver)
-      }
-    })
-    .catch(err => console.error('Failed to calculate rollover', err))
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.carryOver !== undefined) {
+          setRolloverAmount(data.carryOver)
+        }
+      })
+      .catch(err => console.error('Failed to calculate rollover', err))
   }, [activeMonth, activeYear, thisMonthKey])
 
   const carryOver = rolloverAmount
@@ -190,7 +190,7 @@ export default React.memo(function OverviewTab({
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white ">Budget Command Center</h1>
+          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white ">Budget Overview</h1>
           <p className="text-xs text-slate-500 dark:text-neutral-400  mt-0.5">Track real spending against your budget limits in real time.</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -300,7 +300,7 @@ export default React.memo(function OverviewTab({
                   {STATUS_CONFIG[monthlySpendingGoalStatus].label}
                 </span>
               </div>
-              
+
               <div className="flex items-end justify-between mb-2">
                 <div>
                   <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-neutral-400  font-bold">Spent so far</p>
@@ -312,17 +312,17 @@ export default React.memo(function OverviewTab({
                 <div className="text-right">
                   <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-neutral-400  font-bold">Remaining</p>
                   <p className={`text-sm font-bold mt-1 ${monthlySpendingGoalStatus === 'over' ? 'text-red-600 dark:text-red-400  ' : 'text-emerald-600 dark:text-emerald-400  '}`}>
-                    {monthlySpendingGoalStatus === 'over' 
-                      ? `-${formatCurrency(balanceInfo.periodExpenses - monthlySpendingGoal)}` 
+                    {monthlySpendingGoalStatus === 'over'
+                      ? `-${formatCurrency(balanceInfo.periodExpenses - monthlySpendingGoal)}`
                       : formatCurrency(monthlySpendingGoal - balanceInfo.periodExpenses)}
                   </p>
                 </div>
               </div>
-              
+
               <div className="h-2.5 bg-slate-100 dark:bg-neutral-800 dark:bg-neutral-700 rounded-full overflow-hidden mt-3">
-                <div 
-                  className={`h-full rounded-full transition-all duration-700 ${STATUS_CONFIG[monthlySpendingGoalStatus].bar}`} 
-                  style={{ width: `${Math.min(100, monthlySpendingGoalPct)}%` }} 
+                <div
+                  className={`h-full rounded-full transition-all duration-700 ${STATUS_CONFIG[monthlySpendingGoalStatus].bar}`}
+                  style={{ width: `${Math.min(100, monthlySpendingGoalPct)}%` }}
                 />
               </div>
             </div>

@@ -113,9 +113,9 @@ export function DesktopGoalsView({
           <h2 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2 truncate">
             Goals Dashboard <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/40 px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">Pro</span>
           </h2>
-          <p className="text-slate-500 dark:text-neutral-400 text-xs mt-1 truncate">Redesigned financial target tracking and velocity analyzer.</p>
+          <p className="text-slate-500 dark:text-neutral-400 text-xs mt-1 truncate">Track and manage your savings goals.</p>
         </div>
-        
+
         <div className="flex items-center gap-3 shrink-0">
           <button
             onClick={() => setShowAddForm(true)}
@@ -141,11 +141,10 @@ export function DesktopGoalsView({
               if (tab.id !== 'active') setSelectedGoal(null)
               if (tab.id !== 'achieved') setSelectedCompletedGoal(null)
             }}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              goalFilter === tab.id 
-                ? 'bg-slate-900 text-white shadow-sm' 
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${goalFilter === tab.id
+                ? 'bg-slate-900 text-white shadow-sm'
                 : 'text-slate-500 dark:text-neutral-400 hover:bg-slate-50 dark:hover:bg-neutral-800/50 dark:bg-neutral-800/50 hover:text-slate-700 dark:text-neutral-300'
-            }`}
+              }`}
           >
             {tab.label}
           </button>
@@ -154,7 +153,7 @@ export function DesktopGoalsView({
 
       {/* Content Area */}
       <div className="flex-1 min-h-0 flex overflow-hidden w-full gap-5">
-        
+
         {/* OVERVIEW TAB CONTENT */}
         {goalFilter === 'overview' && (
           <div className="flex flex-col gap-5 w-full h-full overflow-y-auto pr-2 custom-scrollbar">
@@ -189,7 +188,7 @@ export function DesktopGoalsView({
               {/* Card 2: Savings Velocity Analyzer */}
               <div className="bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-800 rounded-2xl p-4 shadow-sm flex flex-col justify-between min-h-[120px]">
                 <div className="flex justify-between items-center mb-3">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-500">Savings Velocity</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-500">Savings Rate</span>
                   {monthlySavingPotential >= totalMonthlySavingRequired ? (
                     <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 px-2 py-1 rounded-md uppercase tracking-wider">
                       On Track
@@ -216,7 +215,7 @@ export function DesktopGoalsView({
                     </div>
                   </div>
                   <p className="text-[9px] text-slate-400 dark:text-neutral-500 mt-1 truncate">
-                    {monthlySavingPotential >= totalMonthlySavingRequired 
+                    {monthlySavingPotential >= totalMonthlySavingRequired
                       ? <span className="flex items-center gap-1"><Check className="h-2.5 w-2.5 text-emerald-500 dark:text-emerald-400" /> Capability covers required pace.</span>
                       : <span className="flex items-center gap-1"><AlertTriangle className="h-2.5 w-2.5 text-orange-500" /> Increase savings or extend deadlines.</span>}
                   </p>
@@ -226,7 +225,7 @@ export function DesktopGoalsView({
               {/* Card 3: Landmark Milestone */}
               <div className="bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-800 rounded-2xl p-4 shadow-sm flex flex-col justify-between min-h-[120px]">
                 <div className="flex justify-between items-center mb-3">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-500">Next Landmark</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-500">Next Milestone</span>
                   <span className="p-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg">
                     <Clock className="h-4 w-4" />
                   </span>
@@ -289,7 +288,7 @@ export function DesktopGoalsView({
                     <p className="text-[11px] font-bold text-indigo-950 dark:text-indigo-300 flex items-center gap-1.5 mb-2">
                       <span className="flex items-center gap-1.5"><Lightbulb className="h-3.5 w-3.5" /> Coach Allocation Advice</span>
                     </p>
-                    
+
                     {(() => {
                       const readyToCompleteGoal = goals
                         .filter(g => !g.isCompleted)
@@ -371,7 +370,7 @@ export function DesktopGoalsView({
           <>
             {/* Left Column (List) */}
             <div className={`bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-800 rounded-3xl shadow-sm flex flex-col min-h-0 overflow-hidden ${selectedGoal ? 'w-[60%] shrink-0' : 'flex-1'} transition-all duration-300`}>
-              
+
               {/* Header controls (Sorting, View Toggle) */}
               <div className="h-[60px] px-5 flex justify-between items-center border-b border-slate-100 dark:border-neutral-800 bg-white dark:bg-neutral-900 shrink-0">
                 <div className="flex items-center gap-2">
@@ -389,7 +388,7 @@ export function DesktopGoalsView({
                     <option value="name">Name A-Z</option>
                   </select>
                 </div>
-                
+
                 <div className="flex border border-slate-200 dark:border-neutral-700 rounded-xl p-0.5 bg-slate-50 dark:bg-neutral-800/50">
                   <button
                     onClick={() => setViewMode('cards')}
@@ -416,7 +415,7 @@ export function DesktopGoalsView({
                       <Target className="h-8 w-8 text-purple-500" />
                     </div>
                     <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1.5">No Active Goals</h3>
-                    <p className="text-slate-500 dark:text-neutral-400 text-xs max-w-sm mb-5 leading-relaxed">Create a savings goal to start tracking progress towards your financial landmarks.</p>
+                    <p className="text-slate-500 dark:text-neutral-400 text-xs max-w-sm mb-5 leading-relaxed">Create a savings goal to start tracking progress towards your financial goals.</p>
                     <button
                       onClick={() => setShowAddForm(true)}
                       className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 px-5 rounded-xl transition-colors text-xs shadow-md cursor-pointer"
@@ -468,7 +467,7 @@ export function DesktopGoalsView({
                                 Target: {formatCurrency(goal.targetAmount)}
                               </span>
                             </div>
-                            
+
                             <div className="w-full bg-slate-100 dark:bg-neutral-800 rounded-full h-2 overflow-hidden relative">
                               <div
                                 className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full transition-all duration-1000 ease-out"
@@ -638,7 +637,7 @@ export function DesktopGoalsView({
                               100% Completed
                             </span>
                           </div>
-                          
+
                           <div className="border-t border-slate-100 dark:border-neutral-800/50 pt-2 flex justify-between items-baseline mt-auto">
                             <span className="text-[9px] font-bold text-slate-400 dark:text-neutral-500 uppercase tracking-wider">Target Reached</span>
                             <span className="text-lg font-black text-emerald-700 dark:text-emerald-400 tracking-tight">
@@ -780,7 +779,7 @@ export function DesktopGoalsView({
                 </tbody>
               </table>
             </div>
-            
+
             <div className="p-4 border-t border-slate-100 dark:border-neutral-800 bg-slate-50 dark:bg-neutral-800/50 flex justify-between items-center shrink-0">
               <div className="text-xs font-bold text-slate-500 dark:text-neutral-400 flex items-center gap-1.5">
                 Total Allocation:

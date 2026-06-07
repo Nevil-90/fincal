@@ -56,20 +56,10 @@ export default React.memo(function DashboardHeader({
     return true
   })
 
-  const getTabTitle = () => {
-    switch (activeTab) {
-      case 'overview': return 'Financial Overview'
-      case 'analytics': return 'Financial Analytics'
-      case 'insights': return 'Insights Workspace'
-      case 'transactions': return 'Transaction History'
-      case 'goals': return 'Savings Goals'
-      case 'recurring': return 'Recurring Transactions'
-      case 'calendar': return 'Calendar View'
-      case 'traveling': return 'Traveling'
-      case 'settings': return 'Settings'
-      case 'admin': return 'System Administration'
-      default: return 'Dashboard'
-    }
+  const getGreeting = () => {
+    const hour = new Date().getHours()
+    const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'
+    return user?.firstName ? `${greeting}, ${user.firstName}` : greeting
   }
 
   const handleTabAndClose = (tab: DashboardTab) => {
@@ -90,8 +80,8 @@ export default React.memo(function DashboardHeader({
               <Menu className="h-5 w-5 text-slate-600 dark:text-neutral-400" />
             </button>
             <div className="min-w-0">
-              <h1 className="text-base sm:text-2xl font-bold text-slate-900 dark:text-white truncate">
-                {getTabTitle()}
+              <h1 className="text-base sm:text-xl font-bold text-slate-800 dark:text-slate-100 truncate">
+                {getGreeting()}
               </h1>
             </div>
           </div>

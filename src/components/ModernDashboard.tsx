@@ -96,10 +96,10 @@ export default function ModernDashboard() {
     year: new Date().getFullYear(),
     month: new Date().getMonth() + 1
   })
-  
+
   const { summary, isLoading: loadingSummary, mutate: mutateSummary } = useTransactionSummary(overviewPeriod.month, overviewPeriod.year, true)
   const { transactions: periodTxns, mutate: mutatePeriodTxns } = useTransactions(1, 10, { month: overviewPeriod.month, year: overviewPeriod.year })
-  
+
   const [advancedFilters, setAdvancedFilters] = useState<{
     year?: number
     month?: number
@@ -115,12 +115,12 @@ export default function ModernDashboard() {
   )
 
   const { goals, isLoading: isLoadingGoals, mutate: mutateGoals } = useGoals()
-  
+
   const [showAddTransaction, setShowAddTransaction] = useState(false)
   const [showOnboarding, setShowOnboarding] = useState(false)
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
-  
+
   // Only show the full-page skeleton on the initial load. SWR's isLoading can
   // flicker during key transitions; gating on missing data makes it bulletproof.
   const isInitialSummaryLoading = !summary && loadingSummary
@@ -142,9 +142,9 @@ export default function ModernDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
 
   const filteredSummary = useMemo(() => {
-    const yearOnly  = advancedFilters.year !== undefined && advancedFilters.month === undefined
+    const yearOnly = advancedFilters.year !== undefined && advancedFilters.month === undefined
     const monthOnly = advancedFilters.month !== undefined
-    const noFilter  = !advancedFilters.year && !advancedFilters.month
+    const noFilter = !advancedFilters.year && !advancedFilters.month
 
     // Choose the right aggregate based on active filter:
     //  - no filter   → summary.global (always-fetched overview data, never undefined)
@@ -163,12 +163,12 @@ export default function ModernDashboard() {
     }
 
     return {
-      income:     source?.income   || 0,
-      expense:    source?.expense  || 0,
-      net:        source?.balance  || 0,
+      income: source?.income || 0,
+      expense: source?.expense || 0,
+      net: source?.balance || 0,
       categories: 0,
       latestDate: '—',
-      count:      source?.count    || 0
+      count: source?.count || 0
     }
   }, [txSummary, summary, advancedFilters])
 
@@ -194,15 +194,15 @@ export default function ModernDashboard() {
   // Process overdue recurring transactions once per calendar day.
   useEffect(() => {
     if (!user) return
-    
+
     const processRecurringTransactions = async () => {
       try {
         const lastProcessDate = localStorage.getItem('lastRecurringProcessDate')
         const today = new Date().toISOString().split('T')[0]
-        
+
         if (lastProcessDate !== today) {
           const response = await fetch('/api/recurring/process', { method: 'POST' })
-          
+
           if (response.ok) {
             localStorage.setItem('lastRecurringProcessDate', today)
             const result = await response.json()
@@ -244,7 +244,7 @@ export default function ModernDashboard() {
 
 
   useEffect(() => {
-    const unsubscribe = enhancedStaticDataManager.subscribe(() => {})
+    const unsubscribe = enhancedStaticDataManager.subscribe(() => { })
     return unsubscribe
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -372,7 +372,7 @@ export default function ModernDashboard() {
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                   <div>
                     <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-blue-600 dark:text-blue-500">Transactions</p>
-                    <h3 className="mt-2 text-2xl sm:text-3xl font-semibold tracking-tight text-slate-950 dark:text-white">Ledger Command Center</h3>
+                    <h3 className="mt-2 text-2xl sm:text-3xl font-semibold tracking-tight text-slate-950 dark:text-white">Dashboard</h3>
                     <p className="mt-1 text-sm text-slate-500 dark:text-neutral-400">Filter, inspect, and audit income and expense flows.</p>
 
                     <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-neutral-400">

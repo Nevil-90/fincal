@@ -1,20 +1,20 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { 
-  Users, 
-  ShieldCheck, 
-  Database, 
-  Mail, 
-  AlertTriangle, 
-  Activity, 
-  RefreshCw, 
-  Search, 
-  Trash2, 
-  CheckCircle2, 
-  UserMinus, 
-  UserPlus, 
-  Download, 
+import {
+  Users,
+  ShieldCheck,
+  Database,
+  Mail,
+  AlertTriangle,
+  Activity,
+  RefreshCw,
+  Search,
+  Trash2,
+  CheckCircle2,
+  UserMinus,
+  UserPlus,
+  Download,
   Server,
   Terminal,
   ShieldOff
@@ -49,25 +49,25 @@ interface SessionRecord {
 
 export default function AdminTab() {
   const [activeSubTab, setActiveSubTab] = useState<'users' | 'sessions' | 'system'>('users')
-  
+
   // Data states
   const [users, setUsers] = useState<UserRecord[]>([])
   const [sessions, setSessions] = useState<SessionRecord[]>([])
-  
+
   // Loading & Error states
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
-  
+
   // SMTP Health-check Console state
   const [smtpLog, setSmtpLog] = useState<string[]>([])
   const [smtpChecking, setSmtpChecking] = useState(false)
-  
+
   // Search query
   const [searchQuery, setSearchQuery] = useState('')
 
   // Confirm Toast state
-  const [pendingDeleteUser, setPendingDeleteUser] = useState<{id: string, name: string} | null>(null)
+  const [pendingDeleteUser, setPendingDeleteUser] = useState<{ id: string, name: string } | null>(null)
 
   // Pagination states
   const [usersPage, setUsersPage] = useState(1)
@@ -166,13 +166,13 @@ export default function AdminTab() {
     setSuccess(null)
     setSmtpChecking(true)
     setSmtpLog(['[INIT] Initiating diagnostic handshakes...', '[NET] Resolving host...'])
-    
+
     try {
       const res = await fetch('/api/admin/health-check', {
         method: 'POST'
       })
       const data = await res.json()
-      
+
       if (res.ok) {
         setSmtpLog(prev => [
           ...prev,
@@ -205,7 +205,7 @@ export default function AdminTab() {
   }
 
   // Filter users based on search
-  const filteredUsers = users.filter(u => 
+  const filteredUsers = users.filter(u =>
     `${u.firstName} ${u.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
     u.email.toLowerCase().includes(searchQuery.toLowerCase())
   )
@@ -225,7 +225,7 @@ export default function AdminTab() {
           <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-slate-500 dark:text-neutral-400">Security Control</p>
           <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
             <ShieldCheck className="h-8 w-8 text-blue-600 dark:text-blue-400 shrink-0" />
-            Administrative Intelligence
+            Administration
           </h2>
           <p className="mt-1 text-sm text-slate-500 dark:text-neutral-400">
             Monitor system operations, manage user access, terminate stale sessions, and safeguard assets.
@@ -291,25 +291,22 @@ export default function AdminTab() {
       <div className="flex border-b border-slate-200 dark:border-neutral-800 gap-6">
         <button
           onClick={() => setActiveSubTab('users')}
-          className={`pb-3 text-sm font-bold border-b-2 transition-all ${
-            activeSubTab === 'users' ? 'border-blue-600 text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 dark:text-neutral-400 hover:text-slate-800 dark:text-neutral-200'
-          }`}
+          className={`pb-3 text-sm font-bold border-b-2 transition-all ${activeSubTab === 'users' ? 'border-blue-600 text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 dark:text-neutral-400 hover:text-slate-800 dark:text-neutral-200'
+            }`}
         >
           User Directory ({users.length})
         </button>
         <button
           onClick={() => setActiveSubTab('sessions')}
-          className={`pb-3 text-sm font-bold border-b-2 transition-all ${
-            activeSubTab === 'sessions' ? 'border-blue-600 text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 dark:text-neutral-400 hover:text-slate-800 dark:text-neutral-200'
-          }`}
+          className={`pb-3 text-sm font-bold border-b-2 transition-all ${activeSubTab === 'sessions' ? 'border-blue-600 text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 dark:text-neutral-400 hover:text-slate-800 dark:text-neutral-200'
+            }`}
         >
           Session Controller ({sessions.length})
         </button>
         <button
           onClick={() => setActiveSubTab('system')}
-          className={`pb-3 text-sm font-bold border-b-2 transition-all ${
-            activeSubTab === 'system' ? 'border-blue-600 text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 dark:text-neutral-400 hover:text-slate-800 dark:text-neutral-200'
-          }`}
+          className={`pb-3 text-sm font-bold border-b-2 transition-all ${activeSubTab === 'system' ? 'border-blue-600 text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 dark:text-neutral-400 hover:text-slate-800 dark:text-neutral-200'
+            }`}
         >
           SMTP & System Diagnostics
         </button>
@@ -354,16 +351,14 @@ export default function AdminTab() {
                       {u.reason || 'None provided'}
                     </td>
                     <td className="py-4 px-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                        u.isActive ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400'
-                      }`}>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${u.isActive ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400'
+                        }`}>
                         {u.isActive ? 'Active' : 'Suspended'}
                       </span>
                     </td>
                     <td className="py-4 px-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                        u.role === 'ADMIN' ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400' : 'bg-slate-100 dark:bg-neutral-800 text-slate-700 dark:text-neutral-300'
-                      }`}>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${u.role === 'ADMIN' ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400' : 'bg-slate-100 dark:bg-neutral-800 text-slate-700 dark:text-neutral-300'
+                        }`}>
                         {u.role}
                       </span>
                     </td>
@@ -406,7 +401,7 @@ export default function AdminTab() {
                           Make Admin
                         </button>
                       )}
-                      
+
                       <button
                         onClick={() => {
                           setPendingDeleteUser({ id: u.id, name: `${u.firstName} ${u.lastName}` })
@@ -439,13 +434,12 @@ export default function AdminTab() {
                     <div className="font-bold text-slate-900 dark:text-white">{u.firstName} {u.lastName}</div>
                     <div className="text-xs text-slate-500 dark:text-neutral-400">{u.email}</div>
                   </div>
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide ${
-                    u.isActive ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400'
-                  }`}>
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide ${u.isActive ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400'
+                    }`}>
                     {u.isActive ? 'Active' : 'Suspended'}
                   </span>
                 </div>
-                
+
                 <div className="text-xs text-slate-600 dark:text-neutral-400 bg-slate-50 dark:bg-neutral-900 p-2.5 rounded-xl border border-slate-100">
                   <span className="font-bold text-slate-400 uppercase text-[10px] tracking-wider block mb-1">Reason</span>
                   {u.reason || 'None provided'}
@@ -453,9 +447,8 @@ export default function AdminTab() {
 
                 <div className="flex justify-between items-center text-xs px-1">
                   <div className="flex items-center gap-2">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold ${
-                      u.role === 'ADMIN' ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400 border border-indigo-200' : 'bg-slate-100 dark:bg-neutral-800 text-slate-700 dark:text-neutral-300 border border-slate-200 dark:border-neutral-800'
-                    }`}>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold ${u.role === 'ADMIN' ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400 border border-indigo-200' : 'bg-slate-100 dark:bg-neutral-800 text-slate-700 dark:text-neutral-300 border border-slate-200 dark:border-neutral-800'
+                      }`}>
                       {u.role}
                     </span>
                     <span className="text-slate-400 font-medium">{new Date(u.createdAt).toLocaleDateString()}</span>
@@ -497,7 +490,7 @@ export default function AdminTab() {
                         <ShieldCheck className="h-4 w-4" />
                       </button>
                     )}
-                    
+
                     <button
                       onClick={() => {
                         setPendingDeleteUser({ id: u.id, name: `${u.firstName} ${u.lastName}` })
@@ -521,7 +514,7 @@ export default function AdminTab() {
           {/* User Pagination */}
           {totalUserPages > 1 && (
             <div className="flex items-center justify-between border-t border-slate-200 dark:border-neutral-800 pt-5 mt-2 px-1">
-              <button 
+              <button
                 disabled={usersPage === 1}
                 onClick={() => setUsersPage(p => Math.max(1, p - 1))}
                 className="px-4 py-2 text-xs font-bold bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 dark:hover:bg-neutral-700 text-slate-700 dark:text-neutral-300 rounded-xl disabled:opacity-40 transition-colors shadow-sm"
@@ -529,7 +522,7 @@ export default function AdminTab() {
                 Previous
               </button>
               <span className="text-xs text-slate-500 dark:text-neutral-400 font-bold bg-slate-50 dark:bg-neutral-900 px-3 py-1 rounded-lg">Page {usersPage} of {totalUserPages}</span>
-              <button 
+              <button
                 disabled={usersPage === totalUserPages}
                 onClick={() => setUsersPage(p => Math.min(totalUserPages, p + 1))}
                 className="px-4 py-2 text-xs font-bold bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 dark:hover:bg-neutral-700 text-slate-700 dark:text-neutral-300 rounded-xl disabled:opacity-40 transition-colors shadow-sm"
@@ -622,7 +615,7 @@ export default function AdminTab() {
                     </button>
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-2 text-[11px] bg-slate-50 dark:bg-neutral-900 p-3 rounded-xl border border-slate-100 mt-1">
                   <div>
                     <span className="font-bold text-slate-400 uppercase tracking-wider block mb-0.5 text-[9px]">Created</span>
@@ -645,7 +638,7 @@ export default function AdminTab() {
           {/* Session Pagination */}
           {totalSessionPages > 1 && (
             <div className="flex items-center justify-between border-t border-slate-200 dark:border-neutral-800 pt-5 mt-2 px-1">
-              <button 
+              <button
                 disabled={sessionsPage === 1}
                 onClick={() => setSessionsPage(p => Math.max(1, p - 1))}
                 className="px-4 py-2 text-xs font-bold bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 dark:hover:bg-neutral-700 text-slate-700 dark:text-neutral-300 rounded-xl disabled:opacity-40 transition-colors shadow-sm"
@@ -653,7 +646,7 @@ export default function AdminTab() {
                 Previous
               </button>
               <span className="text-xs text-slate-500 dark:text-neutral-400 font-bold bg-slate-50 dark:bg-neutral-900 px-3 py-1 rounded-lg">Page {sessionsPage} of {totalSessionPages}</span>
-              <button 
+              <button
                 disabled={sessionsPage === totalSessionPages}
                 onClick={() => setSessionsPage(p => Math.min(totalSessionPages, p + 1))}
                 className="px-4 py-2 text-xs font-bold bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 dark:hover:bg-neutral-700 text-slate-700 dark:text-neutral-300 rounded-xl disabled:opacity-40 transition-colors shadow-sm"
