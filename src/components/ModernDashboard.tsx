@@ -9,6 +9,7 @@ import { useScrollLock } from '@/hooks/useScrollLock'
 import { formatCurrency } from '@/lib/financial-utils'
 import { useUser, useTransactionSummary, useTransactions, useGoals } from '@/hooks/useApi'
 import dynamic from 'next/dynamic'
+import { motion, AnimatePresence } from 'framer-motion'
 import AddTransactionForm from './AddTransactionForm'
 import RegularTransactionList from './RegularTransactionList'
 import RecurringTransactions from './RecurringTransactions'
@@ -323,7 +324,7 @@ export default function ModernDashboard() {
       />
 
       <div className="flex min-w-0 flex-1 flex-col min-h-screen relative">
-        <div className="sticky top-0 z-[60] bg-white dark:bg-neutral-950 transition-colors duration-200">
+        <div className="sticky top-0 z-[60] bg-white/80 dark:bg-neutral-950/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-neutral-800/50 transition-colors duration-200">
           <DashboardHeader
             activeTab={activeTab as any}
             onToggleSidebar={handleToggleSidebar}
@@ -336,165 +337,223 @@ export default function ModernDashboard() {
           />
         </div>
 
-        <main className="flex-1 bg-transparent px-4 py-6 sm:px-6 lg:px-8 pb-24 md:pb-6">
-          {activeTab === 'overview' && (
-            <div className="space-y-6">
-              <OverviewTab
-                periodTxns={periodTxns}
-                summary={summary}
-                overviewPeriod={overviewPeriod}
-                onPeriodChange={setOverviewPeriod}
-                onTabChange={setActiveTab}
-                onShowAddTransaction={handleShowAddTransaction}
-                onOpenSettings={handleOpenSettings}
-              />
-            </div>
-          )}
+        <main className="flex-1 bg-transparent px-4 py-6 sm:px-6 lg:px-8 pb-24 md:pb-6 relative overflow-hidden">
+          <AnimatePresence mode="wait">
+            {activeTab === 'overview' && (
+              <motion.div 
+                key="overview"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-6"
+              >
+                <OverviewTab
+                  periodTxns={periodTxns}
+                  summary={summary}
+                  overviewPeriod={overviewPeriod}
+                  onPeriodChange={setOverviewPeriod}
+                  onTabChange={setActiveTab}
+                  onShowAddTransaction={handleShowAddTransaction}
+                  onOpenSettings={handleOpenSettings}
+                />
+              </motion.div>
+            )}
 
-          {activeTab === 'analytics' && (
-            <div className="space-y-6">
-              <AnalyticsTab goals={goals} />
-            </div>
-          )}
+            {activeTab === 'analytics' && (
+              <motion.div 
+                key="analytics"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-6"
+              >
+                <AnalyticsTab goals={goals} />
+              </motion.div>
+            )}
 
-          {activeTab === 'goals' && (
-            <div className="space-y-6">
-              <SavingsGoalsNew
-                goals={goals}
-                availableBalance={availableBalance}
-                onRefresh={refreshAll}
-              />
-            </div>
-          )}
+            {activeTab === 'goals' && (
+              <motion.div 
+                key="goals"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-6"
+              >
+                <SavingsGoalsNew
+                  goals={goals}
+                  availableBalance={availableBalance}
+                  onRefresh={refreshAll}
+                />
+              </motion.div>
+            )}
 
-          {activeTab === 'transactions' && (
-            <div className="space-y-6">
-              <div className="rounded-2xl md:rounded-[28px] border border-slate-200/70 dark:border-neutral-800/70 bg-white/90 dark:bg-neutral-900/90 p-4 sm:p-6 shadow-[0_20px_50px_-35px_rgba(15,23,42,0.5)] dark:shadow-none">
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                  <div>
-                    <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-blue-600 dark:text-blue-500">Transactions</p>
-                    <h3 className="mt-2 text-2xl sm:text-3xl font-semibold tracking-tight text-slate-950 dark:text-white">Dashboard</h3>
-                    <p className="mt-1 text-sm text-slate-500 dark:text-neutral-400">Filter, inspect, and audit income and expense flows.</p>
+            {activeTab === 'transactions' && (
+              <motion.div 
+                key="transactions"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-6"
+              >
+                <div className="rounded-2xl md:rounded-[28px] border border-slate-200/70 dark:border-neutral-800/70 bg-white/90 dark:bg-neutral-900/90 p-4 sm:p-6 shadow-[0_20px_50px_-35px_rgba(15,23,42,0.5)] dark:shadow-none">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                      <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-blue-600 dark:text-blue-500">Transactions</p>
+                      <h3 className="mt-2 text-2xl sm:text-3xl font-semibold tracking-tight text-slate-950 dark:text-white">Dashboard</h3>
+                      <p className="mt-1 text-sm text-slate-500 dark:text-neutral-400">Filter, inspect, and audit income and expense flows.</p>
 
-                    <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-neutral-400">
-                      <div className="rounded-xl bg-slate-100 dark:bg-neutral-800 px-2.5 py-1.5 font-medium text-slate-700 dark:text-neutral-300">
-                        {filteredSummary.count} Transactions
+                      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-neutral-400">
+                        <div className="rounded-xl bg-slate-100 dark:bg-neutral-800 px-2.5 py-1.5 font-medium text-slate-700 dark:text-neutral-300">
+                          {filteredSummary.count} Transactions
+                        </div>
+
+                        {advancedFilters.year && (
+                          <div className="rounded-xl bg-blue-50 dark:bg-blue-900/30 px-2.5 py-1.5 font-medium text-blue-700 dark:text-blue-400">
+                            Year: {advancedFilters.year}
+                          </div>
+                        )}
+
+                        {advancedFilters.month !== undefined && (
+                          <div className="rounded-xl bg-indigo-50 dark:bg-indigo-900/30 px-2.5 py-1.5 font-medium text-indigo-700 dark:text-indigo-400">
+                            Month: {advancedFilters.month + 1}
+                          </div>
+                        )}
                       </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 mt-3 lg:mt-0 w-full lg:w-auto">
+                      <select
+                        value={advancedFilters.year || 'all'}
+                        onChange={(e) => {
+                          const year = e.target.value === 'all' ? undefined : parseInt(e.target.value)
+                          setAdvancedFilters(prev => ({ ...prev, year, month: undefined }))
+                        }}
+                        className="flex-1 lg:flex-initial min-w-[110px] rounded-xl border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 px-3 py-2 text-xs font-semibold text-slate-800 dark:text-neutral-200 shadow-sm transition-all focus:border-slate-300 dark:focus:border-neutral-500 focus:bg-white dark:focus:bg-neutral-900 focus:outline-none"
+                      >
+                        <option value="all">All Years</option>
+                        {availableYears.map(year => (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        ))}
+                      </select>
 
                       {advancedFilters.year && (
-                        <div className="rounded-xl bg-blue-50 dark:bg-blue-900/30 px-2.5 py-1.5 font-medium text-blue-700 dark:text-blue-400">
-                          Year: {advancedFilters.year}
-                        </div>
+                        <select
+                          value={advancedFilters.month !== undefined ? advancedFilters.month : 'all'}
+                          onChange={(e) => {
+                            const month = e.target.value === 'all' ? undefined : parseInt(e.target.value)
+                            setAdvancedFilters(prev => ({ ...prev, month }))
+                          }}
+                          className="flex-1 lg:flex-initial min-w-[110px] rounded-xl border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 px-3 py-2 text-xs font-semibold text-slate-800 dark:text-neutral-200 shadow-sm transition-all focus:border-slate-300 dark:focus:border-neutral-500 focus:bg-white dark:focus:bg-neutral-900 focus:outline-none"
+                        >
+                          <option value="all">All Months</option>
+                          {Array.from({ length: 12 }, (_, i) => (
+                            <option key={i} value={i}>
+                              {new Date(2024, i, 1).toLocaleDateString('en-US', { month: 'long' })}
+                            </option>
+                          ))}
+                        </select>
                       )}
 
-                      {advancedFilters.month !== undefined && (
-                        <div className="rounded-xl bg-indigo-50 dark:bg-indigo-900/30 px-2.5 py-1.5 font-medium text-indigo-700 dark:text-indigo-400">
-                          Month: {advancedFilters.month + 1}
-                        </div>
+                      {(advancedFilters.year || advancedFilters.month !== undefined) && (
+                        <button
+                          onClick={() => setAdvancedFilters({})}
+                          className="rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-neutral-300 shadow-sm transition-all hover:bg-slate-50 dark:hover:bg-neutral-700"
+                        >
+                          Clear
+                        </button>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2 mt-3 lg:mt-0 w-full lg:w-auto">
-                    <select
-                      value={advancedFilters.year || 'all'}
-                      onChange={(e) => {
-                        const year = e.target.value === 'all' ? undefined : parseInt(e.target.value)
-                        setAdvancedFilters(prev => ({ ...prev, year, month: undefined }))
-                      }}
-                      className="flex-1 lg:flex-initial min-w-[110px] rounded-xl border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 px-3 py-2 text-xs font-semibold text-slate-800 dark:text-neutral-200 shadow-sm transition-all focus:border-slate-300 dark:focus:border-neutral-500 focus:bg-white dark:focus:bg-neutral-900 focus:outline-none"
-                    >
-                      <option value="all">All Years</option>
-                      {availableYears.map(year => (
-                        <option key={year} value={year}>
-                          {year}
-                        </option>
-                      ))}
-                    </select>
-
-                    {advancedFilters.year && (
-                      <select
-                        value={advancedFilters.month !== undefined ? advancedFilters.month : 'all'}
-                        onChange={(e) => {
-                          const month = e.target.value === 'all' ? undefined : parseInt(e.target.value)
-                          setAdvancedFilters(prev => ({ ...prev, month }))
-                        }}
-                        className="flex-1 lg:flex-initial min-w-[110px] rounded-xl border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 px-3 py-2 text-xs font-semibold text-slate-800 dark:text-neutral-200 shadow-sm transition-all focus:border-slate-300 dark:focus:border-neutral-500 focus:bg-white dark:focus:bg-neutral-900 focus:outline-none"
-                      >
-                        <option value="all">All Months</option>
-                        {Array.from({ length: 12 }, (_, i) => (
-                          <option key={i} value={i}>
-                            {new Date(2024, i, 1).toLocaleDateString('en-US', { month: 'long' })}
-                          </option>
-                        ))}
-                      </select>
-                    )}
-
-                    {(advancedFilters.year || advancedFilters.month !== undefined) && (
-                      <button
-                        onClick={() => setAdvancedFilters({})}
-                        className="rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-neutral-300 shadow-sm transition-all hover:bg-slate-50 dark:hover:bg-neutral-700"
-                      >
-                        Clear
-                      </button>
-                    )}
+                  <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4 [&>*:last-child:nth-child(odd)]:col-span-2 lg:[&>*:last-child:nth-child(odd)]:col-span-1">
+                    <div className="rounded-xl border border-slate-200 dark:border-neutral-700/50 bg-white dark:bg-neutral-800/50 p-3 shadow-sm">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Income</p>
+                      <p className="mt-0.5 text-base font-black text-emerald-600 dark:text-emerald-500">{formatCurrency(filteredSummary.income)}</p>
+                    </div>
+                    <div className="rounded-xl border border-slate-200 dark:border-neutral-700/50 bg-white dark:bg-neutral-800/50 p-3 shadow-sm">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Expense</p>
+                      <p className="mt-0.5 text-base font-black text-rose-600 dark:text-rose-500">{formatCurrency(filteredSummary.expense)}</p>
+                    </div>
+                    <div className="rounded-xl border border-slate-200 dark:border-neutral-700/50 bg-white dark:bg-neutral-800/50 p-3 shadow-sm">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Net</p>
+                      <p className="mt-0.5 text-base font-black text-slate-900 dark:text-white">{formatCurrency(filteredSummary.net)}</p>
+                    </div>
+                    <div className="rounded-xl border border-slate-200 dark:border-neutral-700/50 bg-white dark:bg-neutral-800/50 p-3 shadow-sm">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Latest Entry</p>
+                      <p className="mt-0.5 text-base font-black text-slate-900 dark:text-white truncate">{filteredSummary.latestDate}</p>
+                    </div>
                   </div>
                 </div>
 
-                <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4 [&>*:last-child:nth-child(odd)]:col-span-2 lg:[&>*:last-child:nth-child(odd)]:col-span-1">
-                  <div className="rounded-xl border border-slate-200 dark:border-neutral-700/50 bg-white dark:bg-neutral-800/50 p-3 shadow-sm">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Income</p>
-                    <p className="mt-0.5 text-base font-black text-emerald-600 dark:text-emerald-500">{formatCurrency(filteredSummary.income)}</p>
-                  </div>
-                  <div className="rounded-xl border border-slate-200 dark:border-neutral-700/50 bg-white dark:bg-neutral-800/50 p-3 shadow-sm">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Expense</p>
-                    <p className="mt-0.5 text-base font-black text-rose-600 dark:text-rose-500">{formatCurrency(filteredSummary.expense)}</p>
-                  </div>
-                  <div className="rounded-xl border border-slate-200 dark:border-neutral-700/50 bg-white dark:bg-neutral-800/50 p-3 shadow-sm">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Net</p>
-                    <p className="mt-0.5 text-base font-black text-slate-900 dark:text-white">{formatCurrency(filteredSummary.net)}</p>
-                  </div>
-                  <div className="rounded-xl border border-slate-200 dark:border-neutral-700/50 bg-white dark:bg-neutral-800/50 p-3 shadow-sm">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Latest Entry</p>
-                    <p className="mt-0.5 text-base font-black text-slate-900 dark:text-white truncate">{filteredSummary.latestDate}</p>
-                  </div>
+                <RegularTransactionList
+                  selectedMonth={advancedFilters.month}
+                  selectedYear={advancedFilters.year}
+                  viewMode={advancedFilters.month !== undefined ? 'month' : (advancedFilters.year ? 'year' : 'all')}
+                  onTransactionDeleted={onTransactionDeleted}
+                />
+              </motion.div>
+            )}
+
+            {activeTab === 'recurring' && (
+              <motion.div 
+                key="recurring"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-6"
+              >
+                <div className="rounded-[28px] border border-slate-200/70 dark:border-neutral-800/70 bg-white/85 dark:bg-neutral-900/90 p-5 shadow-[0_20px_50px_-35px_rgba(15,23,42,0.5)] dark:shadow-none backdrop-blur sm:p-6">
+                  <RecurringTransactions />
                 </div>
-              </div>
+              </motion.div>
+            )}
 
-              <RegularTransactionList
-                selectedMonth={advancedFilters.month}
-                selectedYear={advancedFilters.year}
-                viewMode={advancedFilters.month !== undefined ? 'month' : (advancedFilters.year ? 'year' : 'all')}
-                onTransactionDeleted={onTransactionDeleted}
-              />
-            </div>
-          )}
+            {activeTab === 'calendar' && (
+              <motion.div 
+                key="calendar"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-6"
+              >
+                <CalendarTab />
+              </motion.div>
+            )}
 
-          {activeTab === 'recurring' && (
-            <div className="space-y-6">
-              <div className="rounded-[28px] border border-slate-200/70 dark:border-neutral-800/70 bg-white/85 dark:bg-neutral-900/90 p-5 shadow-[0_20px_50px_-35px_rgba(15,23,42,0.5)] dark:shadow-none backdrop-blur sm:p-6">
-                <RecurringTransactions />
-              </div>
-            </div>
-          )}
+            {activeTab === 'traveling' && (
+              <motion.div 
+                key="traveling"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-6"
+              >
+                <TravelingTab />
+              </motion.div>
+            )}
 
-          {activeTab === 'calendar' && (
-            <div className="space-y-6">
-              <CalendarTab />
-            </div>
-          )}
-
-          {activeTab === 'traveling' && (
-            <div className="space-y-6">
-              <TravelingTab />
-            </div>
-          )}
-
-          {activeTab === 'admin' && user?.role === 'ADMIN' && (
-            <div className="space-y-6">
-              <AdminTab />
-            </div>
-          )}
+            {activeTab === 'admin' && user?.role === 'ADMIN' && (
+              <motion.div 
+                key="admin"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-6"
+              >
+                <AdminTab />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </main>
       </div>
 

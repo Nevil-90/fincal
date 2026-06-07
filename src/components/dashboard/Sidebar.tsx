@@ -62,7 +62,7 @@ export default React.memo(function Sidebar({ sidebarOpen, activeTab, availableBa
         />
       )}
 
-      <div className={`fixed inset-y-0 left-0 z-[110] bg-white dark:bg-neutral-900 border-r border-slate-200 dark:border-neutral-800 transition-all duration-300 flex flex-col shadow-xl md:shadow-sm md:sticky md:top-0 md:h-screen md:translate-x-0 ${
+      <div className={`fixed inset-y-0 left-0 z-[110] bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border-r border-slate-200/50 dark:border-neutral-800/50 transition-all duration-300 flex flex-col shadow-[10px_0_40px_-15px_rgba(0,0,0,0.05)] md:shadow-none md:sticky md:top-0 md:h-screen md:translate-x-0 ${
         sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full w-64 md:translate-x-0 md:w-16'
       }`}>
         {/* Logo */}

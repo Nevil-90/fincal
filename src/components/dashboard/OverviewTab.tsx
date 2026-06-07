@@ -411,6 +411,12 @@ export default React.memo(function OverviewTab({
                             {cfg.label}
                           </span>
                           <span className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-neutral-200  truncate">{row.category}</span>
+                          {row.pct >= 90 && (
+                            <span className="relative flex h-2.5 w-2.5 ml-1 shrink-0" title="Critical budget utilization">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                            </span>
+                          )}
                         </div>
                         <div className="text-right shrink-0 ml-3">
                           <span className="text-xs font-black text-slate-900 dark:text-white  tabular-nums">{formatCurrency(row.spent)}</span>
