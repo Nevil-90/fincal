@@ -560,6 +560,7 @@ export default function ModernDashboard() {
       <CommandPalette 
         onNavigate={handleTabChange} 
         onAddTransaction={handleShowAddTransaction} 
+        onTransactionAdded={onTransactionAdded}
         isAdmin={user?.role === 'ADMIN'} 
       />
 

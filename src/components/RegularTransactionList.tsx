@@ -186,51 +186,57 @@ export default function RegularTransactionList({
   }, [filteredTransactions, groupBy, pendingDeleteIds])
 
   const deleteTransaction = useCallback(async (id: string) => {
+    // Capture transaction data before deleting for the Undo feature
+    const t = fetchedTransactions?.find(tx => tx.id === id)
+
     setPendingDeleteIds(prev => {
       const next = new Set(prev)
       next.add(id)
       return next
     })
 
-    const doDelete = async () => {
-      try {
-        await fetch(`/api/transactions?id=${id}`, { method: 'DELETE' })
-        setPendingDeleteIds(prev => {
-          const next = new Set(prev)
-          next.delete(id)
-          return next
-        })
-        mutate()
-        onTransactionDeleted()
-      } catch {
-        setPendingDeleteIds(prev => {
-          const next = new Set(prev)
-          next.delete(id)
-          return next
-        })
-        onTransactionDeleted()
-      }
+    try {
+      await fetch(`/api/transactions?id=${id}`, { method: 'DELETE' })
+      mutate() // fire and forget mutate to update SWR cache
+      onTransactionDeleted()
+      
+      toast.success('Transaction deleted', {
+        action: t ? {
+          label: 'Undo',
+          onClick: async () => {
+            try {
+              await fetch('/api/transactions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  type: t.type, amount: t.amount, category: t.category, 
+                  description: t.description, paymentMethod: t.paymentMethod, 
+                  source: t.source, date: t.date, recurringTransactionId: t.recurringTransactionId
+                })
+              })
+              mutate()
+              onTransactionDeleted()
+              toast.success('Transaction restored')
+              // Also remove from pending deletes just in case
+              setPendingDeleteIds(prev => { const next = new Set(prev); next.delete(id); return next; })
+            } catch {
+              toast.error('Failed to restore transaction')
+            }
+          }
+        } : undefined,
+        duration: 5000
+      })
+    } catch {
+      setPendingDeleteIds(prev => {
+        const next = new Set(prev)
+        next.delete(id)
+        return next
+      })
+      toast.error('Failed to delete transaction')
+      onTransactionDeleted()
     }
-
-    let undoClicked = false
-    toast.success('Transaction deleted', {
-      action: {
-        label: 'Undo',
-        onClick: () => {
-          undoClicked = true
-          setPendingDeleteIds(prev => {
-            const next = new Set(prev)
-            next.delete(id)
-            return next
-          })
-        }
-      },
-      onAutoClose: () => { if (!undoClicked) doDelete() },
-      onDismiss: () => { if (!undoClicked) doDelete() },
-      duration: 5000
-    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onTransactionDeleted])
+  }, [fetchedTransactions, onTransactionDeleted])
 
   const duplicateTransaction = useCallback(async (t: Transaction) => {
     try {
@@ -260,30 +266,60 @@ export default function RegularTransactionList({
   const handleMultiDelete = async () => {
     if (selectedTransactions.size === 0) return
     const ids = Array.from(selectedTransactions)
+    
+    // Capture transactions for Undo
+    const deletedTxns = (fetchedTransactions || []).filter(tx => ids.includes(tx.id))
+    
     setSelectedTransactions(new Set())
-
-    const doMultiDelete = async () => {
-      try {
-        await Promise.all(ids.map(id => fetch(`/api/transactions?id=${id}`, { method: 'DELETE' })))
-        onTransactionDeleted()
-      } catch {
-        onTransactionDeleted()
-      }
-    }
-
-    let undoClicked = false
-    toast.success(`${ids.length} transactions deleted`, {
-      action: {
-        label: 'Undo',
-        onClick: () => {
-          undoClicked = true
-          setSelectedTransactions(new Set(ids))
-        }
-      },
-      onAutoClose: () => { if (!undoClicked) doMultiDelete() },
-      onDismiss: () => { if (!undoClicked) doMultiDelete() },
-      duration: 5000
+    setPendingDeleteIds(prev => {
+      const next = new Set(prev)
+      ids.forEach(id => next.add(id))
+      return next
     })
+
+    try {
+      await Promise.all(ids.map(id => fetch(`/api/transactions?id=${id}`, { method: 'DELETE' })))
+      mutate()
+      onTransactionDeleted()
+      
+      toast.success(`${ids.length} transactions deleted`, {
+        action: deletedTxns.length > 0 ? {
+          label: 'Undo',
+          onClick: async () => {
+            try {
+              await Promise.all(deletedTxns.map(t => fetch('/api/transactions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  type: t.type, amount: t.amount, category: t.category, 
+                  description: t.description, paymentMethod: t.paymentMethod, 
+                  source: t.source, date: t.date, recurringTransactionId: t.recurringTransactionId
+                })
+              })))
+              mutate()
+              onTransactionDeleted()
+              toast.success(`${deletedTxns.length} transactions restored`)
+              setPendingDeleteIds(prev => { 
+                const next = new Set(prev)
+                ids.forEach(id => next.delete(id))
+                return next 
+              })
+            } catch {
+              toast.error('Failed to restore transactions')
+            }
+          }
+        } : undefined,
+        duration: 5000
+      })
+    } catch {
+      setPendingDeleteIds(prev => {
+        const next = new Set(prev)
+        ids.forEach(id => next.delete(id))
+        return next
+      })
+      toast.error('Failed to delete transactions')
+      onTransactionDeleted()
+    }
   }
 
   const handleSelectTransaction = (id: string) => {
