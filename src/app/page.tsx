@@ -1,3 +1,6 @@
+// Home page. Renders the main dashboard inside a Suspense boundary
+// so the spinner shows while the dashboard's client-side data loads.
+
 import { Suspense } from 'react'
 import ModernDashboard from '@/components/ModernDashboard'
 

@@ -1,3 +1,6 @@
+// Allows an authenticated user to change their own password.
+// Verifies the current password before applying the new hash.
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'

@@ -1,3 +1,5 @@
+// Global SWR configuration provider. Disables focus/reconnect revalidation
+// and deduplicates requests within a 60-second window.
 'use client'
 
 import { SWRConfig } from 'swr'

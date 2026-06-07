@@ -1,3 +1,4 @@
+// Authentication page for register
 'use client'
 
 import React, { useState } from 'react'

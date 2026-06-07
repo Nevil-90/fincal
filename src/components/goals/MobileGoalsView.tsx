@@ -1,3 +1,4 @@
+// Mobile-optimized view for listing active and completed savings goals.
 import { Plus, Target, Trophy } from 'lucide-react'
 import { formatCurrency } from '@/lib/financial-utils'
 import { SavingsGoal, GoalContribution } from './types'

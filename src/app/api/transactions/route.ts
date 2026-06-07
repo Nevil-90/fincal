@@ -1,3 +1,7 @@
+// Full CRUD for transactions with filtering, pagination, and optional
+// opening-balance calculation. PATCH updates an existing transaction in place.
+// DELETE is a soft-delete; transactions linked to a goal contribution are blocked.
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
@@ -11,12 +15,10 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const recurringId = searchParams.get('recurringId')
     
-    // Pagination parameters
     const page = parseInt(searchParams.get('page') || '1', 10)
     const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 200)
     const offset = (page - 1) * limit
     
-    // Filter parameters
     const category = searchParams.get('category')
     const type = searchParams.get('type') as 'income' | 'expense' | null
     const paymentMethod = searchParams.get('paymentMethod')
@@ -27,11 +29,9 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search')
     const includeOpeningBalance = searchParams.get('includeOpeningBalance') === 'true'
     
-    // Month/year filter parameters for export
     const monthParam = searchParams.get('month')
     const yearParam = searchParams.get('year')
     
-    // Build where clause
     const whereClause: {
       userId: string
       recurringTransactionId?: string
@@ -82,12 +82,9 @@ export async function GET(request: NextRequest) {
       if (endDate) {
         whereClause.date.lte = new Date(endDate)
       }
-    }
-    // Handle month/year filtering for export (only if no custom date range is provided)
-    else if (monthParam && yearParam) {
-      // Filter by specific month and year
+    } else if (monthParam && yearParam) {
       const year = parseInt(yearParam, 10)
-      const month = parseInt(monthParam, 10) - 1 // Convert to 0-based month
+      const month = parseInt(monthParam, 10) - 1
       const startOfMonth = new Date(year, month, 1)
       const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59, 999)
       
@@ -96,7 +93,6 @@ export async function GET(request: NextRequest) {
         lte: endOfMonth
       }
     } else if (yearParam && !monthParam) {
-      // Filter by specific year only
       const year = parseInt(yearParam, 10)
       const startOfYear = new Date(year, 0, 1)
       const endOfYear = new Date(year, 11, 31, 23, 59, 59, 999)
@@ -126,7 +122,6 @@ export async function GET(request: NextRequest) {
       ]
     }
     
-    // Prepare queries to run concurrently
     const queries: Promise<any>[] = [
       prisma.transaction.count({ where: whereClause }),
       prisma.transaction.findMany({
@@ -148,7 +143,6 @@ export async function GET(request: NextRequest) {
       })
     ]
 
-    // Add opening balance queries if needed
     const calculateOpening = includeOpeningBalance && whereClause.date?.gte
     if (calculateOpening) {
       queries.push(
@@ -160,13 +154,11 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Execute all database queries concurrently
     const results = await Promise.all(queries)
     
     const totalCount = results[0]
     const transactions = results[1]
     
-    // Calculate opening balance
     let openingBalance = 0
     if (calculateOpening && results[2]) {
       const openingGrouped = results[2]
@@ -179,7 +171,6 @@ export async function GET(request: NextRequest) {
       openingBalance = openingIncome - openingExpense
     }
     
-    // Calculate pagination info
     const totalPages = Math.ceil(totalCount / limit)
     const hasNextPage = page < totalPages
     const hasPrevPage = page > 1
@@ -256,7 +247,6 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Transaction ID is required' }, { status: 400 })
     }
 
-    // Verify transaction exists and belongs to user
     const existingTransaction = await prisma.transaction.findFirst({
       where: { id, userId: currentUserId }
     })
@@ -265,7 +255,6 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Transaction not found or access denied' }, { status: 404 })
     }
 
-    // Check if this transaction is linked to a goal contribution
     const goalContribution = await prisma.goalContribution.findFirst({
       where: { transactionId: id }
     })
@@ -276,7 +265,6 @@ export async function DELETE(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Delete the transaction (soft delete)
     const deletedTransaction = await prisma.transaction.update({
       where: { id },
       data: { deletedAt: new Date() }
@@ -315,7 +303,6 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Amount must be a valid number greater than zero' }, { status: 400 })
     }
 
-    // Verify transaction exists and belongs to user
     const existingTransaction = await prisma.transaction.findFirst({
       where: { id, userId: currentUserId }
     })
@@ -324,7 +311,6 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Transaction not found or access denied' }, { status: 404 })
     }
 
-    // Update the transaction
     const updatedTransaction = await prisma.transaction.update({
       where: { id },
       data: {

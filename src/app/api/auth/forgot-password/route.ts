@@ -1,3 +1,7 @@
+// Initiates a password reset by generating a signed token, storing it,
+// and emailing a reset link. Always returns the same response regardless
+// of whether the email is registered (to prevent user enumeration).
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { sendPasswordResetEmail } from '@/lib/auth'

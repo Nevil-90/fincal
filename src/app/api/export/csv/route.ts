@@ -1,3 +1,8 @@
+// Exports the current user's transactions as a CSV file.
+// Supports the same filter parameters as the transactions list (date range,
+// type, category, search). Prepends an opening balance row when a date filter
+// is active and computes a running balance column.
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { Parser } from '@json2csv/plainjs'
@@ -12,13 +17,11 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     
-    // Build where clause similar to transactions API
     const where: any = {
       userId: currentUserId,
       deletedAt: null
     }
 
-    // Apply filters
     const search = searchParams.get('search')
     if (search) {
       where.OR = [
@@ -37,7 +40,6 @@ export async function GET(request: NextRequest) {
       where.category = filterCategory
     }
 
-    // Date filters (month/year or custom range)
     const month = searchParams.get('month')
     const year = searchParams.get('year')
     const startDate = searchParams.get('startDate')
@@ -64,7 +66,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Fetch all matching records, sorted chronologically
     const transactions = await prisma.transaction.findMany({
       where,
       orderBy: { date: 'asc' },
@@ -79,10 +80,8 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    // Calculate running balance
     let runningBalance = 0
 
-    // Fetch opening balance (everything before the start date)
     if (where.date?.gte) {
       const openingBalanceCondition = {
         ...where,
@@ -103,7 +102,6 @@ export async function GET(request: NextRequest) {
       runningBalance = Number(priorIncome._sum.amount || 0) - Number(priorExpense._sum.amount || 0)
     }
 
-    // Format for CSV
     const csvData = transactions.map(t => {
       const amount = Number(t.amount)
       if (t.type === 'income') {
@@ -125,7 +123,6 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    // Prepend Opening Balance Row if applicable
     if (where.date?.gte) {
       csvData.unshift({
         Date: new Date(where.date.gte).toLocaleDateString('en-US'),
@@ -140,7 +137,6 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Use json2csv
     const fields = ['Date', 'Type', 'Category', 'Description', 'Payment Method', 'Source', 'Debit (-)', 'Credit (+)', 'Balance']
     const parser = new Parser({ fields })
     const csv = parser.parse(csvData)

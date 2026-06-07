@@ -1,3 +1,4 @@
+// Component for TravelList.tsx
 import { Car, Trash2 } from 'lucide-react'
 import { formatCurrency } from '@/lib/financial-utils'
 
@@ -71,7 +72,7 @@ export default function TravelList({
             const derived = calculateDerivedData(entry, index)
             const isExpanded = expandedEntryId === entry.id
             return (
-              <div key={entry.id} className={`px-4 sm:px-5 py-4 ${selectedEntries.has(entry.id) ? 'bg-indigo-50/40' : 'bg-white dark:bg-neutral-900'}`}>
+              <div key={entry.id} className={`px-4 sm:px-5 py-4 ${selectedEntries.has(entry.id) ? 'bg-indigo-50/40 dark:bg-indigo-900/30' : 'bg-white dark:bg-neutral-900'}`}>
                 <div className="flex items-start justify-between gap-2 sm:gap-3">
                   <div className="flex items-start gap-3">
                     <input
@@ -176,7 +177,7 @@ export default function TravelList({
               travelEntries.map((entry, index) => {
                 const derived = calculateDerivedData(entry, index)
                 return (
-                  <tr key={entry.id} className={`transition-colors hover:bg-slate-50 dark:hover:bg-neutral-800/50 dark:bg-neutral-800/50 ${selectedEntries.has(entry.id) ? 'bg-indigo-50/30' : ''}`}>
+                  <tr key={entry.id} className={`transition-colors hover:bg-slate-50 dark:hover:bg-neutral-800/50 dark:bg-neutral-800/50 ${selectedEntries.has(entry.id) ? 'bg-indigo-50/30 dark:bg-indigo-900/20' : ''}`}>
                     <td className="px-6 py-4">
                       <input
                         type="checkbox"

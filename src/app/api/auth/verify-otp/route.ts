@@ -1,3 +1,6 @@
+// Verifies an OTP code for a given email. On success, activates the user account
+// and returns a short-lived JWT for the set-password step.
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { isRateLimited } from '@/lib/rate-limit'

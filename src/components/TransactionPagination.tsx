@@ -1,3 +1,4 @@
+// Pagination controls row: page size selector and prev/next buttons.
 export interface TransactionPaginationProps {
   pageSize: number
   setPageSize: (size: number) => void

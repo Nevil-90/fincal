@@ -1,3 +1,7 @@
+// Hook that loads and persists the user's bottom-nav tab preferences.
+// Deduplicates concurrent fetches with a shared promise and syncs updates
+// across component instances via a custom browser event.
+
 import { useState, useEffect } from 'react'
 
 export const VALID_NAV_TABS = ['overview', 'transactions', 'goals', 'recurring', 'analytics', 'calendar', 'traveling', 'admin']
@@ -22,11 +26,8 @@ export function useNavPreferences() {
               const data = await response.json()
               return data.preferences ? filterValidSlots(data.preferences) : DEFAULT_SLOTS
             }
-            // Silently fall back to defaults on auth errors (401) or other issues
             return DEFAULT_SLOTS
           }).finally(() => {
-            // keep the cached promise for a while or just clear it?
-            // clear it so future refetches can happen if needed
             setTimeout(() => { fetchPromise = null }, 1000)
           })
         }
@@ -44,7 +45,6 @@ export function useNavPreferences() {
 
     fetchPreferences()
 
-    // Listen for custom event from other instances
     const handleUpdate = (e: Event) => {
       const customEvent = e as CustomEvent
       if (mounted && customEvent.detail?.preferences) {
@@ -62,10 +62,8 @@ export function useNavPreferences() {
 
   const updateSlots = async (newSlots: string[]) => {
     const validSlots = filterValidSlots(newSlots)
-    // Optimistic update locally
     setSlots(validSlots)
 
-    // Notify other components instantly (like BottomNav)
     window.dispatchEvent(new CustomEvent('nav-preferences-updated', { 
       detail: { preferences: validSlots } 
     }))

@@ -1,3 +1,5 @@
+// Full-featured transaction list with search, filtering, grouping, CSV export,
+// optimistic deletion with undo toast, and both desktop table and mobile swipe-card views.
 'use client'
 
 import { useEffect, useMemo, useState, useRef, useCallback } from 'react'
@@ -77,7 +79,6 @@ export default function RegularTransactionList({
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
   useScrollLock(showDateRangePicker)
 
-  // UndoToast state
   const [undoToast, setUndoToast] = useState<{ message: string; onUndo: () => void; onExpire: () => void } | null>(null)
   const [pendingDeleteIds, setPendingDeleteIds] = useState<Set<string>>(new Set())
   const listContainerRef = useRef<HTMLDivElement>(null)
@@ -92,14 +93,12 @@ export default function RegularTransactionList({
   const paymentOptions = staticData?.paymentMethods?.map(p => p.name) || []
   const sourceOptions = staticData?.incomeSources?.map(s => s.name) || []
 
-  // Build filters for API
   const apiFilters = useMemo(() => {
     const filters: Record<string, string | number | undefined> = {}
     if (searchTerm) filters.search = searchTerm
     if (filterType !== 'all') filters.type = filterType
     if (filterCategory !== 'all') filters.category = filterCategory
     if (filterPaymentMethod !== 'all') filters.paymentMethod = filterPaymentMethod
-    // The API currently might not support source/recurring filtering but we pass them anyway
     if (filterSource !== 'all') filters.source = filterSource
     if (filterRecurring !== 'all') filters.recurring = filterRecurring
 
@@ -115,7 +114,6 @@ export default function RegularTransactionList({
 
   const { transactions: fetchedTransactions, pagination, isLoading, mutate } = useTransactions(currentPage, pageSize, apiFilters)
 
-  // Filter out pending deletes locally for immediate UI update
   const filteredTransactions = useMemo(() => {
     return (fetchedTransactions || []).filter(t => !pendingDeleteIds.has(t.id))
   }, [fetchedTransactions, pendingDeleteIds])
@@ -131,7 +129,6 @@ export default function RegularTransactionList({
 
   const netAmount = totalIncome - totalExpenses
 
-  // Group transactions
   const groupedTransactions = useMemo((): GroupedTransactions => {
     if (groupBy === 'none') return {}
 
@@ -190,14 +187,12 @@ export default function RegularTransactionList({
   }, [filteredTransactions, groupBy, pendingDeleteIds])
 
   const deleteTransaction = useCallback(async (id: string) => {
-    // Optimistic: immediately hide from view
     setPendingDeleteIds(prev => {
       const next = new Set(prev)
       next.add(id)
       return next
     })
 
-    // Show undo toast for 5 seconds
     const doDelete = async () => {
       try {
         await fetch(`/api/transactions?id=${id}`, { method: 'DELETE' })
@@ -208,7 +203,6 @@ export default function RegularTransactionList({
         })
         onTransactionDeleted()
       } catch {
-        // If fail, show it again
         setPendingDeleteIds(prev => {
           const next = new Set(prev)
           next.delete(id)
@@ -222,7 +216,6 @@ export default function RegularTransactionList({
       message: 'Transaction deleted',
       onUndo: () => {
         setUndoToast(null)
-        // Restore visibility
         setPendingDeleteIds(prev => {
           const next = new Set(prev)
           next.delete(id)
@@ -254,7 +247,7 @@ export default function RegularTransactionList({
         })
       })
       if (response.ok) {
-        onTransactionDeleted() // this triggers refresh
+        onTransactionDeleted()
       }
     } catch (e) {
       console.error(e)
@@ -371,23 +364,18 @@ export default function RegularTransactionList({
         break
     }
 
-    // Add search and filter parameters (but NOT groupBy for non-category exports)
     if (searchTerm) params.append('search', searchTerm)
     if (filterType !== 'all') params.append('filterType', filterType)
 
-    // Only add groupBy if it's not already set by the export type logic above
     if (!params.has('groupBy') && groupBy !== 'none') {
-      // Don't add groupBy for simple exports (month, year, custom)
       if (!['month', 'year', 'custom'].includes(pdfExportType)) {
         params.append('groupBy', groupBy)
       }
     }
 
-    // Open export API endpoint to download CSV
     const exportUrl = `/api/export/csv?${params}`
     window.open(exportUrl, '_self')
 
-    // Reset form
     setPdfStartDate('')
     setPdfEndDate('')
     setPdfExportType('category-current')
@@ -468,15 +456,10 @@ export default function RegularTransactionList({
         setCurrentPage={setCurrentPage}
       />
 
-
-
-      {/* Transactions List */}
-      <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-slate-200 dark:border-neutral-800 overflow-hidden">
+      <div className="hidden md:block bg-white dark:bg-neutral-800 rounded-3xl border border-slate-200 dark:border-neutral-700/80 shadow-sm overflow-hidden">
         {filteredTransactions.length > 0 ? (
           groupBy === 'none' ? (
-            // Ungrouped table view
             <div>
-              {/* Desktop Table View */}
               <div className="hidden sm:block overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-white dark:bg-neutral-900 border-b border-slate-200 dark:border-neutral-800">
@@ -578,7 +561,6 @@ export default function RegularTransactionList({
                         onClick={() => setEditingTransaction(transaction)}
                         className="flex items-center gap-3 py-3 px-4 bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-800 rounded-2xl cursor-pointer active:bg-slate-50 dark:active:bg-neutral-800 transition-colors shadow-sm"
                       >
-                        {/* Checkbox (Stop propagation) */}
                         <div onClick={(e) => e.stopPropagation()} className="flex items-center">
                           <input
                             type="checkbox"
@@ -588,7 +570,6 @@ export default function RegularTransactionList({
                           />
                         </div>
 
-                        {/* Icon */}
                         <div className={`h-10 w-10 flex items-center justify-center rounded-xl text-lg shrink-0 shadow-sm border ${isIncome
                             ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/50'
                             : 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 border-rose-100 dark:border-rose-900/50'
@@ -596,7 +577,6 @@ export default function RegularTransactionList({
                           {isIncome ? <ArrowDownLeft className="h-4 w-4 text-emerald-600 dark:text-emerald-400" /> : <ArrowUpRight className="h-4 w-4 text-rose-600 dark:text-rose-400" />}
                         </div>
 
-                        {/* Details */}
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-bold text-slate-900 dark:text-white leading-snug truncate">
                             {transaction.description || 'No description'}
@@ -608,7 +588,6 @@ export default function RegularTransactionList({
                           </div>
                         </div>
 
-                        {/* Amount & Metadata */}
                         <div className="text-right shrink-0 flex flex-col items-end gap-1">
                           <span className={`text-[15px] font-black tracking-tight ${isIncome ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-900 dark:text-neutral-100'
                             }`}>
@@ -636,7 +615,6 @@ export default function RegularTransactionList({
               </div>
             </div>
           ) : (
-            // Grouped view
             <div className="space-y-4 p-4">
               {paginatedGroups.map(([groupKey, group]) => (
                 <div key={groupKey} className="border border-slate-200 dark:border-neutral-800 rounded-2xl">
@@ -672,7 +650,6 @@ export default function RegularTransactionList({
 
                   {expandedGroups.has(groupKey) && (
                     <div className="border-t border-slate-200 dark:border-neutral-800">
-                      {/* Desktop Table View */}
                       <div className="hidden sm:block overflow-x-auto">
                         <table className="w-full">
                           <thead className="bg-white dark:bg-neutral-900">
@@ -760,7 +737,6 @@ export default function RegularTransactionList({
                         </table>
                       </div>
 
-                      {/* Mobile Card View - spacious and modern card layout */}
                       <div className="sm:hidden space-y-3 p-1">
                         {group.transactions.map((transaction) => {
                           const isIncome = transaction.type === 'income'

@@ -1,3 +1,6 @@
+// CRUD endpoints for travel/fuel log entries. Each entry records a trip with
+// start/end odometer readings, fuel amount, cost, and optional description.
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
@@ -13,12 +16,10 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50', 10)
     const offset = (page - 1) * limit
 
-    // Get total count for pagination
     const totalCount = await prisma.travelEntry.count({
       where: { userId: currentUserId, deletedAt: null }
     })
 
-    // Get travel entries with pagination
     const travelEntries = await prisma.travelEntry.findMany({
       where: { userId: currentUserId, deletedAt: null },
       orderBy: {
@@ -28,7 +29,6 @@ export async function GET(request: NextRequest) {
       take: limit
     })
 
-    // Calculate pagination info
     const totalPages = Math.ceil(totalCount / limit)
     const hasNextPage = page < totalPages
     const hasPrevPage = page > 1
@@ -60,7 +60,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { startDate, endDate, startKm, endKm, amount, liters, description } = body
 
-    // Validation
     if (!startDate || !endDate || startKm === undefined || endKm === undefined || !amount || !liters) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
@@ -111,7 +110,6 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Travel entry ID is required' }, { status: 400 })
     }
 
-    // Verify ownership
     const existing = await prisma.travelEntry.findFirst({
       where: { id, userId: currentUserId, deletedAt: null }
     })

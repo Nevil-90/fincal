@@ -1,3 +1,5 @@
+// Admin endpoint for viewing all active user sessions and revoking individual ones.
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 

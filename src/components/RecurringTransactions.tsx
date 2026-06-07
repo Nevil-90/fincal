@@ -1,2 +1,2 @@
-// Use the new paginated implementation for better performance
+// Re-exports the paginated recurring transactions view.
 export { default } from './recurring/PaginatedRecurringTransactions'

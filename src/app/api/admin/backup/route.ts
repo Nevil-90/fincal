@@ -1,3 +1,7 @@
+// Admin endpoint for listing and creating SQLite database backups.
+// GET returns a list of existing .db backup files sorted by creation date.
+// POST copies the current dev.db to prisma/backups/ and logs the action.
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import fs from 'fs'

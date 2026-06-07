@@ -1,3 +1,5 @@
+// Wraps next-themes' ThemeProvider and syncs the selected theme with the
+// backend (GET on mount, POST on change) so it persists across devices.
 'use client'
 
 import * as React from 'react'
@@ -25,7 +27,6 @@ function ThemeSync() {
   const { theme, setTheme } = useTheme()
   const [isSynced, setIsSynced] = React.useState(false)
 
-  // Fetch theme from backend on mount
   React.useEffect(() => {
     const fetchTheme = async () => {
       try {
@@ -43,9 +44,8 @@ function ThemeSync() {
       }
     }
     fetchTheme()
-  }, []) // Empty dependency array, run once on mount
+  }, [])
 
-  // Sync theme to backend when it changes
   React.useEffect(() => {
     if (!isSynced) return
 

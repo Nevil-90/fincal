@@ -1,3 +1,6 @@
+// Validates that required server-side environment variables are present at startup
+// and exports them as a typed config object. Only runs on the server (not in the browser).
+
 if (typeof window === 'undefined') {
   const missingSecrets: string[] = []
 

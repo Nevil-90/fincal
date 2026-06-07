@@ -1,3 +1,5 @@
+// Type declarations for jspdf-autotable, which lacks bundled types.
+
 declare module 'jspdf-autotable' {
   interface AutoTableOptions {
     head?: (string | number)[][];

@@ -1,3 +1,6 @@
+// Sets the initial password for a new user after OTP verification.
+// Expects a short-lived JWT (purpose: 'set-password') issued by the verify-otp endpoint.
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/auth'

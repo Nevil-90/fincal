@@ -1,3 +1,5 @@
+// Floating undo toast shown after a destructive action. Auto-dismisses after
+// `duration` ms with a shrinking progress bar; calling onUndo cancels the timer.
 'use client'
 
 import { useEffect, useRef } from 'react'
@@ -19,7 +21,6 @@ export default function UndoToast({ message, onUndo, onExpire, duration = 5000 }
       onExpire()
     }, duration)
 
-    // Animate progress bar
     if (progressRef.current) {
       progressRef.current.style.transition = `width ${duration}ms linear`
       progressRef.current.style.width = '0%'
@@ -48,7 +49,6 @@ export default function UndoToast({ message, onUndo, onExpire, duration = 5000 }
             Undo
           </button>
         </div>
-        {/* Progress bar countdown */}
         <div className="h-0.5 bg-slate-700">
           <div
             ref={progressRef}

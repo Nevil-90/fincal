@@ -1,3 +1,7 @@
+// Aggregated transaction summary used by the dashboard.
+// Returns global all-time totals, available years, an optional year summary,
+// an optional month+year period summary, and per-category spend for the period.
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
@@ -12,7 +16,6 @@ export async function GET(request: NextRequest) {
     const monthParam = searchParams.get('month')
     const yearParam = searchParams.get('year')
 
-    // 1. Global (All-time) Summary and 2. Available Years
     const [globalGrouped, dateAgg] = await Promise.all([
       prisma.transaction.groupBy({
         by: ['type'],
@@ -53,7 +56,6 @@ export async function GET(request: NextRequest) {
       availableYears.sort((a, b) => b - a)
     }
 
-    // 3a. Year-only summary (when only year is selected, no month)
     let yearInfo = null
     if (yearParam && !monthParam) {
       const year = parseInt(yearParam, 10)
@@ -81,7 +83,6 @@ export async function GET(request: NextRequest) {
       yearInfo = { income: yIncome, expense: yExpense, balance: yIncome - yExpense, count: yearCountAgg }
     }
 
-    // 3b. Month+Year period summary
     let periodInfo = null
     const categorySpend: Record<string, number> = {}
 
@@ -92,7 +93,6 @@ export async function GET(request: NextRequest) {
       const startDate = new Date(year, month - 1, 1)
       const endDate = new Date(year, month, 0, 23, 59, 59, 999)
 
-      // Previous Month
       const prevMonth = month === 1 ? 12 : month - 1
       const prevYear = month === 1 ? year - 1 : year
       const prevStartDate = new Date(prevYear, prevMonth - 1, 1)
@@ -145,7 +145,6 @@ export async function GET(request: NextRequest) {
         prevExpense
       }
 
-      // 4. Category Spend for the period
       categoryAgg.forEach(item => {
         categorySpend[item.category || 'Other'] = Number(item._sum.amount || 0)
       })

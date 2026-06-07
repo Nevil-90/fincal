@@ -1,3 +1,6 @@
+// Logs the user out by deleting their session from the database
+// and clearing the access_token and refresh_token cookies.
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
@@ -6,7 +9,6 @@ export async function POST(request: NextRequest) {
     const refreshToken = request.cookies.get('refresh_token')?.value
 
     if (refreshToken) {
-      // Delete session from database
       await prisma.userSession.deleteMany({
         where: { token: refreshToken }
       })
@@ -14,7 +16,6 @@ export async function POST(request: NextRequest) {
 
     const response = NextResponse.json({ success: true, message: 'Logged out successfully' })
 
-    // Clear access and refresh token cookies
     response.cookies.set('access_token', '', { path: '/', maxAge: 0 })
     response.cookies.set('refresh_token', '', { path: '/', maxAge: 0 })
 

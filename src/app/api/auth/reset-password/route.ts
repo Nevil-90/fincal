@@ -1,3 +1,6 @@
+// Validates a password reset token and sets the user's new password.
+// Invalidates all existing sessions after the reset.
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/auth'

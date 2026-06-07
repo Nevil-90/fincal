@@ -1,9 +1,10 @@
+// Tab showing travel and fuel logging data, including charts, aggregated insights,
+// recent entries list, and support for multi-delete and bulk export.
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
 'use client'
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
-// FIXED: Added 'X' to the lucide-react imports
 import { Plus, Car, Fuel, TrendingUp, Calendar, Trash2, X } from 'lucide-react'
 import { formatCurrency } from '@/lib/financial-utils'
 import { useScrollLock } from '@/hooks/useScrollLock'
@@ -111,7 +112,6 @@ export default function TravelingTab() {
 
   const tableRef = useRef<HTMLDivElement>(null)
 
-  // Form state
   const [formData, setFormData] = useState({
     startDate: '',
     endDate: '',

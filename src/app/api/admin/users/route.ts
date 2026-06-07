@@ -1,3 +1,7 @@
+// Admin endpoint for listing all users and performing account actions:
+// ACTIVATE, SUSPEND, PROMOTE_ADMIN, DEMOTE_USER, DELETE.
+// All mutations are logged to the admin audit log.
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
@@ -144,8 +148,6 @@ export async function POST(request: NextRequest) {
         }
       })
 
-      // The cascade delete in Prisma schema will automatically remove all related records
-      // (transactions, goals, recurring transactions, etc.)
       updatedUser = await prisma.user.delete({
         where: { id: targetUserId }
       })

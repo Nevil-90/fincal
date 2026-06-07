@@ -1,3 +1,6 @@
+// Issues a new access token by validating the refresh token cookie against
+// the stored session. Cleans up the session if it has expired.
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyRefreshToken, generateAccessToken } from '@/lib/auth'

@@ -1,3 +1,4 @@
+// Component for TravelSummaryCards.tsx
 import { Car, Fuel, TrendingUp, Calendar } from 'lucide-react'
 import { formatCurrency } from '@/lib/financial-utils'
 

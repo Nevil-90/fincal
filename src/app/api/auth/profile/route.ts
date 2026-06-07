@@ -1,3 +1,6 @@
+// Manages the authenticated user's profile.
+// PUT updates first/last name. DELETE permanently removes the account.
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
@@ -34,7 +37,6 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     
-    // Cascade delete in Prisma handles related records
     await prisma.user.delete({
       where: { id: currentUserId }
     })

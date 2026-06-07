@@ -1,3 +1,6 @@
+// Returns the authenticated user's profile data.
+// The user ID is read from the x-user-id header set by middleware.
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 

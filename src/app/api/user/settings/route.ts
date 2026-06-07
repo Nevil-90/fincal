@@ -1,3 +1,5 @@
+// GET/POST endpoints for the user's theme setting ('light', 'dark', 'system').
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 

@@ -1,3 +1,6 @@
+// Financial calculation helpers, static lookup lists (categories, payment methods, etc.),
+// and formatting utilities used across the app.
+
 import { Transaction, SavingsGoal, MonthlyBudget } from '@/generated/prisma'
 
 export interface FinancialSummary {
@@ -160,7 +163,6 @@ export type ExpenseCategory = typeof EXPENSE_CATEGORIES[number]
 export type IncomeCategory = typeof INCOME_CATEGORIES[number]
 export type PaymentMethod = typeof PAYMENT_METHODS[number]
 
-// Source of money for better tracking
 export const INCOME_SOURCES = [
   'Salary from Company',
   'Freelance Client',

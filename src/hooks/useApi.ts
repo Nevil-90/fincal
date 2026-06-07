@@ -1,5 +1,7 @@
-import useSWR from 'swr'
+// SWR-based data fetching hooks for all major API resources.
+// Each hook returns { data, isLoading, isError, mutate } shaped for its domain.
 
+import useSWR from 'swr'
 
 export const fetcher = async (url: string) => {
   const res = await fetch(url)
@@ -11,9 +13,6 @@ export const fetcher = async (url: string) => {
   return res.json()
 }
 
-// ----------------------------------------
-// Auth Hooks
-// ----------------------------------------
 export function useUser() {
   const { data, error, isLoading, mutate } = useSWR('/api/auth/me', fetcher, {
     shouldRetryOnError: false
@@ -26,9 +25,6 @@ export function useUser() {
   }
 }
 
-// ----------------------------------------
-// Transaction Hooks
-// ----------------------------------------
 export function useTransactions(page: number = 1, limit: number = 50, filters: Record<string, string | number | undefined> = {}) {
   let url = `/api/transactions?page=${page}&limit=${limit}`
   for (const [key, value] of Object.entries(filters)) {
@@ -52,7 +48,6 @@ export function useTransactions(page: number = 1, limit: number = 50, filters: R
 }
 
 export function useTransactionSummary(month?: number | null, year?: number | null, keepPreviousData = false) {
-  // Don't fetch at all if both are explicitly null (disabled)
   const shouldFetch = !(month === null && year === null)
 
   const url = shouldFetch
@@ -67,7 +62,7 @@ export function useTransactionSummary(month?: number | null, year?: number | nul
 
   const { data, error, isLoading, mutate } = useSWR(url, fetcher, {
     shouldRetryOnError: false,
-    keepPreviousData,   // prevents flash-to-empty when filter changes
+    keepPreviousData,
   })
   
   return {
@@ -78,9 +73,6 @@ export function useTransactionSummary(month?: number | null, year?: number | nul
   }
 }
 
-// ----------------------------------------
-// Goal Hooks
-// ----------------------------------------
 export function useGoals() {
   const { data, error, isLoading, mutate } = useSWR('/api/goals', fetcher, {
     shouldRetryOnError: false
@@ -93,9 +85,6 @@ export function useGoals() {
   }
 }
 
-// ----------------------------------------
-// Travel Hooks
-// ----------------------------------------
 export function useTravelEntries(page: number = 1, limit: number = 10) {
   const { data, error, isLoading, mutate } = useSWR(`/api/travel?page=${page}&limit=${limit}`, fetcher, {
     shouldRetryOnError: false
@@ -121,9 +110,6 @@ export function useTravelAnalytics(year: number) {
   }
 }
 
-// ----------------------------------------
-// Analytics Hooks
-// ----------------------------------------
 export function useAnalytics(dateFilter: string = 'this_month', compareYear?: number, compareMonth?: number) {
   let url = `/api/analytics?dateFilter=${dateFilter}`
   if (compareYear) url += `&compareYear=${compareYear}`
@@ -140,4 +126,3 @@ export function useAnalytics(dateFilter: string = 'this_month', compareYear?: nu
     mutate
   }
 }
-

@@ -1,3 +1,6 @@
+// Manages keyword-based auto-categorization rules for the current user.
+// GET returns all rules. POST upserts a batch of rules by keyword.
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
@@ -33,7 +36,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid payload' }, { status: 400 })
     }
 
-    // Upsert each rule
     await Promise.all(
       rules.map((rule: { keyword: string; category: string; type: string }) =>
         prisma.autoCategorizeRule.upsert({

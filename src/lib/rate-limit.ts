@@ -1,19 +1,19 @@
+// Rate limiting using Redis with an in-memory fallback.
+// Uses a fixed-window algorithm. Falls back to memory-based limiting
+// when Redis is not configured or unavailable.
+
 import Redis from 'ioredis'
 
-// Ensure we don't create multiple connections in development due to hot-reloading
 const globalForRedis = globalThis as unknown as {
   redis: Redis | undefined
 }
 
-// Treat empty string as "not configured" — avoids ioredis connecting to invalid host
 const redisUrl = process.env.REDIS_URL?.trim() || undefined
 export let redis: Redis | undefined = undefined
 
 function getRedis(): Redis | undefined {
-  // No URL → skip Redis entirely, use memory fallback
   if (!redisUrl) return undefined
 
-  // Reuse existing connection across hot-reloads in dev
   if (globalForRedis.redis) {
     redis = globalForRedis.redis
     return redis
@@ -21,20 +21,17 @@ function getRedis(): Redis | undefined {
 
   if (!redis) {
     redis = new Redis(redisUrl, {
-      // Fail fast — don't block for 20 retries (default) when Redis is down
       maxRetriesPerRequest: 1,
-      // Don't retry reconnecting forever; back off quickly
       retryStrategy: (times) => {
-        if (times > 3) return null  // Stop retrying after 3 attempts
+        if (times > 3) return null
         return Math.min(times * 200, 1000)
       },
-      // Suppress unhandled error events — we handle errors in isRateLimited()
       enableOfflineQueue: false,
       lazyConnect: false,
     })
 
     redis.on('error', () => {
-      // Suppress unhandled error events — errors are caught in isRateLimited()
+      // Errors are caught in isRateLimited()
     })
 
     if (process.env.NODE_ENV !== 'production') {
@@ -44,22 +41,18 @@ function getRedis(): Redis | undefined {
   return redis
 }
 
-// Fallback if Redis is down or not configured
 const memoryFallback = new Map<string, { count: number, resetAt: number }>()
 
 /**
- * Checks if a specific key has exceeded its rate limit.
- * Uses a fixed-window algorithm backed by Redis (or memory fallback).
+ * Returns true if the given key has exceeded the rate limit for the current window.
  *
- * @param key - The unique identifier for the limit (e.g., "login:192.168.1.1")
- * @param limit - Maximum allowed requests in the window
- * @param windowMs - The time window in milliseconds
- * @returns boolean - true if the limit is exceeded, false otherwise
+ * @param key - Unique identifier for the limit (e.g. "login:192.168.1.1")
+ * @param limit - Max allowed requests per window
+ * @param windowMs - Window duration in milliseconds
  */
 export async function isRateLimited(key: string, limit = 5, windowMs = 60000): Promise<boolean> {
   const activeRedis = getRedis()
 
-  // No Redis configured → use memory fallback silently (no error, no delay)
   if (!activeRedis) {
     return memoryRateLimit(key, limit, windowMs)
   }
@@ -71,18 +64,16 @@ export async function isRateLimited(key: string, limit = 5, windowMs = 60000): P
     }
     return currentCount > limit
   } catch (error) {
-    // Redis is configured but failed — log and fall back to memory
     console.error('Redis Rate Limiter Error, using memory fallback:', error)
     return memoryRateLimit(key, limit, windowMs)
   }
 }
 
 function memoryRateLimit(key: string, limit: number, windowMs: number): boolean {
-  // Inline memory cleanup to prevent unbounded growth
   if (memoryFallback.size > 1000) {
-    const nowCleanup = Date.now()
+    const now = Date.now()
     for (const [k, v] of memoryFallback.entries()) {
-      if (nowCleanup > v.resetAt) memoryFallback.delete(k)
+      if (now > v.resetAt) memoryFallback.delete(k)
     }
   }
 

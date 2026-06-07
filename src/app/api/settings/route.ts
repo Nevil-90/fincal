@@ -1,3 +1,7 @@
+// Key-value store for per-user settings (e.g. theme, display preferences).
+// GET returns all settings as an object, or a single setting by key.
+// POST upserts a key/value pair.
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
@@ -27,7 +31,6 @@ export async function GET(request: NextRequest) {
       where: { userId: currentUserId }
     })
     
-    // Convert to a key-value object
     const settingsMap = settings.reduce((acc, curr) => {
       acc[curr.key] = curr.value
       return acc

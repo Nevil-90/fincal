@@ -1,3 +1,5 @@
+// Add/Edit transaction modal form. Includes auto-categorization suggestions
+// by storing mapping rules locally based on user description input.
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
@@ -52,7 +54,6 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
   const [suggestion, setSuggestion] = useState<{ category: string; type: 'income' | 'expense' } | null>(null)
   const syncedRef = useRef(false)
 
-  // Sync DB rules into localStorage once on mount
   useEffect(() => {
     if (syncedRef.current) return
     syncedRef.current = true
@@ -70,7 +71,6 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
       .catch(() => {})
   }, [])
 
-  // Auto-suggest category when description changes
   useEffect(() => {
     if (!description.trim()) {
       setSuggestion(null)
@@ -78,7 +78,6 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
     }
     const key = description.toLowerCase().trim()
     const rules = getLocalRules()
-    // Find best match: exact or startsWith
     const match = rules[key] || Object.entries(rules).find(([k]) => key.startsWith(k) || k.startsWith(key))?.[1]
     if (match) {
       setSuggestion(match as { category: string; type: 'income' | 'expense' })
@@ -127,10 +126,8 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
       })
 
       if (response.ok) {
-        // Save the categorization rule locally and sync to DB
         if (description.trim() && category) {
           saveLocalRule(description, category, type)
-          // Sync to DB (fire-and-forget)
           fetch('/api/user/autocategorize', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -142,7 +139,6 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
         onTransactionAdded()
       }
     } catch {
-      // silent
     } finally {
       setLoading(false)
     }
@@ -150,7 +146,6 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
 
   return (
     <div className="flex flex-col w-full h-full overflow-hidden bg-white dark:bg-neutral-900">
-      {/* Header */}
       <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-neutral-800 shrink-0">
         <h3 className="text-base font-bold text-slate-900 dark:text-white">{initialData ? 'Edit Transaction' : 'Add Transaction'}</h3>
         <button
@@ -164,7 +159,6 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
       <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 bg-white dark:bg-neutral-900">
         <div className="flex-1 overflow-y-auto p-5 custom-scrollbar">
           <div className="grid grid-cols-2 gap-x-4 gap-y-4">
-        {/* Transaction Type */}
         <div className="col-span-2">
           <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400 mb-1.5">
             Type
@@ -195,7 +189,6 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
           </div>
         </div>
 
-        {/* Description — before category so suggestion can pre-fill */}
         <div className="col-span-2">
           <label htmlFor="description" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400 mb-1">
             Description (Optional)
@@ -208,7 +201,6 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
             className="w-full px-3 py-2 border border-slate-200 dark:border-neutral-700 rounded-xl focus:border-blue-500 focus:bg-white dark:focus:bg-neutral-900 focus:outline-none focus:ring-4 focus:ring-blue-50/50 dark:focus:ring-blue-500/20 text-slate-900 dark:text-white bg-slate-50/70 dark:bg-neutral-950 text-sm font-semibold transition-all"
             placeholder="What was this for?"
           />
-          {/* Auto-categorization suggestion pill */}
           {suggestion && (
             <button
               type="button"
@@ -221,7 +213,6 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
           )}
         </div>
 
-        {/* Amount */}
         <div>
           <label htmlFor="amount" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400 mb-1">
             Amount
@@ -241,7 +232,6 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
           </div>
         </div>
 
-        {/* Category */}
         <div>
           <label htmlFor="category" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400 mb-1">
             Category
@@ -260,7 +250,6 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
           </select>
         </div>
 
-        {/* Source */}
         <div>
           <label htmlFor="source" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400 mb-1 truncate" title={type === 'income' ? 'Source of Money (Optional)' : 'Purpose/Where it went (Optional)'}>
             {type === 'income' ? 'Source' : 'Purpose'} (Optional)
@@ -278,7 +267,6 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
           </select>
         </div>
 
-        {/* Payment Method */}
         <div>
           <label htmlFor="paymentMethod" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400 mb-1">
             Payment Method
@@ -297,7 +285,6 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
           </select>
         </div>
 
-        {/* Date */}
         <div className="col-span-2">
           <label htmlFor="date" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400 mb-1">
             Date
@@ -326,7 +313,6 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
           </div>
         </div>
 
-        {/* Buttons (Footer) */}
         <div className="flex gap-3 p-4 border-t border-slate-100 dark:border-neutral-800 shrink-0 bg-white dark:bg-neutral-900">
           <button
             type="button"

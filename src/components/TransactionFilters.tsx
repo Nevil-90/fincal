@@ -1,3 +1,5 @@
+// Advanced filtering controls for transaction lists. Includes search bar, type
+// pills, date ranges, group-by selectors, and batch-action buttons.
 import { Search, Filter, Trash2, Download } from 'lucide-react'
 
 export interface TransactionFiltersProps {
@@ -209,7 +211,6 @@ export function TransactionFilters({
         </div>
       )}
 
-      {/* Grouping Controls */}
       <div className="flex flex-wrap gap-2 items-center">
         <span className="text-sm font-medium text-slate-700 dark:text-neutral-300">Group by:</span>
         <div className="flex max-w-full overflow-x-auto rounded-xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-1 custom-scrollbar">

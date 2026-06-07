@@ -1,3 +1,7 @@
+// Admin endpoint that tests SMTP connectivity by verifying the transport
+// and sending a test email to the configured SMTP address. Logs success/failure
+// to the admin audit log.
+
 import { NextRequest, NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 import { config } from '@/lib/config'

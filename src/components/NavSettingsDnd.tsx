@@ -1,3 +1,5 @@
+// Re-orderable bottom navigation tabs configured via Dnd-kit.
+// Uses a drag-and-drop overlay to manage active and inactive mobile slots.
 import React, { useState } from 'react';
 import { 
   DndContext, 
@@ -212,8 +214,6 @@ export function NavSettingsDnd({ slots, updateSlots, isAdmin }: { slots: string[
       }
     }
 
-    // Since we used activeIdsRef, it already contains the cross-list moves from handleDragOver!
-    // But if there was an intra-list move just now, finalActiveIds has it.
     updateSlots(finalActiveIds);
   };
 
@@ -313,7 +313,6 @@ export function NavSettingsDnd({ slots, updateSlots, isAdmin }: { slots: string[
           </div>
         </div>
 
-        {/* @ts-expect-error: Next 13 type definitions for dnd-kit differ, ignoring to preserve custom animation */}
         <DragOverlay dropAnimation={defaultDropAnimationSideEffects({ duration: 250, easing: 'ease' })}>
           {activeItemData ? (
             isDraggingActive ? (

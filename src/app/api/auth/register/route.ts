@@ -1,3 +1,6 @@
+// User registration endpoint. Creates an inactive account and sends a
+// verification OTP to the provided email address.
+
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { prisma } from '@/lib/prisma'

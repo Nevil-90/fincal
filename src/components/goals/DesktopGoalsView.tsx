@@ -1,3 +1,4 @@
+// Desktop view for savings goals dashboard, showing progress metrics and goal lists.
 import { Target, Trophy, Sparkles, Plus, Filter, History, Clock, Save, Loader2, Calendar, Trash2, Check, AlertTriangle, Lightbulb } from 'lucide-react'
 import { formatCurrency } from '@/lib/financial-utils'
 import { SavingsGoal, GoalContribution, BulkEntry } from './types'

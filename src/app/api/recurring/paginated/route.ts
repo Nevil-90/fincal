@@ -1,3 +1,7 @@
+// Paginated list of recurring transactions with filtering by status, type,
+// category, frequency, and text search. Returns aggregate totals per transaction
+// without loading all child transactions into memory.
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
@@ -10,19 +14,16 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     
-    // Pagination parameters
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '10')
     const skip = (page - 1) * limit
 
-    // Filter parameters
-    const status = searchParams.get('status') // 'active', 'inactive', 'all'
-    const type = searchParams.get('type') // 'income', 'expense', 'all'
+    const status = searchParams.get('status')
+    const type = searchParams.get('type')
     const category = searchParams.get('category')
     const frequency = searchParams.get('frequency')
-    const search = searchParams.get('search') // Search in description/category
+    const search = searchParams.get('search')
 
-    // Build where clause
     const where: {
       userId: string
       isActive?: boolean
@@ -60,7 +61,6 @@ export async function GET(request: NextRequest) {
       ]
     }
 
-    // Parallelize metadata fetches and initial paginated query
     const [totalCount, categories, frequencies, recurringTransactions] = await Promise.all([
       prisma.recurringTransaction.count({ where }),
       prisma.recurringTransaction.findMany({
@@ -78,15 +78,15 @@ export async function GET(request: NextRequest) {
       prisma.recurringTransaction.findMany({
         where,
         orderBy: [
-          { isActive: 'desc' }, // Active first
-          { nextDue: 'asc' }     // Then by next due date
+          { isActive: 'desc' },
+          { nextDue: 'asc' }
         ],
         skip,
         take: limit,
         include: {
           _count: {
             select: {
-              transactions: true // Count of related transactions
+              transactions: true
             }
           },
           priceChanges: {
@@ -96,7 +96,6 @@ export async function GET(request: NextRequest) {
       })
     ])
 
-    // Get aggregate sums for transaction amounts to avoid N+1 loading all transactions into memory
     const recurringIds = recurringTransactions.map(rt => rt.id)
     let groupedTotals: Record<string, number> = {}
     
@@ -115,7 +114,6 @@ export async function GET(request: NextRequest) {
       }, {} as Record<string, number>)
     }
 
-    // Compute the total spent for each recurring transaction
     const formattedData = recurringTransactions.map(rt => {
       return { ...rt, totalSpent: groupedTotals[rt.id] || 0 }
     })

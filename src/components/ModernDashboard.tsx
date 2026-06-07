@@ -1,3 +1,5 @@
+// Root dashboard shell. Manages tab routing, global state, the add-transaction
+// modal, settings panel, and onboarding wizard. Lazy-loads heavy tabs via next/dynamic.
 'use client'
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
@@ -98,7 +100,6 @@ export default function ModernDashboard() {
   const { summary, isLoading: loadingSummary, mutate: mutateSummary } = useTransactionSummary(overviewPeriod.month, overviewPeriod.year, true)
   const { transactions: periodTxns, mutate: mutatePeriodTxns } = useTransactions(1, 10, { month: overviewPeriod.month, year: overviewPeriod.year })
   
-  // For the transactions tab
   const [advancedFilters, setAdvancedFilters] = useState<{
     year?: number
     month?: number
@@ -107,11 +108,10 @@ export default function ModernDashboard() {
   }>({})
 
   const hasAdvancedFilter = advancedFilters.year !== undefined
-  // keepPreviousData: shows old data while new filter loads → prevents UI jerk
   const { summary: txSummary } = useTransactionSummary(
     hasAdvancedFilter ? (advancedFilters.month !== undefined ? advancedFilters.month + 1 : undefined) : null,
     hasAdvancedFilter ? advancedFilters.year : null,
-    true // keepPreviousData
+    true
   )
 
   const { goals, isLoading: isLoadingGoals, mutate: mutateGoals } = useGoals()
@@ -121,8 +121,8 @@ export default function ModernDashboard() {
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   
-  // Only show the full page skeleton on the true initial load (when data is completely missing).
-  // SWR's isLoading can sometimes flicker during key transitions; this check makes it bulletproof.
+  // Only show the full-page skeleton on the initial load. SWR's isLoading can
+  // flicker during key transitions; gating on missing data makes it bulletproof.
   const isInitialSummaryLoading = !summary && loadingSummary
   const isInitialUserLoading = !user && isLoadingUser
   const isInitialGoalsLoading = !goals && isLoadingGoals
@@ -191,24 +191,23 @@ export default function ModernDashboard() {
     }
   }, [user])
 
-  // Automatically process overdue recurring transactions once per day
+  // Process overdue recurring transactions once per calendar day.
   useEffect(() => {
     if (!user) return
     
     const processRecurringTransactions = async () => {
       try {
         const lastProcessDate = localStorage.getItem('lastRecurringProcessDate')
-        const today = new Date().toISOString().split('T')[0] // e.g., '2023-10-25'
+        const today = new Date().toISOString().split('T')[0]
         
         if (lastProcessDate !== today) {
-          console.log('Checking for overdue recurring transactions...')
           const response = await fetch('/api/recurring/process', { method: 'POST' })
           
           if (response.ok) {
             localStorage.setItem('lastRecurringProcessDate', today)
             const result = await response.json()
             if (result.processed > 0) {
-              refreshAll() // Refresh dashboard data if new transactions were created
+              refreshAll()
             }
           }
         }
@@ -245,18 +244,12 @@ export default function ModernDashboard() {
 
 
   useEffect(() => {
-    // Only subscribe to static data changes for relevant dashboard updates,
-    // we don't need to fetch goals on every setting change.
-    const unsubscribe = enhancedStaticDataManager.subscribe(() => {
-      // Intentionally left empty or handle specific static data changes if needed
-    })
-
+    const unsubscribe = enhancedStaticDataManager.subscribe(() => {})
     return unsubscribe
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const refreshAll = async () => {
-    // Refresh goals or summary if needed
     mutateSummary()
     mutatePeriodTxns()
     mutateGoals()
@@ -504,7 +497,6 @@ export default function ModernDashboard() {
         </main>
       </div>
 
-      {/* Mobile Bottom Navigation */}
       <BottomNav
         activeTab={activeTab}
         onTabChange={handleTabChange}
@@ -522,7 +514,6 @@ export default function ModernDashboard() {
         </div>
       )}
 
-      {/* Global Settings Panel */}
       <SettingsPanel
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
@@ -530,7 +521,6 @@ export default function ModernDashboard() {
         isAdmin={user?.role === 'ADMIN'}
       />
 
-      {/* Onboarding Wizard - shown only once per user (server-tracked) */}
       {showOnboarding && user && (
         <OnboardingWizard
           user={user as any}

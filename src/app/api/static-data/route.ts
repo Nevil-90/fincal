@@ -1,7 +1,11 @@
+// CRUD endpoints for user-specific static data: expense/income categories,
+// payment methods, income sources, expense purposes, and budget amounts.
+// On first fetch, default categories are auto-seeded for new users.
+// Responses include a private Cache-Control header (5 min, stale-while-revalidate 10 min).
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-// Valid static data types
 const VALID_TYPES = [
   'expenseCategories',
   'incomeCategories', 
@@ -21,7 +25,6 @@ interface StaticDataItem {
   updatedAt: string
 }
 
-// GET - Fetch all static data for the current user
 export async function GET(request: NextRequest) {
   try {
     const currentUserId = request.headers.get('x-user-id')
@@ -29,13 +32,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Fetch static data categories for this user
     let categories = await prisma.staticDataCategory.findMany({
       where: { userId: currentUserId },
       orderBy: { name: 'asc' }
     })
 
-    // Auto-seed default categories for new users
     if (categories.length === 0) {
       const defaultData = [
         ...['Food & Dining', 'Groceries', 'Transportation', 'Petrol/Fuel', 'Auto Rickshaw/Taxi',
@@ -65,7 +66,6 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Fetch budget amounts and user settings concurrently for this user
     const [budgetAmounts, settings] = await Promise.all([
       prisma.budgetAmount.findMany({
         where: { userId: currentUserId },
@@ -76,7 +76,6 @@ export async function GET(request: NextRequest) {
       })
     ])
 
-    // Group categories by type
     const groupedData = categories.reduce((acc: Record<string, StaticDataItem[]>, category) => {
       if (!acc[category.type]) {
         acc[category.type] = []
@@ -91,13 +90,11 @@ export async function GET(request: NextRequest) {
       return acc
     }, {})
     
-    // Convert to a key-value object
     const userSettings = settings.reduce((acc, curr) => {
       acc[curr.key] = curr.value
       return acc
     }, {} as Record<string, string>)
 
-    // Format budget amounts
     const formattedBudgetAmounts = budgetAmounts.map(budget => ({
       id: budget.id,
       name: budget.name,
@@ -121,9 +118,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(staticData, {
       headers: {
-        // Cache for 5 min, serve stale for up to 10 min while revalidating in background.
-        // 'private' ensures this is only cached by the browser (not a shared CDN cache)
-        // since the data is user-specific.
         'Cache-Control': 'private, max-age=300, stale-while-revalidate=600',
       }
     })
@@ -133,7 +127,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create new static data item
 export async function POST(request: NextRequest) {
   try {
     const currentUserId = request.headers.get('x-user-id')
@@ -144,17 +137,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { type, name, amount, period, category } = body
 
-    // Validate required fields
     if (!type || !name) {
       return NextResponse.json({ error: 'Type and name are required' }, { status: 400 })
     }
 
-    // Validate type
     if (!VALID_TYPES.includes(type as ValidStaticDataType)) {
       return NextResponse.json({ error: `Invalid type. Must be one of: ${VALID_TYPES.join(', ')}` }, { status: 400 })
     }
 
-    // Validate name is not empty
     if (typeof name !== 'string' || name.trim().length === 0) {
       return NextResponse.json({ error: 'Name cannot be empty' }, { status: 400 })
     }
@@ -225,7 +215,6 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PUT - Update static data item
 export async function PUT(request: NextRequest) {
   try {
     const currentUserId = request.headers.get('x-user-id')
@@ -262,7 +251,6 @@ export async function PUT(request: NextRequest) {
         }
       }
 
-      // Verify ownership
       const existing = await prisma.budgetAmount.findFirst({
         where: { id, userId: currentUserId }
       })
@@ -292,7 +280,6 @@ export async function PUT(request: NextRequest) {
         updatedAt: updatedItem.updatedAt.toISOString()
       })
     } else {
-      // Verify ownership
       const existing = await prisma.staticDataCategory.findFirst({
         where: { id, userId: currentUserId }
       })
@@ -325,7 +312,6 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// DELETE - Delete static data item
 export async function DELETE(request: NextRequest) {
   try {
     const currentUserId = request.headers.get('x-user-id')
@@ -346,7 +332,6 @@ export async function DELETE(request: NextRequest) {
     }
 
     if (type === 'budgetAmounts') {
-      // Verify ownership
       const existing = await prisma.budgetAmount.findFirst({
         where: { id, userId: currentUserId }
       })
@@ -358,7 +343,6 @@ export async function DELETE(request: NextRequest) {
         where: { id }
       })
     } else {
-      // Verify ownership
       const existing = await prisma.staticDataCategory.findFirst({
         where: { id, userId: currentUserId }
       })

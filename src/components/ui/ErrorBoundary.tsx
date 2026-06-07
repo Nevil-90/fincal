@@ -1,3 +1,5 @@
+// React class-based error boundary. Catches unhandled render errors and
+// displays a full-page fallback with the error message and a reload button.
 'use client'
 
 import React, { Component, ErrorInfo, ReactNode } from 'react'

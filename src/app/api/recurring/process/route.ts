@@ -1,3 +1,7 @@
+// Processes due recurring transactions for the current user. For each active,
+// unpaused transaction whose nextDue is today or earlier, creates all missing
+// transaction records and advances nextDue to the next future occurrence.
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
@@ -8,9 +12,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get all active, unpaused recurring transactions where nextDue is today or in the past
     const now = new Date()
-    now.setHours(23, 59, 59, 999) // End of current day
+    now.setHours(23, 59, 59, 999)
 
     const dueRecurring = await prisma.recurringTransaction.findMany({
       where: {
@@ -35,9 +38,7 @@ export async function POST(request: NextRequest) {
     for (const rt of dueRecurring) {
       let currentDate = new Date(rt.nextDue)
       
-      // Process all occurrences up to today
       while (currentDate <= now) {
-        // Store date as UTC midnight to align with summary routes
         const finalDate = new Date(Date.UTC(
           currentDate.getFullYear(),
           currentDate.getMonth(),
@@ -59,7 +60,6 @@ export async function POST(request: NextRequest) {
 
         totalProcessed++
 
-        // Move to next occurrence based on frequency
         switch (rt.frequency.toLowerCase()) {
           case 'daily':
             currentDate.setDate(currentDate.getDate() + 1)
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
             currentDate.setMonth(currentDate.getMonth() + 1)
             currentDate.setDate(originalDayOfMonth)
             if (currentDate.getDate() !== originalDayOfMonth) {
-              currentDate.setDate(0) // Set to last day of the month
+              currentDate.setDate(0)
             }
             break
           case 'quarterly':
@@ -91,7 +91,6 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Update the recurring transaction's nextDue date
       updatePromises.push(
         prisma.recurringTransaction.update({
           where: { id: rt.id },
@@ -100,7 +99,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Execute database operations
     if (transactionsToCreate.length > 0) {
       await prisma.transaction.createMany({
         data: transactionsToCreate

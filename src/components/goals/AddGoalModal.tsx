@@ -1,3 +1,4 @@
+// Component for AddGoalModal.tsx
 import { Target, X, Plus, Calendar } from 'lucide-react'
 import { useEffect } from 'react'
 

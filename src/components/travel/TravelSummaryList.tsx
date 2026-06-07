@@ -1,3 +1,4 @@
+// Component for TravelSummaryList.tsx
 import { Calendar, TrendingUp } from 'lucide-react'
 import { formatCurrency } from '@/lib/financial-utils'
 

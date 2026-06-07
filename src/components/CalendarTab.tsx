@@ -1,3 +1,5 @@
+// Interactive financial calendar with month, week, and agenda views.
+// Shows per-day transaction chips, spending intensity heat, and an upcoming-events sidebar.
 'use client'
 
 import { useMemo, useState } from 'react'
@@ -59,7 +61,6 @@ interface CalendarTabProps {
 type ViewMode = 'month' | 'week' | 'agenda'
 type TypeFilter = 'all' | 'income' | 'expense' | 'recurring'
 
-// ─── Design Tokens ───
 const CARD = "rounded-2xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm"
 
 const TYPE_THEME = {
@@ -117,7 +118,6 @@ function CalendarTab({}: CalendarTabProps) {
   const gridStart = startOfWeek(monthStart)
   const gridEnd = endOfWeek(monthEnd)
 
-  // Fetch transactions dynamically for the current calendar grid
   const { transactions: fetchedTransactions, isLoading: fetchLoading } = useTransactions(1, 1000, {
     startDate: format(gridStart, 'yyyy-MM-dd'),
     endDate: format(gridEnd, 'yyyy-MM-dd')
@@ -125,7 +125,6 @@ function CalendarTab({}: CalendarTabProps) {
   
   const transactions = fetchedTransactions || []
 
-  // ─── Derived Data ───
   const filteredTransactions = useMemo(() => {
     const q = searchQuery.trim().toLowerCase()
     return transactions.filter(t => {
@@ -167,7 +166,6 @@ function CalendarTab({}: CalendarTabProps) {
     return Array.from({ length: 7 }, (_, i) => addDays(start, i))
   }, [currentDate])
 
-  // ─── Summary Stats for current month ───
   const monthStats = useMemo(() => {
     let income = 0, expense = 0, txCount = 0
     filteredTransactions.forEach(t => {
@@ -181,7 +179,6 @@ function CalendarTab({}: CalendarTabProps) {
     return { income, expense, net: income - expense, txCount }
   }, [filteredTransactions, currentDate])
 
-  // ─── Upcoming transactions (next 7 days) ───
   const upcoming = useMemo(() => {
     const today = startOfDay(new Date())
     const end = addDays(today, 7)
@@ -194,7 +191,6 @@ function CalendarTab({}: CalendarTabProps) {
       .slice(0, 5)
   }, [filteredTransactions])
 
-  // ─── Navigation ───
   const goNext = () => {
     if (view === 'month' || view === 'agenda') setCurrentDate(addMonths(currentDate, 1))
     else if (view === 'week') setCurrentDate(addWeeks(currentDate, 1))
@@ -215,18 +211,15 @@ function CalendarTab({}: CalendarTabProps) {
     return format(currentDate, 'MMMM yyyy')
   }, [currentDate, view])
 
-  // ─── Day spending intensity (for the background color) ───
   const getDayIntensity = (date: Date): string => {
     const key = format(date, 'yyyy-MM-dd')
     const dayTx = txByDate.get(key) || []
     const totalExpense = dayTx.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
     const totalIncome = dayTx.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0)
 
-    // Income day (only income, no expense) → green tint
     if (totalIncome > 0 && totalExpense === 0) {
       return 'dark:bg-emerald-900/10'
     }
-    // Both: mixed day — expense dominates colour
     if (totalExpense === 0) return ''
     if (totalExpense <= 500)  return 'bg-rose-50/30  dark:bg-rose-950/20'
     if (totalExpense <= 2000) return 'bg-rose-50/50  dark:bg-rose-950/30'
@@ -234,7 +227,6 @@ function CalendarTab({}: CalendarTabProps) {
     return 'bg-rose-100/60 dark:bg-rose-950/50'
   }
 
-  // ─── Render a small transaction chip (for calendar cells) ───
   const renderChip = (t: Transaction) => {
     const theme = getTheme(t)
     return (
@@ -252,7 +244,6 @@ function CalendarTab({}: CalendarTabProps) {
     )
   }
 
-  // ─── Render a full transaction row (for agenda / day detail) ───
   const renderFullRow = (t: Transaction) => {
     const theme = getTheme(t)
     const Icon = theme.icon
@@ -281,7 +272,6 @@ function CalendarTab({}: CalendarTabProps) {
     )
   }
 
-  // ─── MONTH VIEW ───
   const renderMonthView = () => (
     <div className={`${CARD} overflow-hidden`}>
       {/* Day headers */}
@@ -380,7 +370,6 @@ function CalendarTab({}: CalendarTabProps) {
     </div>
   )
 
-  // ─── WEEK VIEW ───
   const renderWeekView = () => (
     <div className={`${CARD} overflow-hidden`}>
       <div className="overflow-x-auto">
@@ -420,9 +409,7 @@ function CalendarTab({}: CalendarTabProps) {
     </div>
   )
 
-  // ─── AGENDA VIEW ───
   const renderAgendaView = () => {
-    // Group transactions by date, sorted chronologically
     const sortedTx = [...filteredTransactions]
       .filter(t => isSameMonth(new Date(t.date), currentDate))
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())

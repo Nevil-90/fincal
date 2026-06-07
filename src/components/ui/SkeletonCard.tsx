@@ -1,4 +1,5 @@
-// Reusable skeleton shimmer base
+// Loading skeleton components used while data is being fetched.
+// Shimmer is the base pulse animation; exported variants mirror actual UI shapes.
 function Shimmer({ className = '' }: { className?: string }) {
   return (
     <div className={`animate-pulse rounded-xl bg-slate-200 dark:bg-neutral-700 ${className}`} />
@@ -37,18 +38,14 @@ export function SkeletonTransactionRow() {
   )
 }
 
-// Full page skeleton matching the actual sidebar + header + content layout
 export function SkeletonDashboard() {
   return (
     <div className="flex h-screen w-full overflow-hidden bg-slate-50 dark:bg-neutral-950">
-      {/* Sidebar skeleton */}
       <div className="hidden md:flex w-64 shrink-0 flex-col bg-white dark:bg-neutral-900 border-r border-slate-200 dark:border-neutral-800">
-        {/* Logo area */}
         <div className="px-6 h-[60px] sm:h-[68px] border-b border-slate-200 dark:border-neutral-800 flex items-center gap-3 shrink-0">
           <Shimmer className="h-8 w-8 rounded-lg shrink-0" />
           <Shimmer className="h-4 w-24" />
         </div>
-        {/* Nav items */}
         <div className="flex-1 p-4 space-y-2">
           {Array.from({ length: 7 }).map((_, i) => (
             <div key={i} className="flex items-center gap-3 px-3 py-2.5">
@@ -57,7 +54,6 @@ export function SkeletonDashboard() {
             </div>
           ))}
         </div>
-        {/* Footer */}
         <div className="p-4 border-t border-slate-200 dark:border-neutral-800 flex items-center gap-3">
           <Shimmer className="h-8 w-8 rounded-full shrink-0" />
           <div className="flex-1 space-y-1.5">
@@ -67,9 +63,7 @@ export function SkeletonDashboard() {
         </div>
       </div>
 
-      {/* Main content area */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header skeleton */}
         <div className="h-[60px] sm:h-[68px] bg-white dark:bg-neutral-900 border-b border-slate-200 dark:border-neutral-800 flex items-center justify-between px-4 sm:px-6 shrink-0">
           <div className="flex items-center gap-3">
             <Shimmer className="h-5 w-5 rounded-md" />
@@ -82,22 +76,18 @@ export function SkeletonDashboard() {
           </div>
         </div>
 
-        {/* Content skeleton */}
         <div className="flex-1 overflow-auto p-4 md:p-6 space-y-5">
-          {/* Page title */}
           <div className="space-y-2">
             <Shimmer className="h-7 w-56" />
             <Shimmer className="h-3.5 w-80 opacity-60" />
           </div>
 
-          {/* Stat cards row */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {Array.from({ length: 4 }).map((_, i) => (
               <SkeletonStatCard key={i} />
             ))}
           </div>
 
-          {/* Main content card */}
           <div className="bg-white dark:bg-neutral-900 border border-slate-200/70 dark:border-neutral-800 rounded-3xl p-6 space-y-4">
             <div className="flex items-center justify-between">
               <Shimmer className="h-5 w-40" />

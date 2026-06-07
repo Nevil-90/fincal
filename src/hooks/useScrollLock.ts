@@ -1,3 +1,5 @@
+// Locks/unlocks body scroll when a modal or overlay is open.
+
 import { useEffect } from 'react'
 
 export function useScrollLock(isLocked: boolean) {

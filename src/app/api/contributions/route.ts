@@ -1,3 +1,6 @@
+// CRUD endpoints for goal contributions. Each contribution creates a linked
+// expense transaction and updates the goal's current amount atomically.
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
@@ -15,7 +18,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Goal ID is required' }, { status: 400 })
     }
 
-    // Verify goal belongs to user
     const goal = await prisma.savingsGoal.findFirst({
       where: { id: goalId, userId: currentUserId }
     })
@@ -55,7 +57,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Get the goal details and verify ownership
     const goal = await prisma.savingsGoal.findFirst({
       where: { id: goalId, userId: currentUserId }
     })
@@ -64,9 +65,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Goal not found or access denied' }, { status: 404 })
     }
 
-    // Start a transaction to ensure consistency
     const result = await prisma.$transaction(async (tx) => {
-      // Create the expense transaction
       const transaction = await tx.transaction.create({
         data: {
           type: 'expense',
@@ -79,7 +78,6 @@ export async function POST(request: NextRequest) {
         }
       })
 
-      // Create the goal contribution record
       const contribution = await tx.goalContribution.create({
         data: {
           goalId,
@@ -89,7 +87,6 @@ export async function POST(request: NextRequest) {
         }
       })
 
-      // Update the goal's current amount
       const updatedGoal = await tx.savingsGoal.update({
         where: { id: goalId },
         data: {
@@ -124,7 +121,6 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Contribution ID is required' }, { status: 400 })
     }
 
-    // Get the contribution details and verify ownership of the goal
     const contribution = await prisma.goalContribution.findUnique({
       where: { id: contributionId },
       include: {
@@ -137,9 +133,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Contribution not found or access denied' }, { status: 404 })
     }
 
-    // Start a transaction to ensure consistency
     await prisma.$transaction(async (tx) => {
-      // Soft delete the related expense transaction if it exists
       if (contribution.transactionId) {
         await tx.transaction.update({
           where: { id: contribution.transactionId },
@@ -147,13 +141,11 @@ export async function DELETE(request: NextRequest) {
         })
       }
 
-      // Soft delete the contribution
       await tx.goalContribution.update({
         where: { id: contributionId },
         data: { deletedAt: new Date() }
       })
 
-      // Update the goal's current amount (subtract the contribution)
       const newCurrentAmount = Math.max(0, Number(contribution.goal.currentAmount) - Number(contribution.amount))
       await tx.savingsGoal.update({
         where: { id: contribution.goalId },

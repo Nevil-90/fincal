@@ -1,3 +1,6 @@
+// Stores and retrieves the user's bottom-nav tab order (navPreferences).
+// Accepts an array of 4–6 valid tab slugs.
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 

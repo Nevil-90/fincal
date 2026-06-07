@@ -1,3 +1,8 @@
+// Travel analytics endpoint. Supports three aggregation modes via ?type=:
+//   overview  — all-time summary + monthly breakdown for current year + yearly summaries
+//   monthly   — summary and entries for a specific month
+//   yearly    — summary and monthly breakdown for a specific year
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
@@ -28,12 +33,11 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    const type = searchParams.get('type') || 'overview' // overview, monthly, yearly
+    const type = searchParams.get('type') || 'overview'
     const year = searchParams.get('year') ? parseInt(searchParams.get('year')!) : new Date().getFullYear()
     const month = searchParams.get('month') ? parseInt(searchParams.get('month')!) : null
 
     if (type === 'overview') {
-      // Get overall summary for the user
       const allEntries = await prisma.travelEntry.findMany({
         where: { userId: currentUserId, deletedAt: null },
         orderBy: { startDate: 'asc' }
@@ -41,7 +45,6 @@ export async function GET(request: NextRequest) {
 
       const summary = calculateSummary(allEntries)
       
-      // Get monthly summaries for current year
       const monthlySummaries: MonthlySummary[] = []
       for (let m = 1; m <= 12; m++) {
         const monthEntries = allEntries.filter(entry => {
@@ -60,7 +63,6 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      // Get yearly summaries
       const years = [...new Set(allEntries.map(entry => new Date(entry.startDate).getFullYear()))]
       const yearlySummaries: YearlySummary[] = years.map(y => {
         const yearEntries = allEntries.filter(entry => new Date(entry.startDate).getFullYear() === y)
@@ -75,12 +77,11 @@ export async function GET(request: NextRequest) {
         overall: summary,
         monthly: monthlySummaries,
         yearly: yearlySummaries,
-        recentEntries: allEntries.slice(-5).reverse() // Last 5 entries
+        recentEntries: allEntries.slice(-5).reverse()
       })
     }
 
     if (type === 'monthly') {
-      // Get specific month data
       const startDate = new Date(year, (month || 1) - 1, 1)
       const endDate = new Date(year, month || 12, 0, 23, 59, 59)
 
@@ -106,7 +107,6 @@ export async function GET(request: NextRequest) {
     }
 
     if (type === 'yearly') {
-      // Get specific year data
       const startDate = new Date(year, 0, 1)
       const endDate = new Date(year, 11, 31, 23, 59, 59)
 
@@ -124,7 +124,6 @@ export async function GET(request: NextRequest) {
 
       const summary = calculateSummary(entries)
 
-      // Get monthly breakdown for the year
       const monthlyBreakdown: MonthlySummary[] = []
       for (let m = 1; m <= 12; m++) {
         const monthEntries = entries.filter(entry => {

@@ -1,3 +1,8 @@
+// CRUD endpoints for recurring transactions.
+// POST creates the recurring template, backfills all missed past transactions,
+// and optionally creates a linked SharedSubscription for split-type entries.
+// PUT handles pause/resume and the legacy isActive toggle.
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
@@ -39,18 +44,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Calculate next due date based on frequency and start date
     const start = new Date(startDate)
-    start.setHours(0, 0, 0, 0) // Normalize to start of day
+    start.setHours(0, 0, 0, 0)
     const now = new Date()
-    now.setHours(0, 0, 0, 0) // Normalize to start of day
+    now.setHours(0, 0, 0, 0)
     let nextDue = new Date(start)
 
-    // If start date is in the past or today, calculate the next occurrence maintaining the original pattern
     if (start <= now) {
       nextDue = new Date(start)
       
-      // Calculate next due date maintaining the original recurring pattern
       while (nextDue <= now) {
         switch (frequency.toLowerCase()) {
           case 'daily':
@@ -60,14 +62,11 @@ export async function POST(request: NextRequest) {
             nextDue.setDate(nextDue.getDate() + 7)
             break
           case 'monthly':
-            // Maintain the same day of month as original start date
             const originalDayOfMonth = start.getDate()
             nextDue.setMonth(nextDue.getMonth() + 1)
             nextDue.setDate(originalDayOfMonth)
             
-            // Handle edge case where original day doesn't exist in target month (e.g., Jan 31 -> Feb 31)
             if (nextDue.getDate() !== originalDayOfMonth) {
-              // Set to last day of the month
               nextDue.setDate(0)
             }
             break
@@ -82,7 +81,6 @@ export async function POST(request: NextRequest) {
         }
       }
     } else {
-      // If start date is in the future, next due is the start date itself
       nextDue = new Date(start)
     }
 
@@ -94,7 +92,7 @@ export async function POST(request: NextRequest) {
         description,
         frequency,
         splitType: splitType || 'personal',
-        startDate: start, // Store the actual start date
+        startDate: start,
         nextDue,
         paymentMethod,
         source,
@@ -103,12 +101,10 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Smart backfill: Create all missed transactions from start date to now
     const transactionsToCreate = []
     const currentDate = new Date(start)
     
     while (currentDate <= now) {
-      // Store date as UTC midnight to align with summary routes
       const finalDate = new Date(Date.UTC(
         currentDate.getFullYear(),
         currentDate.getMonth(),
@@ -124,12 +120,11 @@ export async function POST(request: NextRequest) {
         description: description,
         paymentMethod,
         source,
-        recurringTransactionId: recurringTransaction.id, // Link to parent recurring transaction
-        date: finalDate, // Use UTC midnight
-        userId: currentUserId // Assign to current user
+        recurringTransactionId: recurringTransaction.id,
+        date: finalDate,
+        userId: currentUserId
       })
 
-      // Move to next occurrence based on frequency
       switch (frequency) {
         case 'daily':
           currentDate.setDate(currentDate.getDate() + 1)
@@ -148,27 +143,23 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create all backfill transactions
     if (transactionsToCreate.length > 0) {
       await prisma.transaction.createMany({
         data: transactionsToCreate
       })
     }
 
-    // If this is a split recurring transaction, create a corresponding shared subscription
     let sharedSubscription = null
     if (splitType === 'split') {
       try {
-        // Calculate billing date based on frequency and next due date
         let billingDate = nextDue.getDate()
         
-        // For monthly frequency, use the day of the month
         if (frequency === 'monthly') {
           billingDate = nextDue.getDate()
         } else if (frequency === 'yearly') {
           billingDate = nextDue.getDate()
         } else {
-          billingDate = 1 // Default to 1st for daily/weekly (simplified)
+          billingDate = 1
         }
 
         sharedSubscription = await prisma.sharedSubscription.create({
@@ -213,7 +204,6 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Recurring transaction ID is required' }, { status: 400 })
     }
 
-    // Verify ownership
     const existing = await prisma.recurringTransaction.findFirst({
       where: { id, userId: currentUserId, deletedAt: null }
     })
@@ -222,10 +212,8 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Recurring transaction not found or access denied' }, { status: 404 })
     }
 
-    // Handle pause/resume logic
     if (isPaused !== undefined) {
       if (isPaused) {
-        // Pause the transaction
         const updatedRecurring = await prisma.recurringTransaction.update({
           where: { id },
           data: { 
@@ -236,14 +224,12 @@ export async function PUT(request: NextRequest) {
         })
         return NextResponse.json(updatedRecurring)
       } else {
-        // Resume the transaction - calculate proper next due date
         const today = new Date()
         today.setHours(0, 0, 0, 0)
         
         const originalStartDate = new Date(existing.startDate)
         const nextDue = new Date(today)
         
-        // Calculate next due date based on frequency while maintaining original pattern
         switch (existing.frequency) {
           case 'daily':
             nextDue.setDate(nextDue.getDate() + 1)
@@ -325,7 +311,6 @@ export async function PUT(request: NextRequest) {
       }
     }
 
-    // Legacy support for isActive toggle (convert to isPaused)
     if (isActive !== undefined) {
       const updatedRecurring = await prisma.recurringTransaction.update({
         where: { id },
@@ -359,7 +344,6 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Recurring transaction ID is required' }, { status: 400 })
     }
 
-    // Verify ownership
     const existing = await prisma.recurringTransaction.findFirst({
       where: { id, userId: currentUserId, deletedAt: null }
     })

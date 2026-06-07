@@ -1,3 +1,6 @@
+// Root layout. Wraps the app with ThemeProvider, SWR global config,
+// and an error boundary. Disables user-scalable zoom for mobile.
+
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";

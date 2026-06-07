@@ -1,3 +1,6 @@
+// Utilities for resolving the correct price of a recurring transaction on a given date,
+// taking into account its full price change history stored in the database.
+
 import { prisma } from '@/lib/prisma'
 
 export interface PriceHistoryItem {
@@ -10,8 +13,8 @@ export interface PriceHistoryItem {
 }
 
 /**
- * Get the correct price for a recurring transaction on a specific date
- * based on its price change history
+ * Returns the price that was active for a recurring transaction on a specific date.
+ * Falls back to `defaultAmount` if no history exists or on error.
  */
 export async function getPriceForDate(
   recurringTransactionId: string,
@@ -19,25 +22,21 @@ export async function getPriceForDate(
   defaultAmount: number
 ): Promise<number> {
   try {
-    // Get all price changes for this recurring transaction
     const priceChanges = await prisma.recurringTransactionPriceChange.findMany({
       where: { recurringTransactionId },
-      orderBy: { effectiveDate: 'desc' } // Most recent first
+      orderBy: { effectiveDate: 'desc' }
     })
 
-    // If no price changes, return the default amount
     if (priceChanges.length === 0) {
       return defaultAmount
     }
 
-    // Find the most recent price change that was effective on or before the target date
     for (const priceChange of priceChanges) {
       if (priceChange.effectiveDate <= targetDate) {
         return Number(priceChange.newAmount)
       }
     }
 
-    // If no price change was effective before the target date, return the oldAmount of the oldest price change
     return Number(priceChanges[priceChanges.length - 1].oldAmount)
   } catch (error) {
     console.error('Error getting price for date:', error)
@@ -46,8 +45,8 @@ export async function getPriceForDate(
 }
 
 /**
- * Calculate the correct amounts for a series of recurring transaction dates
- * considering price history
+ * Returns the correct amount for each date in a series, accounting for price changes
+ * that took effect between those dates.
  */
 export async function calculateAmountsForDates(
   recurringTransactionId: string,
@@ -55,28 +54,22 @@ export async function calculateAmountsForDates(
   defaultAmount: number
 ): Promise<{ date: Date; amount: number }[]> {
   try {
-    // Get all price changes for this recurring transaction
     const priceChanges = await prisma.recurringTransactionPriceChange.findMany({
       where: { recurringTransactionId },
-      orderBy: { effectiveDate: 'asc' } // Oldest first for easier processing
+      orderBy: { effectiveDate: 'asc' }
     })
 
-    // If no price changes, all dates use the default amount
     if (priceChanges.length === 0) {
       return dates.map(date => ({ date, amount: defaultAmount }))
     }
 
-    // Sort dates to process them in order
     const sortedDates = dates.sort((a, b) => a.getTime() - b.getTime())
-
     const result: { date: Date; amount: number }[] = []
-    
-    // The initial amount before the first price change was oldAmount
+
     let currentAmount = Number(priceChanges[0].oldAmount)
     let priceChangeIndex = 0
 
     for (const date of sortedDates) {
-      // Check if we need to update the current amount based on price changes
       while (
         priceChangeIndex < priceChanges.length &&
         priceChanges[priceChangeIndex].effectiveDate <= date
@@ -91,13 +84,13 @@ export async function calculateAmountsForDates(
     return result
   } catch (error) {
     console.error('Error calculating amounts for dates:', error)
-    // Return default amounts as fallback
     return dates.map(date => ({ date, amount: defaultAmount }))
   }
 }
 
 /**
- * Generate dates for a recurring transaction based on frequency
+ * Generates all occurrence dates for a recurring transaction between two dates,
+ * based on the given frequency.
  */
 export function generateRecurringDates(
   startDate: Date,
@@ -110,7 +103,6 @@ export function generateRecurringDates(
   while (currentDate <= endDate) {
     dates.push(new Date(currentDate))
 
-    // Move to the next occurrence based on frequency
     switch (frequency) {
       case 'daily':
         currentDate.setDate(currentDate.getDate() + 1)

@@ -1,3 +1,8 @@
+// Next.js middleware that runs on every request.
+// Redirects HTTP → HTTPS in production, enforces auth on protected routes,
+// restricts admin paths to ADMIN-role users, and forwards user identity
+// headers (x-user-id, x-user-email) to API routes.
+
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { config as appConfig } from '@/lib/config'

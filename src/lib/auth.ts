@@ -1,3 +1,6 @@
+// Authentication utilities: password hashing, JWT generation/verification,
+// and sending OTP + password reset emails via nodemailer.
+
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
 import nodemailer from 'nodemailer'
@@ -129,6 +132,3 @@ export async function sendPasswordResetEmail(email: string, resetUrl: string): P
     return false
   }
 }
-
-
-

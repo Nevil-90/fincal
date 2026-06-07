@@ -1,3 +1,7 @@
+// Login endpoint. Handles two flows:
+//   1. Email check — if the user has no password set, generates and emails a one-time OTP.
+//   2. Password login — validates credentials and issues access + refresh token cookies.
+
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { prisma } from '@/lib/prisma'

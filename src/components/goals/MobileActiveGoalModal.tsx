@@ -1,3 +1,4 @@
+// Mobile modal for viewing and managing an active savings goal.
 import { Calendar, ChevronDown, Plus, History, TrendingUp, Trash2, Lightbulb } from 'lucide-react'
 import { formatCurrency } from '@/lib/financial-utils'
 import { SavingsGoal, GoalContribution } from './types'

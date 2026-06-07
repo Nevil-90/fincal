@@ -1,4 +1,5 @@
-// Types and interfaces for recurring transactions functionality
+// Domain types for recurring transactions, split subscriptions, participants,
+// price change history, and their associated form data.
 
 export interface RecurringTransaction {
   id: string
@@ -57,7 +58,7 @@ export interface SharedSubscription {
   amount: number
   billingDate: number
   frequency: string
-  startDate?: string // When the subscription actually started
+  startDate?: string
   isActive: boolean
   participants: SubscriptionParticipant[]
 }
@@ -86,7 +87,7 @@ export interface RecurringFormData {
   source: string
   frequency: string
   startDate: string
-  splitType: 'personal' | 'split' // Keep for compatibility but only 'personal' will be used
+  splitType: 'personal' | 'split'
 }
 
 export interface PriceChange {

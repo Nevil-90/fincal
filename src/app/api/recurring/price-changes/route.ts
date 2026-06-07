@@ -1,7 +1,11 @@
+// Manages price change history for recurring transactions.
+// GET returns the change log. POST records a new price change, updates the
+// recurring template, and retroactively updates all linked transactions
+// on or after the effective date.
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-// GET: Get all price changes for a recurring transaction
 export async function GET(request: NextRequest) {
   try {
     const currentUserId = request.headers.get('x-user-id')
@@ -16,7 +20,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'recurringTransactionId is required' }, { status: 400 })
     }
 
-    // Verify ownership of the recurring transaction
     const recurringTransaction = await prisma.recurringTransaction.findFirst({
       where: { id: recurringTransactionId, userId: currentUserId }
     })
@@ -40,7 +43,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST: Add a new price change
 export async function POST(request: NextRequest) {
   try {
     const currentUserId = request.headers.get('x-user-id')
@@ -58,7 +60,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Verify ownership and get old amount
     const recurringTransaction = await prisma.recurringTransaction.findFirst({
       where: { id: recurringTransactionId, userId: currentUserId }
     })
@@ -72,7 +73,6 @@ export async function POST(request: NextRequest) {
 
     const oldAmount = recurringTransaction.amount
 
-    // Create the price change record
     const priceChange = await prisma.recurringTransactionPriceChange.create({
       data: {
         recurringTransactionId,
@@ -83,14 +83,11 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Update the recurring transaction with the new amount
     await prisma.recurringTransaction.update({
       where: { id: recurringTransactionId },
       data: { amount: parseFloat(newAmount) }
     })
 
-    // Update existing transactions that should use the new price
-    // Find all transactions from this recurring transaction that are on or after the effective date
     const transactionsToUpdate = await prisma.transaction.findMany({
       where: {
         recurringTransactionId,
@@ -101,7 +98,6 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Update each transaction with the new amount
     if (transactionsToUpdate.length > 0) {
       await prisma.transaction.updateMany({
         where: {

@@ -1,3 +1,5 @@
+// Touch-swipeable row for mobile list items. Reveals action slots on
+// left/right swipe with a resistance effect; triggers callbacks at threshold.
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
@@ -36,11 +38,9 @@ export default function SwipeableRow({
     
     const diff = currentX.current - startX.current
     
-    // Only allow swipe if there's a handler for that direction
     if (diff > 0 && !onSwipeRight) return
     if (diff < 0 && !onSwipeLeft) return
 
-    // Cap the visual offset to make it feel resistive
     const resistance = diff > 0 ? 0.6 : 0.6
     const visualOffset = diff * resistance
     
@@ -62,7 +62,6 @@ export default function SwipeableRow({
       onSwipeLeft()
     }
 
-    // Reset smoothly
     setIsSwiping(false)
     setOffset(0)
     startX.current = null
@@ -71,17 +70,15 @@ export default function SwipeableRow({
 
   return (
     <div className="relative w-full overflow-hidden rounded-2xl group">
-      {/* Background action layers */}
-      <div className="absolute inset-0 flex items-center justify-between px-4 text-white">
-        <div className={`flex items-center justify-start w-1/2 h-full bg-blue-500 rounded-l-2xl transition-opacity ${offset > 10 ? 'opacity-100' : 'opacity-0'}`}>
-          {rightContent}
-        </div>
-        <div className={`flex items-center justify-end w-1/2 h-full bg-rose-500 rounded-r-2xl transition-opacity ${offset < -10 ? 'opacity-100' : 'opacity-0'}`}>
+      <div className="absolute inset-0 flex items-center justify-between px-0 text-white">
+        <div className={`flex items-center justify-start w-1/2 h-full rounded-l-2xl transition-opacity duration-200 ${offset > 10 ? 'opacity-100' : 'opacity-0'}`}>
           {leftContent}
+        </div>
+        <div className={`flex items-center justify-end w-1/2 h-full rounded-r-2xl transition-opacity duration-200 ${offset < -10 ? 'opacity-100' : 'opacity-0'}`}>
+          {rightContent}
         </div>
       </div>
 
-      {/* Foreground swiping content */}
       <div
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}

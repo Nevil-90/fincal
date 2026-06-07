@@ -1,3 +1,4 @@
+// Right pane for desktop goals view, displaying goal details, history, and actions.
 import { Target, Calendar, Clock, History, Trash2, Check, TrendingUp, Sparkles, Trophy, ChevronRight, X, Plus } from 'lucide-react'
 import { formatCurrency } from '@/lib/financial-utils'
 import { SavingsGoal, GoalContribution } from './types'

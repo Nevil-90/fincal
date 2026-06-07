@@ -1,3 +1,6 @@
+// Returns completed savings goals for the current user, ordered by most
+// recently completed, each with the last 5 contributions included.
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
@@ -26,11 +29,11 @@ export async function GET(request: NextRequest) {
           orderBy: {
             date: 'desc'
           },
-          take: 5 // Include last 5 contributions for display
+          take: 5
         }
       },
       orderBy: {
-        completedAt: 'desc' // Most recently completed first
+        completedAt: 'desc'
       }
     })
     

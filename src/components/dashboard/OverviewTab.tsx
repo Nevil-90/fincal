@@ -1,3 +1,5 @@
+// Budget command center component visualizing monthly progress,
+// category-specific budget limits vs actuals, and insights/burn-rate.
 'use client'
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react'
@@ -78,21 +80,17 @@ export default React.memo(function OverviewTab({
   const { data: staticData } = useEnhancedStaticData()
   const now = new Date()
 
-  // Default to current month/year if not set
   const activeYear = overviewPeriod.year
   const activeMonth = overviewPeriod.month ?? (now.getMonth() + 1)
 
-  // Days progress through current month
   const daysInMonth = new Date(activeYear, activeMonth, 0).getDate()
   const dayOfMonth = overviewPeriod.month === (now.getMonth() + 1) && activeYear === now.getFullYear()
     ? now.getDate()
     : daysInMonth
   const monthProgress = Math.round((dayOfMonth / daysInMonth) * 100)
 
-  // Use server-calculated category spend
   const categorySpend = (summary?.categorySpend || {}) as Record<string, number>
 
-  // Budget vs Actual rows
   const budgetRows = useMemo(() => {
     return staticData.budgetAmounts
       .filter(b => b.isActive && !['travelSettings', 'global'].includes(b.category))
@@ -108,14 +106,12 @@ export default React.memo(function OverviewTab({
       .sort((a, b) => b.pct - a.pct)
   }, [staticData.budgetAmounts, categorySpend])
 
-  // Overall budget health
   const totalBudgeted = budgetRows.reduce((s, r) => s + r.limit, 0)
   const totalSpentOnBudgeted = budgetRows.reduce((s, r) => s + r.spent, 0)
   const overallBudgetPct = totalBudgeted > 0 ? (totalSpentOnBudgeted / totalBudgeted) * 100 : 0
   const overCount = budgetRows.filter(r => r.status === 'over').length
   const warnCount = budgetRows.filter(r => r.status === 'warn').length
 
-  // Unbudgeted categories (spending but no budget set)
   const unbudgetedSpend = useMemo(() => {
     const budgetedCats = new Set(staticData.budgetAmounts.filter(b => b.isActive).map(b => b.category))
     return Object.entries(categorySpend)
@@ -130,16 +126,13 @@ export default React.memo(function OverviewTab({
     periodBalance: summary?.period?.balance || 0,
   }
 
-  // Savings rate
   const savingsRate = balanceInfo.periodIncome > 0
     ? Math.round((balanceInfo.periodBalance / balanceInfo.periodIncome) * 100)
     : 0
 
-  // Daily burn rate vs expected
   const actualDailyBurn = dayOfMonth > 0 ? balanceInfo.periodExpenses / dayOfMonth : 0
   const expectedDailyBurn = daysInMonth > 0 ? totalBudgeted / daysInMonth : 0
 
-  // Monthly Spending Goal (Global)
   const monthlySpendingGoal = Number(staticData.userSettings?.monthlySpendingGoal) || 0
   const monthlySpendingGoalPct = monthlySpendingGoal > 0 ? (balanceInfo.periodExpenses / monthlySpendingGoal) * 100 : 0
   const monthlySpendingGoalStatus = monthlySpendingGoalPct >= 100 ? 'over' : monthlySpendingGoalPct >= 80 ? 'warn' : monthlySpendingGoalPct >= 50 ? 'ok' : 'safe'
@@ -172,7 +165,6 @@ export default React.memo(function OverviewTab({
   const rolloverCalculatedRef = useRef<string | null>(null)
   const thisMonthKey = `${activeMonth}-${activeYear}`
 
-  // Recalculate rollover when month changes
   useEffect(() => {
     if (rolloverCalculatedRef.current === thisMonthKey) return // already done
     rolloverCalculatedRef.current = thisMonthKey
@@ -196,7 +188,6 @@ export default React.memo(function OverviewTab({
   return (
     <div className="space-y-4 sm:space-y-5 pb-24 md:pb-6">
 
-      {/* ── PERIOD SELECTOR BAR ── */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white ">Budget Command Center</h1>
@@ -226,24 +217,18 @@ export default React.memo(function OverviewTab({
         </div>
       </div>
 
-      {/* ── MAIN GRID ── */}
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-4 sm:gap-5">
 
-        {/* LEFT: Budget Tracker */}
         <div className="space-y-4 sm:space-y-5">
 
-          {/* Overall Gauge Card */}
           <div className="rounded-2xl border border-slate-200 dark:border-neutral-700/80  bg-white dark:bg-neutral-800 p-4 sm:p-5 shadow-sm">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
-              {/* Gauge */}
               <div className="flex flex-col items-center gap-2 shrink-0 w-full sm:w-auto">
                 <SpendGauge pct={overallBudgetPct} />
                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-500">Overall Budget Usage</p>
               </div>
 
-              {/* Stats */}
               <div className="flex-1 space-y-3 w-full">
-                {/* Month progress bar */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-1.5">
@@ -257,7 +242,6 @@ export default React.memo(function OverviewTab({
                   </div>
                 </div>
 
-                {/* Key numbers */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 [&>*:last-child:nth-child(odd)]:col-span-2 sm:[&>*:last-child:nth-child(odd)]:col-span-1">
                   <div className="rounded-xl bg-rose-50 dark:bg-rose-900/20  border border-rose-100 dark:border-rose-900/50 p-3">
                     <p className="text-[10px] font-bold text-rose-500 dark:text-rose-400 uppercase tracking-wider">Spent</p>
@@ -282,7 +266,6 @@ export default React.memo(function OverviewTab({
                   </div>
                 </div>
 
-                {/* Alert pills */}
                 {(overCount > 0 || warnCount > 0) && (
                   <div className="flex flex-wrap gap-2">
                     {overCount > 0 && (
@@ -306,7 +289,6 @@ export default React.memo(function OverviewTab({
             </div>
           </div>
 
-          {/* Monthly Spending Goal (Global) */}
           {monthlySpendingGoal > 0 && (
             <div className="rounded-2xl border border-slate-200 dark:border-neutral-700/80  bg-white dark:bg-neutral-800 p-4 sm:p-5 shadow-sm">
               <div className="flex items-center justify-between mb-3">
@@ -346,7 +328,6 @@ export default React.memo(function OverviewTab({
             </div>
           )}
 
-          {/* Budget Rows */}
           {budgetRows.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-slate-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 p-8 text-center">
               <ClipboardList className="h-8 w-8 text-slate-400 dark:text-neutral-500  mx-auto mb-3" />
@@ -411,17 +392,14 @@ export default React.memo(function OverviewTab({
           )}
         </div>
 
-        {/* RIGHT PANEL */}
         <div className="space-y-4 sm:space-y-5">
 
-          {/* Savings & Burn Rate Card */}
           <div className="rounded-2xl border border-slate-200 dark:border-neutral-700/80  bg-white dark:bg-neutral-800 p-4 sm:p-5 shadow-sm space-y-4">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-500 ">This Month's Health</p>
               <h3 className="text-base font-black text-slate-900 dark:text-white  mt-0.5">Financial Pulse</h3>
             </div>
 
-            {/* Savings Rate ring */}
             <div className="flex items-center gap-4">
               <div className="relative shrink-0">
                 <svg width="64" height="64" viewBox="0 0 64 64">
@@ -462,7 +440,6 @@ export default React.memo(function OverviewTab({
             </div>
           </div>
 
-          {/* Unbudgeted Spending */}
           {unbudgetedSpend.length > 0 && (
             <div className="rounded-2xl border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-900/20   p-4 shadow-sm">
               <div className="flex items-start gap-2 mb-3">
@@ -489,7 +466,6 @@ export default React.memo(function OverviewTab({
             </div>
           )}
 
-          {/* Recent 5 transactions */}
           <div className="rounded-2xl border border-slate-200 dark:border-neutral-700/80  bg-white dark:bg-neutral-800 shadow-sm overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3.5 border-b border-slate-100 dark:border-neutral-800 dark:border-neutral-700">
               <p className="text-xs font-black text-slate-900 dark:text-white ">Recent Activity</p>
@@ -521,7 +497,6 @@ export default React.memo(function OverviewTab({
             </div>
           </div>
 
-          {/* Monthly Insights Card */}
           <div className="bg-white dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700/70  rounded-3xl shadow-sm overflow-hidden">
             <button
               onClick={() => setShowInsights(v => !v)}

@@ -1,3 +1,4 @@
+// Component for PriceHistoryModal.tsx
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'

@@ -1,3 +1,4 @@
+// Domain types for savings goals and contributions.
 export interface SavingsGoal {
   id: string
   name: string

@@ -1,3 +1,4 @@
+// Component for CompletedGoalModal.tsx
 import { Trophy, ChevronDown, History, Trash2 } from 'lucide-react'
 import { formatCurrency } from '@/lib/financial-utils'
 import { SavingsGoal, GoalContribution } from './types'

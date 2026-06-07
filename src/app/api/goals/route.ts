@@ -1,3 +1,6 @@
+// CRUD endpoints for savings goals. Only active (non-completed) goals are
+// returned by GET. Deletion is a soft-delete via deletedAt.
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
@@ -71,7 +74,6 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Verify goal belongs to user
     const existingGoal = await prisma.savingsGoal.findFirst({
       where: { id, userId: currentUserId }
     })
@@ -93,7 +95,6 @@ export async function PUT(request: NextRequest) {
       isCompleted
     }
 
-    // Set completedAt timestamp when goal is first completed
     if (isCompleted && !wasAlreadyCompleted) {
       updateData.completedAt = new Date()
     }
@@ -124,7 +125,6 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Goal ID is required' }, { status: 400 })
     }
 
-    // Verify goal belongs to user
     const existingGoal = await prisma.savingsGoal.findFirst({
       where: { id, userId: currentUserId }
     })
@@ -133,7 +133,6 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Goal not found or access denied' }, { status: 404 })
     }
 
-    // Delete goal (soft delete)
     await prisma.savingsGoal.update({
       where: { id },
       data: { deletedAt: new Date() }

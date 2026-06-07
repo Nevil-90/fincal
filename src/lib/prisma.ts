@@ -1,8 +1,13 @@
+// Prisma client singleton with two extensions:
+//   1. Decimal → number coercion: overrides toJSON so API routes return plain numbers
+//      instead of Prisma's stringified Decimal objects.
+//   2. Soft-delete filter: automatically excludes records where deletedAt is set
+//      for all supported models on read operations.
+
 import { PrismaClient, Prisma } from '@/generated/prisma'
 
-// Override Prisma's Decimal serialization globally so API routes return
-// raw numbers to the client instead of stringified decimals.
-// This prevents massive string concatenation bugs in React components.
+// Prevent Prisma Decimal values from serialising as strings in JSON responses,
+// which would break arithmetic in React components.
 if (Prisma && Prisma.Decimal) {
   (Prisma.Decimal.prototype as any).toJSON = function () {
     return Number(this.toString())
@@ -13,15 +18,13 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
 
-// Use globalThis singleton in both dev and production.
-// In dev it prevents "too many connections" during hot-reload.
-// In production it reuses the connection across requests within a container.
+// Reuse a single connection across hot-reloads in development and across
+// requests within a container in production.
 const staleInstance = globalForPrisma.prisma
 const isStale = staleInstance && !('userSetting' in staleInstance)
 
 if (!staleInstance || isStale) {
   globalForPrisma.prisma = new PrismaClient({
-    // Disable query logging in production — reduces overhead per request
     log: process.env.NODE_ENV === 'development' ? ['warn', 'error'] : [],
   })
 }
@@ -47,8 +50,8 @@ const softDeleteExtension = Prisma.defineExtension({
           (operation === 'findUnique' || operation === 'findFirst' || operation === 'findMany' || operation === 'count' || operation === 'aggregate')
         ) {
           if (operation === 'findUnique') {
-            // Prisma findUnique doesn't allow adding non-unique fields to where.
-            // But we can check if it returns a soft-deleted record and return null.
+            // findUnique doesn't support adding non-unique fields to where, so we
+            // run the query normally and return null if the result is soft-deleted.
             const result = await query(args)
             if (result && (result as any).deletedAt !== null) {
               return null
@@ -70,4 +73,3 @@ const softDeleteExtension = Prisma.defineExtension({
 })
 
 export const prisma = activePrisma.$extends(softDeleteExtension) as unknown as typeof activePrisma
-
