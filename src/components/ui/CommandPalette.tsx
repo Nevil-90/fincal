@@ -178,7 +178,7 @@ export default function CommandPalette({ onNavigate, onAddTransaction, onTransac
         onOpenChange={setOpen}
         label="Global Command Menu"
         aria-describedby={undefined}
-        className="fixed inset-0 z-[200] flex items-start justify-center pt-[20vh] sm:pt-[25vh] bg-slate-900/40 dark:bg-neutral-950/80 backdrop-blur-sm transition-opacity animate-in fade-in"
+        className="fixed inset-0 z-[200] flex items-start justify-center pt-[20vh] sm:pt-[25vh] bg-slate-950/45 dark:bg-neutral-950/80 backdrop-blur-sm transition-opacity animate-in fade-in"
       >
         <div className="w-[90%] max-w-[600px] overflow-hidden rounded-2xl bg-white dark:bg-neutral-900 shadow-2xl border border-slate-200 dark:border-neutral-800 animate-in zoom-in-95 duration-200 relative">
           

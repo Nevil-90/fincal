@@ -133,7 +133,7 @@ export default function ProfileModal({ onClose, user, onUserUpdate }: ProfileMod
     <div className="fixed inset-0 z-[500] flex justify-end">
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-slate-900/40 dark:bg-neutral-950/80 backdrop-blur-sm transition-opacity animate-fade-in" 
+        className="absolute inset-0 bg-slate-950/45 dark:bg-neutral-950/80 backdrop-blur-sm transition-opacity animate-fade-in" 
         onClick={onClose} 
       />
       
@@ -142,11 +142,11 @@ export default function ProfileModal({ onClose, user, onUserUpdate }: ProfileMod
         className="relative w-full max-w-md bg-white dark:bg-neutral-900 shadow-2xl h-full flex flex-col animate-slide-left sm:rounded-l-2xl"
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100 dark:border-neutral-800 bg-slate-50/50 dark:bg-neutral-800/50">
+        <div className="flex justify-between items-center px-5 py-3 border-b border-slate-100 dark:border-neutral-800 bg-slate-50/50 dark:bg-neutral-800/50 shrink-0">
           <h2 className="text-lg font-bold text-slate-900 dark:text-white">My Profile</h2>
           <button 
             onClick={onClose}
-            className="p-2 -mr-2 text-slate-400 dark:text-neutral-500 hover:text-slate-600 dark:hover:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-800 rounded-full transition-colors"
+            className="rounded-lg p-1.5 text-slate-400 dark:text-neutral-500 transition-all duration-200 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-500 dark:hover:text-rose-400 hover:shadow-[0_0_12px_rgba(244,63,94,0.4)]"
           >
             <X className="h-5 w-5" />
           </button>

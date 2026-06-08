@@ -440,14 +440,14 @@ export function SettingsPanel({ onDataChange, isAdmin, isOpen, onClose }: Settin
         className="relative w-full max-w-2xl bg-slate-50 dark:bg-neutral-900 shadow-2xl h-full flex flex-col animate-slide-left sm:rounded-l-2xl overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex justify-between items-center px-6 py-4 border-b border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 shadow-sm z-10">
+        <div className="flex justify-between items-center px-5 py-3 border-b border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 shadow-sm z-10 shrink-0">
           <div>
             <h2 className="text-xl font-bold text-slate-900 dark:text-white">Settings</h2>
             <p className="text-xs text-slate-500 dark:text-neutral-400 mt-1">Manage app preferences and data.</p>
           </div>
           <button 
             onClick={onClose}
-            className="p-2 -mr-2 text-slate-400 hover:text-slate-600 dark:hover:text-neutral-200 hover:bg-slate-100 dark:hover:bg-neutral-800 rounded-full transition-colors"
+            className="rounded-lg p-1.5 text-slate-400 dark:text-neutral-500 transition-all duration-200 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-500 dark:hover:text-rose-400 hover:shadow-[0_0_12px_rgba(244,63,94,0.4)]"
           >
             <X className="h-5 w-5" />
           </button>
@@ -653,7 +653,7 @@ export function SettingsPanel({ onDataChange, isAdmin, isOpen, onClose }: Settin
 
       {/* Edit Modal */}
       {editingItem && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[250] p-4 animate-fadeIn">
+        <div className="fixed inset-0 bg-slate-950/45 dark:bg-neutral-950/80 backdrop-blur-sm flex items-center justify-center z-[250] p-4 animate-fadeIn">
           <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-xl p-5 sm:p-6 w-full max-w-md border border-slate-200 dark:border-neutral-800">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-sm font-bold uppercase tracking-wider text-slate-800 dark:text-neutral-200">
@@ -662,7 +662,7 @@ export function SettingsPanel({ onDataChange, isAdmin, isOpen, onClose }: Settin
               <button
                 type="button"
                 onClick={() => setEditingItem(null)}
-                className="p-1 text-slate-400 hover:bg-slate-50 dark:hover:bg-neutral-800 hover:text-slate-600 dark:hover:text-neutral-200 rounded-lg transition-colors cursor-pointer"
+                className="rounded-lg p-1.5 text-slate-400 dark:text-neutral-500 transition-all duration-200 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-500 dark:hover:text-rose-400 hover:shadow-[0_0_12px_rgba(244,63,94,0.4)]"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -783,7 +783,7 @@ export function SettingsPanel({ onDataChange, isAdmin, isOpen, onClose }: Settin
 
       {/* Advanced Import Modal */}
       {showImport && importMode === 'preview' && (
-        <div className="fixed inset-0 bg-slate-900/60 dark:bg-neutral-950/80 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-fadeIn">
+        <div className="fixed inset-0 bg-slate-950/45 dark:bg-neutral-950/80 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-fadeIn">
           <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-xl p-5 sm:p-6 w-full max-w-2xl border border-slate-200 dark:border-neutral-800 transition-all duration-300">
             <div className="flex justify-between items-center border-b border-slate-100 dark:border-neutral-800 pb-3 mb-4">
               <h3 className="text-sm font-bold uppercase tracking-wider text-slate-800 dark:text-neutral-200">
@@ -792,7 +792,7 @@ export function SettingsPanel({ onDataChange, isAdmin, isOpen, onClose }: Settin
               <button
                 type="button"
                 onClick={() => { setShowImport(false); setImportData(''); }}
-                className="p-1 text-slate-400 hover:bg-slate-50 dark:hover:bg-neutral-800 hover:text-slate-600 dark:hover:text-neutral-200 rounded-lg transition-colors cursor-pointer"
+                className="rounded-lg p-1.5 text-slate-400 dark:text-neutral-500 transition-all duration-200 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-500 dark:hover:text-rose-400 hover:shadow-[0_0_12px_rgba(244,63,94,0.4)]"
               >
                 <X className="h-4 w-4" />
               </button>

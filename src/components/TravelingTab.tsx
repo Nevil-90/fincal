@@ -910,13 +910,13 @@ export default function TravelingTab() {
       )}
 
       {showAddForm && (
-        <div className="fixed inset-0 z-[200] bg-slate-900/40 dark:bg-neutral-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-hidden">
+        <div className="fixed inset-0 z-[200] bg-slate-950/45 dark:bg-neutral-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-hidden">
           <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl ring-1 ring-slate-900/5 dark:ring-neutral-800 w-full max-w-md max-h-[90vh] overflow-y-auto transform transition-all">
-            <div className="flex justify-between items-center px-6 py-5 border-b border-slate-100 dark:border-neutral-800 bg-slate-50 dark:bg-neutral-800/50">
-              <h3 className="text-base font-semibold text-slate-900 dark:text-white">Add Travel Entry</h3>
+            <div className="flex justify-between items-center px-5 py-3 border-b border-slate-100 dark:border-neutral-800 bg-slate-50 dark:bg-neutral-800/50 shrink-0">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">Add Travel Entry</h3>
               <button
                 onClick={() => setShowAddForm(false)}
-                className="p-2 -mr-2 text-slate-400 dark:text-neutral-500 hover:text-slate-600 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-800 dark:bg-neutral-800 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+                className="rounded-lg p-1.5 text-slate-400 dark:text-neutral-500 transition-all duration-200 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-500 dark:hover:text-rose-400 hover:shadow-[0_0_12px_rgba(244,63,94,0.4)]"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -939,6 +939,13 @@ export default function TravelingTab() {
                       type="date"
                       value={formData.startDate}
                       onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                      onClick={(e) => {
+                        try {
+                          if ('showPicker' in HTMLInputElement.prototype) {
+                            (e.target as HTMLInputElement).showPicker();
+                          }
+                        } catch (err) {}
+                      }}
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                       required
                     />
@@ -959,6 +966,13 @@ export default function TravelingTab() {
                       type="date"
                       value={formData.endDate}
                       onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                      onClick={(e) => {
+                        try {
+                          if ('showPicker' in HTMLInputElement.prototype) {
+                            (e.target as HTMLInputElement).showPicker();
+                          }
+                        } catch (err) {}
+                      }}
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                       required
                     />

@@ -3,7 +3,7 @@
 
 import { RecurringFormData } from './types'
 import { useScrollLock } from '@/hooks/useScrollLock'
-import { Calendar, Lightbulb } from 'lucide-react'
+import { Calendar, Lightbulb, X } from 'lucide-react'
 
 interface RecurringFormProps {
   formData: RecurringFormData
@@ -23,11 +23,16 @@ export default function RecurringForm({
   useScrollLock(true)
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-md">
-      <div className="bg-white dark:bg-neutral-900 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Add Recurring Transaction</h3>
-        
-        <form onSubmit={onSubmit} className="space-y-4">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/45 dark:bg-neutral-950/80 p-4 backdrop-blur-sm">
+      <div className="bg-white dark:bg-neutral-900 rounded-2xl flex flex-col w-full max-w-2xl max-h-[90vh] overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-neutral-800 shrink-0">
+          <h3 className="text-base font-bold text-slate-900 dark:text-white">Add Recurring Transaction</h3>
+          <button type="button" onClick={onCancel} className="rounded-lg p-1.5 text-slate-400 dark:text-neutral-500 transition-all duration-200 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-500 dark:hover:text-rose-400 hover:shadow-[0_0_12px_rgba(244,63,94,0.4)]">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+          <form onSubmit={onSubmit} className="space-y-4">
           {/* Transaction Type */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Transaction Type</label>
@@ -207,6 +212,13 @@ export default function RecurringForm({
                 type="date"
                 value={formData.startDate}
                 onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                onClick={(e) => {
+                  try {
+                    if ('showPicker' in HTMLInputElement.prototype) {
+                      (e.target as HTMLInputElement).showPicker();
+                    }
+                  } catch (err) {}
+                }}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 required
               />
@@ -241,7 +253,8 @@ export default function RecurringForm({
               {formLoading ? 'Adding...' : 'Add Recurring'}
             </button>
           </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   )

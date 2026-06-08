@@ -71,7 +71,7 @@ export default function OnboardingWizard({ user, onComplete }: OnboardingWizardP
   }
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 dark:bg-neutral-950/80 backdrop-blur-md">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/45 dark:bg-neutral-950/80 backdrop-blur-sm">
       <div className="bg-white dark:bg-neutral-900 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100 dark:border-neutral-800">
         {/* Progress Bar */}
         <div className="h-1 bg-slate-100 dark:bg-neutral-800">

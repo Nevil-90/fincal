@@ -1,5 +1,5 @@
 // Mobile modal for viewing and managing an active savings goal.
-import { Calendar, ChevronDown, Plus, History, TrendingUp, Trash2, Lightbulb } from 'lucide-react'
+import { Calendar, ChevronDown, Plus, History, TrendingUp, Trash2, Lightbulb, X } from 'lucide-react'
 import { formatCurrency } from '@/lib/financial-utils'
 import { SavingsGoal, GoalContribution } from './types'
 import { useEnhancedStaticData } from '@/lib/enhanced-static-data-manager'
@@ -63,16 +63,16 @@ export function MobileActiveGoalModal({
 
   return (
     <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-0 sm:p-4 lg:sticky lg:top-6 lg:inset-auto lg:z-auto lg:p-0 lg:block lg:w-[420px] xl:w-[450px] lg:shrink-0 lg:flex-none">
-      <div className="fixed inset-0 bg-black/60 dark:bg-neutral-950/80 backdrop-blur-sm transition-opacity touch-none lg:hidden" onClick={() => setSelectedGoal(null)}></div>
+      <div className="fixed inset-0 bg-slate-950/45 dark:bg-neutral-950/80 backdrop-blur-sm transition-opacity touch-none lg:hidden" onClick={() => setSelectedGoal(null)}></div>
       <div className="bg-white dark:bg-neutral-900 rounded-t-[32px] sm:rounded-3xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] lg:max-h-none lg:max-w-none relative z-10 animate-slide-up lg:animate-none shadow-2xl lg:shadow-[0_8px_30px_rgb(0,0,0,0.04)] lg:border lg:border-gray-100 dark:lg:border-neutral-800 flex flex-col overflow-hidden">
 
         {/* Header */}
-        <div className="p-6 border-b border-gray-100 dark:border-neutral-800 flex justify-between items-center bg-white dark:bg-neutral-900 sticky top-0 z-20">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-neutral-800 bg-white dark:bg-neutral-900 sticky top-0 z-20 shrink-0">
           <div className="flex-1">
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white leading-tight">{g.name}</h3>
+            <h3 className="text-base font-bold text-gray-900 dark:text-white leading-tight">{g.name}</h3>
             {g.deadline && (
-              <p className="text-sm text-gray-500 mt-1 flex items-center gap-1.5 font-medium">
-                <Calendar className="h-4 w-4 text-purple-500" />
+              <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1 font-medium">
+                <Calendar className="h-3 w-3 text-purple-500" />
                 Due: {new Date(g.deadline).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}
               </p>
             )}
@@ -80,12 +80,12 @@ export function MobileActiveGoalModal({
           <div className="flex items-center gap-2">
             <button
               onClick={() => handleDeleteGoal(g)}
-              className="p-2.5 bg-red-50 text-red-500 hover:bg-red-100 rounded-full transition-colors lg:hidden"
+              className="p-1.5 bg-red-50 text-red-500 hover:bg-red-100 rounded-lg transition-colors lg:hidden"
             >
-              <Trash2 className="h-6 w-6" />
+              <Trash2 className="h-5 w-5" />
             </button>
-            <button onClick={() => setSelectedGoal(null)} className="p-2.5 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-full transition-colors lg:ml-4">
-              <ChevronDown className="h-6 w-6" />
+            <button onClick={() => setSelectedGoal(null)} className="rounded-lg p-1.5 text-slate-400 dark:text-neutral-500 transition-all duration-200 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-500 dark:hover:text-rose-400 hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] lg:ml-4">
+              <X className="h-5 w-5" />
             </button>
           </div>
         </div>
@@ -177,6 +177,13 @@ export function MobileActiveGoalModal({
                           type="date"
                           value={quickContribution.date}
                           onChange={(e) => setQuickContribution({ ...quickContribution, date: e.target.value })}
+                          onClick={(e) => {
+                            try {
+                              if ('showPicker' in HTMLInputElement.prototype) {
+                                (e.target as HTMLInputElement).showPicker();
+                              }
+                            } catch (err) {}
+                          }}
                           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                           required
                         />

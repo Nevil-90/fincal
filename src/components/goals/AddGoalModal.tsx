@@ -30,16 +30,16 @@ export function AddGoalModal({ isOpen, onClose, newGoal, setNewGoal, handleAddGo
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-      <div className="fixed inset-0 bg-black/40 dark:bg-neutral-950/80 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
+      <div className="fixed inset-0 bg-slate-950/45 dark:bg-neutral-950/80 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
       <div className="bg-white dark:bg-neutral-900 rounded-3xl w-full max-w-md relative z-10 animate-slide-up shadow-2xl overflow-hidden max-h-[90vh] flex flex-col overscroll-contain">
-        <div className="p-6 border-b border-gray-100 dark:border-neutral-800 flex justify-between items-center bg-gray-50/50 dark:bg-neutral-800/50">
-          <h4 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2 text-lg">
-            <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-full text-purple-600 dark:text-purple-400">
-              <Target className="h-5 w-5" />
+        <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-neutral-800 shrink-0">
+          <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <div className="p-1.5 bg-purple-100 dark:bg-purple-900/20 rounded-lg text-purple-600 dark:text-purple-400">
+              <Target className="h-4 w-4" />
             </div>
             New Savings Goal
-          </h4>
-          <button onClick={onClose} className="p-2 text-gray-400 dark:text-neutral-500 hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-full transition-colors">
+          </h3>
+          <button onClick={onClose} className="rounded-lg p-1.5 text-slate-400 dark:text-neutral-500 transition-all duration-200 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-500 dark:hover:text-rose-400 hover:shadow-[0_0_12px_rgba(244,63,94,0.4)]">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -86,6 +86,13 @@ export function AddGoalModal({ isOpen, onClose, newGoal, setNewGoal, handleAddGo
                   type="date"
                   value={newGoal.deadline}
                   onChange={(e) => setNewGoal({ ...newGoal, deadline: e.target.value })}
+                  onClick={(e) => {
+                    try {
+                      if ('showPicker' in HTMLInputElement.prototype) {
+                        (e.target as HTMLInputElement).showPicker();
+                      }
+                    } catch (err) {}
+                  }}
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 />
               </div>

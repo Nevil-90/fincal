@@ -150,7 +150,7 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
         <h3 className="text-base font-bold text-slate-900 dark:text-white">{initialData ? 'Edit Transaction' : 'Add Transaction'}</h3>
         <button
           onClick={onClose}
-          className="rounded-lg p-1.5 text-slate-400 dark:text-neutral-500 hover:bg-slate-100 dark:hover:bg-neutral-800 hover:text-slate-600 dark:hover:text-neutral-300 transition-colors"
+          className="rounded-lg p-1.5 text-slate-400 dark:text-neutral-500 transition-all duration-200 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-500 dark:hover:text-rose-400 hover:shadow-[0_0_12px_rgba(244,63,94,0.4)]"
         >
           <X className="h-5 w-5" />
         </button>
@@ -303,6 +303,13 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
               id="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
+              onClick={(e) => {
+                try {
+                  if ('showPicker' in HTMLInputElement.prototype) {
+                    (e.target as HTMLInputElement).showPicker();
+                  }
+                } catch (err) {}
+              }}
               max={new Date().toISOString().split('T')[0]}
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               required

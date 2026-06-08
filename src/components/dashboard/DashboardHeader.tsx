@@ -164,7 +164,7 @@ export default React.memo(function DashboardHeader({
       {showMobileMenu && (
         <div className="fixed inset-0 z-[100] md:hidden" onClick={() => setShowMobileMenu(false)}>
           {/* Backdrop */}
-          <div className="absolute inset-0 bg-slate-900/40 dark:bg-neutral-950/80 backdrop-blur-sm transition-opacity" />
+          <div className="absolute inset-0 bg-slate-950/45 dark:bg-neutral-950/80 backdrop-blur-sm transition-opacity" />
 
           {/* Sheet */}
           <div

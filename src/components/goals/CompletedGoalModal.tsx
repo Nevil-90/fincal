@@ -1,5 +1,5 @@
 // Component for CompletedGoalModal.tsx
-import { Trophy, ChevronDown, History, Trash2 } from 'lucide-react'
+import { Trophy, ChevronDown, History, Trash2, X } from 'lucide-react'
 import { formatCurrency } from '@/lib/financial-utils'
 import { SavingsGoal, GoalContribution } from './types'
 import { useEffect } from 'react'
@@ -38,7 +38,7 @@ export function CompletedGoalModal({
 
   return (
     <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-0 sm:p-4 lg:sticky lg:top-6 lg:inset-auto lg:z-auto lg:p-0 lg:block lg:w-[420px] xl:w-[450px] lg:shrink-0 lg:flex-none">
-      <div className="fixed inset-0 bg-black/60 dark:bg-neutral-950/80 backdrop-blur-sm transition-opacity touch-none lg:hidden" onClick={() => setSelectedCompletedGoal(null)}></div>
+      <div className="fixed inset-0 bg-slate-950/45 dark:bg-neutral-950/80 backdrop-blur-sm transition-opacity touch-none lg:hidden" onClick={() => setSelectedCompletedGoal(null)}></div>
       <div className="bg-white dark:bg-neutral-900 rounded-t-[32px] sm:rounded-3xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] lg:max-h-none lg:max-w-none relative z-10 animate-slide-up lg:animate-none shadow-2xl lg:shadow-[0_8px_30px_rgb(0,0,0,0.04)] lg:border lg:border-gray-100 dark:lg:border-neutral-800 flex flex-col overflow-hidden">
         <div className="p-6 bg-gradient-to-br from-green-500 to-emerald-600 text-white flex justify-between items-start sticky top-0 z-20">
           <div>
@@ -53,13 +53,13 @@ export function CompletedGoalModal({
           <div className="flex items-center gap-2">
             <button
               onClick={() => handleDeleteGoal(g)}
-              className="p-2.5 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors"
+              className="p-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
               title="Delete Completed Goal"
             >
               <Trash2 className="h-5 w-5" />
             </button>
-            <button onClick={() => setSelectedCompletedGoal(null)} className="p-2.5 bg-black/10 hover:bg-black/20 rounded-full transition-colors backdrop-blur-md lg:ml-2">
-              <ChevronDown className="h-6 w-6" />
+            <button onClick={() => setSelectedCompletedGoal(null)} className="rounded-lg p-1.5 text-white/70 transition-all duration-200 hover:bg-white/10 hover:text-white hover:shadow-[0_0_12px_rgba(255,255,255,0.5)] lg:ml-2">
+              <X className="h-5 w-5" />
             </button>
           </div>
         </div>

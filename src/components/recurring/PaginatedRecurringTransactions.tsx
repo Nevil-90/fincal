@@ -921,7 +921,7 @@ export default function PaginatedRecurringTransactions() {
           const dailyAverage = totalSpent / activeDays
 
           return (
-            <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/20 backdrop-blur-[1px] p-4">
+            <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/45 dark:bg-neutral-950/80 backdrop-blur-sm p-4">
               <div className="w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white dark:bg-neutral-900 shadow-2xl ring-1 ring-gray-200 dark:ring-neutral-800">
                 <div className="sticky top-0 z-10 flex items-start justify-between border-b border-gray-100 dark:border-neutral-800 bg-white/95 dark:bg-neutral-900/95 p-6 backdrop-blur">
                   <div>

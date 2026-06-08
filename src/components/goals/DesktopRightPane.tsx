@@ -168,6 +168,13 @@ export function DesktopRightPane({
                     type="date"
                     value={quickContribution.date}
                     onChange={(e) => setQuickContribution({ ...quickContribution, date: e.target.value })}
+                    onClick={(e) => {
+                      try {
+                        if ('showPicker' in HTMLInputElement.prototype) {
+                          (e.target as HTMLInputElement).showPicker();
+                        }
+                      } catch (err) {}
+                    }}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     required
                   />

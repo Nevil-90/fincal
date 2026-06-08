@@ -890,18 +890,18 @@ export default function RegularTransactionList({
       )}
 
             {showDateRangePicker && typeof document !== 'undefined' && createPortal(
-              <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/50 dark:bg-neutral-950/80 p-4 backdrop-blur">
+              <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/45 dark:bg-neutral-950/80 p-4 backdrop-blur-sm">
                 <div className="w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-2xl">
-                  <div className="flex items-center justify-between border-b border-slate-200 dark:border-neutral-800 px-6 py-4">
+                  <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-neutral-800 shrink-0">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.2em] text-slate-400 dark:text-neutral-500">Statement Export</p>
-                      <h4 className="text-lg font-semibold text-slate-900 dark:text-white">Download Data as CSV</h4>
+                      <h3 className="text-base font-bold text-slate-900 dark:text-white">Download Data as CSV</h3>
+                      <p className="text-xs text-slate-500 dark:text-neutral-500">Statement Export</p>
                     </div>
                     <button
                       onClick={() => setShowDateRangePicker(false)}
-                      className="rounded-lg border border-slate-200 dark:border-neutral-700 px-3 py-1 text-sm font-semibold text-slate-600 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-800"
+                      className="rounded-lg p-1.5 text-slate-400 dark:text-neutral-500 transition-all duration-200 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-500 dark:hover:text-rose-400 hover:shadow-[0_0_12px_rgba(244,63,94,0.4)]"
                     >
-                      Close
+                      <X className="h-5 w-5" />
                     </button>
                   </div>
 
@@ -1029,6 +1029,13 @@ export default function RegularTransactionList({
                               type="date"
                               value={pdfStartDate}
                               onChange={(e) => setPdfStartDate(e.target.value)}
+                              onClick={(e) => {
+                                try {
+                                  if ('showPicker' in HTMLInputElement.prototype) {
+                                    (e.target as HTMLInputElement).showPicker();
+                                  }
+                                } catch (err) {}
+                              }}
                               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                             />
                           </div>
@@ -1048,6 +1055,13 @@ export default function RegularTransactionList({
                               type="date"
                               value={pdfEndDate}
                               onChange={(e) => setPdfEndDate(e.target.value)}
+                              onClick={(e) => {
+                                try {
+                                  if ('showPicker' in HTMLInputElement.prototype) {
+                                    (e.target as HTMLInputElement).showPicker();
+                                  }
+                                } catch (err) {}
+                              }}
                               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                             />
                           </div>
@@ -1077,7 +1091,7 @@ export default function RegularTransactionList({
 
             {/* Edit Transaction Modal */}
             {editingTransaction && typeof document !== 'undefined' && createPortal(
-              <div className="fixed inset-0 bg-slate-900/40 dark:bg-neutral-950/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4" onClick={() => setEditingTransaction(null)}>
+              <div className="fixed inset-0 bg-slate-950/45 dark:bg-neutral-950/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4" onClick={() => setEditingTransaction(null)}>
                 <div className="bg-white dark:bg-neutral-900 rounded-3xl shadow-2xl w-full max-w-md flex flex-col max-h-[90vh] sm:max-h-[85vh] overflow-hidden border border-slate-200 dark:border-neutral-800" onClick={(e) => e.stopPropagation()}>
                   <AddTransactionForm
                     initialData={{

@@ -58,7 +58,7 @@ export default React.memo(function Sidebar({ sidebarOpen, activeTab, availableBa
       {sidebarOpen && (
         <div
           onClick={onClose}
-          className="fixed inset-0 z-[100] bg-slate-900/30 backdrop-blur-sm md:hidden transition-opacity duration-300"
+          className="fixed inset-0 z-[100] bg-slate-950/45 dark:bg-neutral-950/80 backdrop-blur-sm md:hidden transition-opacity duration-300"
         />
       )}
 

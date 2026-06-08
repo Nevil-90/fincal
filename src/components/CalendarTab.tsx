@@ -683,7 +683,7 @@ function CalendarTab({}: CalendarTabProps) {
 
       {/* ─── Day Detail Sheet (when clicking a day in month view) ─── */}
       {selectedDay && (
-        <div className="fixed inset-0 bg-slate-950/40 dark:bg-neutral-950/80 backdrop-blur-sm z-[200] flex items-end sm:items-center justify-center" onClick={() => setSelectedDay(null)}>
+        <div className="fixed inset-0 bg-slate-950/45 dark:bg-neutral-950/80 backdrop-blur-sm z-[200] flex items-end sm:items-center justify-center" onClick={() => setSelectedDay(null)}>
           <div
             className="bg-white dark:bg-neutral-900 w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl shadow-2xl overflow-hidden max-h-[80vh]"
             onClick={e => e.stopPropagation()}
@@ -720,7 +720,7 @@ function CalendarTab({}: CalendarTabProps) {
 
       {/* ─── Transaction Detail Sheet ─── */}
       {selectedTransaction && (
-        <div className="fixed inset-0 bg-slate-950/40 dark:bg-neutral-950/80 backdrop-blur-sm z-[200] flex items-end sm:items-center justify-center" onClick={() => setSelectedTransaction(null)}>
+        <div className="fixed inset-0 bg-slate-950/45 dark:bg-neutral-950/80 backdrop-blur-sm z-[200] flex items-end sm:items-center justify-center" onClick={() => setSelectedTransaction(null)}>
           <div
             className="bg-white dark:bg-neutral-900 w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl shadow-2xl overflow-hidden"
             onClick={e => e.stopPropagation()}
