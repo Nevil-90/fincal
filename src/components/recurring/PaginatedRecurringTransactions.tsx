@@ -7,6 +7,7 @@ import { Search, Filter, Plus, RefreshCw, ChevronLeft, ChevronRight, ChevronUp, 
 import RecurringForm from './RecurringForm'
 import PriceHistoryModal from './PriceHistoryModal'
 import { formatCurrency } from '@/lib/financial-utils'
+import { useUser } from '@/hooks/useApi'
 import type { RecurringTransaction, RecurringFormData } from './types'
 
 interface PaginatedRecurringResponse {
@@ -119,8 +120,21 @@ export default function PaginatedRecurringTransactions() {
     splitType: 'personal',
   })
 
+  const { user } = useUser()
+  const isTourActive = user && !user.hasCompletedOnboarding
+
   // Fetch data with pagination and filters
   const fetchRecurringTransactions = useCallback(async (page: number = 1, signal?: AbortSignal) => {
+    if (isTourActive) {
+      setRecurringData({
+        data: [],
+        pagination: { currentPage: 1, totalPages: 1, totalCount: 0, limit: pageSize, hasNextPage: false, hasPrevPage: false },
+        filters: { categories: [], frequencies: [] }
+      })
+      setLoading(false)
+      return
+    }
+
     setLoading(true)
     try {
       const params = new URLSearchParams({
@@ -148,7 +162,7 @@ export default function PaginatedRecurringTransactions() {
     } finally {
       setLoading(false)
     }
-  }, [pageSize, filters]) // Include filters dependency
+  }, [pageSize, filters, isTourActive]) // Include filters dependency
 
   useEffect(() => {
     const controller = new AbortController()

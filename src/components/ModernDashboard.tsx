@@ -699,10 +699,6 @@ function ModernDashboardContent() {
         onClose={() => setIsSettingsOpen(false)}
         onDataChange={refreshAll}
         isAdmin={user?.role === 'ADMIN'}
-        onRestartTour={() => {
-          setIsSettingsOpen(false)
-          startTour(getFilteredTourSteps())
-        }}
       />
     </div>
   )

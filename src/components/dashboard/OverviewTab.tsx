@@ -6,6 +6,7 @@ import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { Plus, BarChart2, BarChart3, Calendar, Target, AlertCircle, TrendingUp, TrendingDown, DollarSign, Wallet, CreditCard, ArrowRight, ArrowUpRight, ArrowDownRight, ArrowDownLeft, Activity, PieChart, ShieldAlert, Zap, AlertTriangle, CheckCircle, ClipboardList, Banknote, Clock, Sparkles } from 'lucide-react'
 import { formatCurrency } from '@/lib/financial-utils'
 import { useEnhancedStaticData } from '@/lib/enhanced-static-data-manager'
+import { useUser } from '@/hooks/useApi'
 import MonthlyInsights from './MonthlyInsights'
 
 interface Transaction {
@@ -164,8 +165,11 @@ export default React.memo(function OverviewTab({
 
   const rolloverCalculatedRef = useRef<string | null>(null)
   const thisMonthKey = `${activeMonth}-${activeYear}`
+  const { user } = useUser()
+  const isTourActive = user && !user.hasCompletedOnboarding
 
   useEffect(() => {
+    if (isTourActive) return
     if (rolloverCalculatedRef.current === thisMonthKey) return // already done
     rolloverCalculatedRef.current = thisMonthKey
 

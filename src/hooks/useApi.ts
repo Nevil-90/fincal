@@ -26,13 +26,16 @@ export function useUser() {
 }
 
 export function useTransactions(page: number = 1, limit: number = 50, filters: Record<string, string | number | undefined> = {}) {
+  const { user } = useUser()
+  const isTourActive = user && !user.hasCompletedOnboarding
+
   let url = `/api/transactions?page=${page}&limit=${limit}`
   for (const [key, value] of Object.entries(filters)) {
     if (value !== undefined) {
       url += `&${key}=${value}`
     }
   }
-  const { data, error, isLoading, mutate } = useSWR(url, fetcher, { 
+  const { data, error, isLoading, mutate } = useSWR(isTourActive ? null : url, fetcher, { 
     keepPreviousData: true,
     shouldRetryOnError: false 
   })
@@ -48,7 +51,10 @@ export function useTransactions(page: number = 1, limit: number = 50, filters: R
 }
 
 export function useTransactionSummary(month?: number | null, year?: number | null, keepPreviousData = false) {
-  const shouldFetch = !(month === null && year === null)
+  const { user } = useUser()
+  const isTourActive = user && !user.hasCompletedOnboarding
+
+  const shouldFetch = !(month === null && year === null) && !isTourActive
 
   const url = shouldFetch
     ? (() => {
@@ -74,7 +80,10 @@ export function useTransactionSummary(month?: number | null, year?: number | nul
 }
 
 export function useGoals() {
-  const { data, error, isLoading, mutate } = useSWR('/api/goals', fetcher, {
+  const { user } = useUser()
+  const isTourActive = user && !user.hasCompletedOnboarding
+
+  const { data, error, isLoading, mutate } = useSWR(isTourActive ? null : '/api/goals', fetcher, {
     shouldRetryOnError: false
   })
   return {
@@ -86,7 +95,10 @@ export function useGoals() {
 }
 
 export function useTravelEntries(page: number = 1, limit: number = 10) {
-  const { data, error, isLoading, mutate } = useSWR(`/api/travel?page=${page}&limit=${limit}`, fetcher, {
+  const { user } = useUser()
+  const isTourActive = user && !user.hasCompletedOnboarding
+
+  const { data, error, isLoading, mutate } = useSWR(isTourActive ? null : `/api/travel?page=${page}&limit=${limit}`, fetcher, {
     shouldRetryOnError: false
   })
   return {
@@ -99,7 +111,10 @@ export function useTravelEntries(page: number = 1, limit: number = 10) {
 }
 
 export function useTravelAnalytics(year: number) {
-  const { data, error, isLoading, mutate } = useSWR(`/api/travel/analytics?type=overview&year=${year}`, fetcher, {
+  const { user } = useUser()
+  const isTourActive = user && !user.hasCompletedOnboarding
+
+  const { data, error, isLoading, mutate } = useSWR(isTourActive ? null : `/api/travel/analytics?type=overview&year=${year}`, fetcher, {
     shouldRetryOnError: false
   })
   return {
@@ -111,11 +126,14 @@ export function useTravelAnalytics(year: number) {
 }
 
 export function useAnalytics(dateFilter: string = 'this_month', compareYear?: number, compareMonth?: number) {
+  const { user } = useUser()
+  const isTourActive = user && !user.hasCompletedOnboarding
+
   let url = `/api/analytics?dateFilter=${dateFilter}`
   if (compareYear) url += `&compareYear=${compareYear}`
   if (compareMonth) url += `&compareMonth=${compareMonth}`
   
-  const { data, error, isLoading, mutate } = useSWR(url, fetcher, {
+  const { data, error, isLoading, mutate } = useSWR(isTourActive ? null : url, fetcher, {
     shouldRetryOnError: false
   })
   

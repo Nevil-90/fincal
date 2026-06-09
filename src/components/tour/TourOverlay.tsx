@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTour, TourStep, TourStepInput } from './TourContext'
 import { X, ChevronRight, ChevronLeft, Check, Sparkles, Loader2 } from 'lucide-react'
+import { useUser } from '@/hooks/useApi'
 
 // Hook to observe element position
 function useTargetRect(selector?: string, active?: boolean) {
@@ -105,6 +106,7 @@ function TourRenderer({ step, totalSteps, currentIndex, onNext, onPrev, onEnd }:
   const padding = 8
   const [formData, setFormData] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const { mutate } = useUser()
   
   const rawRect = useTargetRect(step.target, true)
   
@@ -181,34 +183,34 @@ function TourRenderer({ step, totalSteps, currentIndex, onNext, onPrev, onEnd }:
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-slate-900/60 dark:bg-neutral-950/80 backdrop-blur-sm transition-all duration-300"
+            className="absolute inset-0 bg-slate-900/60 dark:bg-neutral-950/80 backdrop-blur-sm"
           />
         ) : (
           <>
             <motion.div 
-              className="absolute top-0 left-0 right-0 bg-slate-900/60 dark:bg-neutral-950/80 backdrop-blur-sm transition-all duration-300"
+              className="absolute top-0 left-0 right-0 bg-slate-900/60 dark:bg-neutral-950/80 backdrop-blur-sm"
               animate={{ height: rect.top }}
               transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
             />
             <motion.div 
-              className="absolute left-0 bg-slate-900/60 dark:bg-neutral-950/80 backdrop-blur-sm transition-all duration-300"
+              className="absolute left-0 bg-slate-900/60 dark:bg-neutral-950/80 backdrop-blur-sm"
               animate={{ top: rect.top, height: rect.height, width: rect.left }}
               transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
             />
             <motion.div 
-              className="absolute right-0 bg-slate-900/60 dark:bg-neutral-950/80 backdrop-blur-sm transition-all duration-300"
+              className="absolute right-0 bg-slate-900/60 dark:bg-neutral-950/80 backdrop-blur-sm"
               animate={{ top: rect.top, height: rect.height, width: window.innerWidth - rect.right }}
               transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
             />
             <motion.div 
-              className="absolute bottom-0 left-0 right-0 bg-slate-900/60 dark:bg-neutral-950/80 backdrop-blur-sm transition-all duration-300"
+              className="absolute bottom-0 left-0 right-0 bg-slate-900/60 dark:bg-neutral-950/80 backdrop-blur-sm"
               animate={{ top: rect.bottom, height: window.innerHeight - rect.bottom }}
               transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
             />
             
             {/* Glowing border around cutout */}
             <motion.div
-              className="absolute border-2 border-blue-500 rounded-xl shadow-[0_0_20px_rgba(59,130,246,0.5)] pointer-events-none transition-all duration-300"
+              className="absolute border-2 border-blue-500 rounded-xl shadow-[0_0_20px_rgba(59,130,246,0.5)] pointer-events-none"
               animate={{ 
                 top: rect.top, 
                 left: rect.left, 
@@ -344,6 +346,7 @@ function TourRenderer({ step, totalSteps, currentIndex, onNext, onPrev, onEnd }:
                         }
                         
                         await fetch('/api/user/complete-onboarding', { method: 'POST' })
+                        await mutate()
                       } finally {
                         setIsSubmitting(false)
                         onEnd()
@@ -359,9 +362,15 @@ function TourRenderer({ step, totalSteps, currentIndex, onNext, onPrev, onEnd }:
             
             {/* Close Button */}
             <button 
-              onClick={() => {
-                onEnd()
-                fetch('/api/user/complete-onboarding', { method: 'POST' }).catch(() => {})
+              onClick={async () => {
+                setIsSubmitting(true)
+                try {
+                  await fetch('/api/user/complete-onboarding', { method: 'POST' })
+                  await mutate()
+                } finally {
+                  setIsSubmitting(false)
+                  onEnd()
+                }
               }}
               className="absolute top-3 right-3 p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-neutral-200 hover:bg-slate-100 dark:hover:bg-neutral-800 rounded-lg transition-colors z-30"
             >
