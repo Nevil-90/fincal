@@ -37,22 +37,33 @@ export async function POST(request: NextRequest) {
       
       const insertWithUserId = (items: any[]) => items?.map(({ id, ...rest }) => ({ id, ...rest, userId: user.id })) || []
 
+      const chunkInsert = async (model: any, items: any[]) => {
+        const CHUNK_SIZE = 2000;
+        for (let i = 0; i < items.length; i += CHUNK_SIZE) {
+          await model.createMany({ data: items.slice(i, i + CHUNK_SIZE) });
+        }
+      }
+
       // 2. Insert data in topological order
-      if (data.staticDataCategories?.length) await tx.staticDataCategory.createMany({ data: insertWithUserId(data.staticDataCategories) })
-      if (data.budgetAmounts?.length) await tx.budgetAmount.createMany({ data: insertWithUserId(data.budgetAmounts) })
-      if (data.userSettings?.length) await tx.userSetting.createMany({ data: insertWithUserId(data.userSettings) })
-      if (data.autoCategorizeRules?.length) await tx.autoCategorizeRule.createMany({ data: insertWithUserId(data.autoCategorizeRules) })
-      if (data.monthlyBudgets?.length) await tx.monthlyBudget.createMany({ data: insertWithUserId(data.monthlyBudgets) })
-      if (data.travelEntries?.length) await tx.travelEntry.createMany({ data: insertWithUserId(data.travelEntries) })
+      if (data.staticDataCategories?.length) await chunkInsert(tx.staticDataCategory, insertWithUserId(data.staticDataCategories))
+      if (data.budgetAmounts?.length) await chunkInsert(tx.budgetAmount, insertWithUserId(data.budgetAmounts))
+      if (data.userSettings?.length) await chunkInsert(tx.userSetting, insertWithUserId(data.userSettings))
+      if (data.autoCategorizeRules?.length) await chunkInsert(tx.autoCategorizeRule, insertWithUserId(data.autoCategorizeRules))
+      if (data.monthlyBudgets?.length) await chunkInsert(tx.monthlyBudget, insertWithUserId(data.monthlyBudgets))
+      if (data.travelEntries?.length) await chunkInsert(tx.travelEntry, insertWithUserId(data.travelEntries))
       
-      if (data.savingsGoals?.length) await tx.savingsGoal.createMany({ data: insertWithUserId(data.savingsGoals) })
-      if (data.recurringTransactions?.length) await tx.recurringTransaction.createMany({ data: insertWithUserId(data.recurringTransactions) })
+      if (data.savingsGoals?.length) await chunkInsert(tx.savingsGoal, insertWithUserId(data.savingsGoals))
+      if (data.recurringTransactions?.length) await chunkInsert(tx.recurringTransaction, insertWithUserId(data.recurringTransactions))
       
-      if (data.recurringPriceChanges?.length) await tx.recurringTransactionPriceChange.createMany({ data: data.recurringPriceChanges })
+      if (data.recurringPriceChanges?.length) await chunkInsert(tx.recurringTransactionPriceChange, data.recurringPriceChanges)
       
-      if (data.transactions?.length) await tx.transaction.createMany({ data: insertWithUserId(data.transactions) })
       
-      if (data.goalContributions?.length) await tx.goalContribution.createMany({ data: data.goalContributions })
+      if (data.transactions?.length) await chunkInsert(tx.transaction, insertWithUserId(data.transactions))
+      
+      if (data.goalContributions?.length) await chunkInsert(tx.goalContribution, data.goalContributions)
+    }, {
+      maxWait: 10000,
+      timeout: 60000
     })
 
     return NextResponse.json({ success: true, message: 'Data restored successfully' })

@@ -3,6 +3,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { withDbLock } from '@/lib/db-lock'
 
 export async function GET(request: NextRequest) {
   try {
@@ -65,40 +66,42 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Goal not found or access denied' }, { status: 404 })
     }
 
-    const result = await prisma.$transaction(async (tx) => {
-      const transaction = await tx.transaction.create({
-        data: {
-          type: 'expense',
-          amount: parseFloat(amount),
-          category: 'Investment',
-          description: description || `Savings contribution to ${goal.name}`,
-          paymentMethod: paymentMethod || null,
-          source: 'Savings Goal Contribution',
-          userId: currentUserId
-        }
-      })
+    const result = await withDbLock(() => 
+      prisma.$transaction(async (tx) => {
+        const transaction = await tx.transaction.create({
+          data: {
+            type: 'expense',
+            amount: parseFloat(amount),
+            category: 'Investment',
+            description: description || `Savings contribution to ${goal.name}`,
+            paymentMethod: paymentMethod || null,
+            source: 'Savings Goal Contribution',
+            userId: currentUserId
+          }
+        })
 
-      const contribution = await tx.goalContribution.create({
-        data: {
-          goalId,
-          amount: parseFloat(amount),
-          transactionId: transaction.id,
-          description
-        }
-      })
+        const contribution = await tx.goalContribution.create({
+          data: {
+            goalId,
+            amount: parseFloat(amount),
+            transactionId: transaction.id,
+            description
+          }
+        })
 
-      const updatedGoal = await tx.savingsGoal.update({
-        where: { id: goalId },
-        data: {
-          currentAmount: {
-            increment: parseFloat(amount)
-          },
-          isCompleted: Number(goal.currentAmount) + parseFloat(amount) >= Number(goal.targetAmount)
-        }
-      })
+        const updatedGoal = await tx.savingsGoal.update({
+          where: { id: goalId },
+          data: {
+            currentAmount: {
+              increment: parseFloat(amount)
+            },
+            isCompleted: Number(goal.currentAmount) + parseFloat(amount) >= Number(goal.targetAmount)
+          }
+        })
 
-      return { contribution, transaction, goal: updatedGoal }
-    })
+        return { contribution, transaction, goal: updatedGoal }
+      })
+    )
 
     return NextResponse.json(result)
   } catch (error) {
@@ -133,28 +136,30 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Contribution not found or access denied' }, { status: 404 })
     }
 
-    await prisma.$transaction(async (tx) => {
-      if (contribution.transactionId) {
-        await tx.transaction.update({
-          where: { id: contribution.transactionId },
+    await withDbLock(() => 
+      prisma.$transaction(async (tx) => {
+        if (contribution.transactionId) {
+          await tx.transaction.update({
+            where: { id: contribution.transactionId },
+            data: { deletedAt: new Date() }
+          })
+        }
+
+        await tx.goalContribution.update({
+          where: { id: contributionId },
           data: { deletedAt: new Date() }
         })
-      }
 
-      await tx.goalContribution.update({
-        where: { id: contributionId },
-        data: { deletedAt: new Date() }
+        const newCurrentAmount = Math.max(0, Number(contribution.goal.currentAmount) - Number(contribution.amount))
+        await tx.savingsGoal.update({
+          where: { id: contribution.goalId },
+          data: {
+            currentAmount: newCurrentAmount,
+            isCompleted: newCurrentAmount >= Number(contribution.goal.targetAmount)
+          }
+        })
       })
-
-      const newCurrentAmount = Math.max(0, Number(contribution.goal.currentAmount) - Number(contribution.amount))
-      await tx.savingsGoal.update({
-        where: { id: contribution.goalId },
-        data: {
-          currentAmount: newCurrentAmount,
-          isCompleted: newCurrentAmount >= Number(contribution.goal.targetAmount)
-        }
-      })
-    })
+    )
 
     return NextResponse.json({ success: true })
   } catch (error) {

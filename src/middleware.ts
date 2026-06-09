@@ -54,7 +54,8 @@ export async function middleware(request: NextRequest) {
     payload = await verifyJwt(token, JWT_SECRET)
   }
 
-  if (!payload) {
+  // Verify JWT and enforce that critical payload fields exist
+  if (!payload || !payload.userId || !payload.email) {
     if (isPublicPage || isPublicApi || isCronJob) {
       return NextResponse.next()
     }

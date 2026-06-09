@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     }
 
     const transactionsToCreate = []
-    const updatePromises = []
+    const updatePayloads = []
     let totalProcessed = 0
 
     for (const rt of dueRecurring) {
@@ -91,22 +91,34 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      updatePromises.push(
-        prisma.recurringTransaction.update({
-          where: { id: rt.id },
-          data: { nextDue: currentDate }
-        })
-      )
-    }
-
-    if (transactionsToCreate.length > 0) {
-      await prisma.transaction.createMany({
-        data: transactionsToCreate
+      updatePayloads.push({
+        id: rt.id,
+        nextDue: currentDate
       })
     }
 
-    if (updatePromises.length > 0) {
-      await Promise.all(updatePromises)
+    if (transactionsToCreate.length > 0) {
+      const TX_CHUNK_SIZE = 1000;
+      for (let i = 0; i < transactionsToCreate.length; i += TX_CHUNK_SIZE) {
+        await prisma.transaction.createMany({
+          data: transactionsToCreate.slice(i, i + TX_CHUNK_SIZE)
+        });
+      }
+    }
+
+    if (updatePayloads.length > 0) {
+      const CHUNK_SIZE = 50;
+      for (let i = 0; i < updatePayloads.length; i += CHUNK_SIZE) {
+        const chunk = updatePayloads.slice(i, i + CHUNK_SIZE);
+        await Promise.all(
+          chunk.map(update => 
+            prisma.recurringTransaction.update({
+              where: { id: update.id },
+              data: { nextDue: update.nextDue }
+            })
+          )
+        );
+      }
     }
 
     return NextResponse.json({

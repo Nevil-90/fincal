@@ -72,7 +72,10 @@ export async function POST(request: NextRequest) {
     }
 
     if (updatePromises.length > 0) {
-      await Promise.all(updatePromises)
+      const CHUNK_SIZE = 50;
+      for (let i = 0; i < updatePromises.length; i += CHUNK_SIZE) {
+        await Promise.all(updatePromises.slice(i, i + CHUNK_SIZE));
+      }
     }
 
     return NextResponse.json({

@@ -15,8 +15,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const recurringId = searchParams.get('recurringId')
     
-    const page = parseInt(searchParams.get('page') || '1', 10)
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 200)
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10))
+    const limit = Math.max(1, Math.min(parseInt(searchParams.get('limit') || '50', 10), 200))
     const offset = (page - 1) * limit
     
     const category = searchParams.get('category')
@@ -77,14 +77,19 @@ export async function GET(request: NextRequest) {
     if (startDate || endDate) {
       whereClause.date = {}
       if (startDate) {
-        whereClause.date.gte = new Date(startDate)
+        const d = new Date(startDate)
+        if (!isNaN(d.getTime())) whereClause.date.gte = d
+        else return NextResponse.json({ error: 'Invalid startDate' }, { status: 400 })
       }
       if (endDate) {
-        whereClause.date.lte = new Date(endDate)
+        const d = new Date(endDate)
+        if (!isNaN(d.getTime())) whereClause.date.lte = d
+        else return NextResponse.json({ error: 'Invalid endDate' }, { status: 400 })
       }
     } else if (monthParam && yearParam) {
       const year = parseInt(yearParam, 10)
       const month = parseInt(monthParam, 10) - 1
+      if (isNaN(year) || isNaN(month)) return NextResponse.json({ error: 'Invalid month or year' }, { status: 400 })
       const startOfMonth = new Date(year, month, 1)
       const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59, 999)
       
@@ -94,6 +99,7 @@ export async function GET(request: NextRequest) {
       }
     } else if (yearParam && !monthParam) {
       const year = parseInt(yearParam, 10)
+      if (isNaN(year)) return NextResponse.json({ error: 'Invalid year' }, { status: 400 })
       const startOfYear = new Date(year, 0, 1)
       const endOfYear = new Date(year, 11, 31, 23, 59, 59, 999)
       
@@ -106,10 +112,12 @@ export async function GET(request: NextRequest) {
     if (minAmount || maxAmount) {
       whereClause.amount = {}
       if (minAmount) {
-        whereClause.amount.gte = parseFloat(minAmount)
+        const min = parseFloat(minAmount)
+        if (!isNaN(min)) whereClause.amount.gte = min
       }
       if (maxAmount) {
-        whereClause.amount.lte = parseFloat(maxAmount)
+        const max = parseFloat(maxAmount)
+        if (!isNaN(max)) whereClause.amount.lte = max
       }
     }
     
@@ -212,6 +220,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Amount must be a valid number greater than zero' }, { status: 400 })
     }
 
+    let validDate = new Date()
+    if (date) {
+      const d = new Date(date)
+      if (isNaN(d.getTime())) {
+        return NextResponse.json({ error: 'Invalid date format' }, { status: 400 })
+      }
+      validDate = d
+    }
+
     const transaction = await prisma.transaction.create({
       data: {
         type,
@@ -220,7 +237,7 @@ export async function POST(request: NextRequest) {
         description,
         paymentMethod,
         source,
-        date: date ? new Date(date) : new Date(),
+        date: validDate,
         recurringTransactionId,
         userId: currentUserId
       }

@@ -3,6 +3,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { withDbLock } from '@/lib/db-lock'
 
 export async function GET(request: NextRequest) {
   try {
@@ -74,9 +75,11 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    const existingGoal = await prisma.savingsGoal.findFirst({
-      where: { id, userId: currentUserId }
-    })
+    const existingGoal = await withDbLock(() => 
+      prisma.savingsGoal.findFirst({
+        where: { id, userId: currentUserId }
+      })
+    )
     
     if (!existingGoal) {
       return NextResponse.json({ error: 'Goal not found or access denied' }, { status: 404 })
@@ -99,10 +102,12 @@ export async function PUT(request: NextRequest) {
       updateData.completedAt = new Date()
     }
 
-    const goal = await prisma.savingsGoal.update({
-      where: { id },
-      data: updateData
-    })
+    const goal = await withDbLock(() => 
+      prisma.savingsGoal.update({
+        where: { id },
+        data: updateData
+      })
+    )
 
     return NextResponse.json(goal)
   } catch (error) {

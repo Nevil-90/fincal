@@ -60,3 +60,13 @@ data.json
 /features.md
 /prisma/backup.json
 /prisma/*.live_backup
+
+# QA Testing (Local Only)
+__tests__/
+e2e/
+vitest.config.ts
+playwright.config.ts
+playwright-report/
+test-results/
+qa_test_plan.md
+
