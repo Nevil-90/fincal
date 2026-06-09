@@ -97,6 +97,7 @@ export default React.memo(function Sidebar({ sidebarOpen, activeTab, availableBa
               return (
                 <button
                   key={tab.id}
+                  data-tour={`sidebar-${tab.id}`}
                   onClick={() => handleTabClick(tab.id)}
                   className={`w-full flex items-center ${sidebarOpen ? 'gap-3 px-3 justify-start' : 'justify-center px-0'} py-2.5 rounded-xl text-left transition-colors ${
                     activeTab === tab.id

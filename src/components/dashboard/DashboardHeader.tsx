@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useTheme } from 'next-themes'
 import { Plus, Menu, User, Settings, Shield, LogOut, Car, Calendar, PieChart, BarChart3, CreditCard, Target, RefreshCw, Sun, Moon, Search } from 'lucide-react'
 import { useScrollLock } from '@/hooks/useScrollLock'
@@ -107,6 +108,7 @@ export default React.memo(function DashboardHeader({
 
             {/* Desktop Add Transaction Button */}
             <button
+              data-tour="add-transaction"
               onClick={onShowAddTransaction}
               className="hidden md:flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-sm text-sm font-semibold whitespace-nowrap"
             >
@@ -147,6 +149,7 @@ export default React.memo(function DashboardHeader({
 
             {/* Mobile Profile Icon */}
             <button
+              data-tour="mobile-more-menu"
               onClick={() => setShowMobileMenu(true)}
               className="md:hidden flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-400 border border-slate-200 dark:border-neutral-700 shadow-sm hover:bg-slate-200 dark:hover:bg-neutral-700 transition-all"
             >
@@ -161,14 +164,14 @@ export default React.memo(function DashboardHeader({
       </header>
 
       {/* Mobile Profile & More Menu (Bottom Sheet) */}
-      {showMobileMenu && (
-        <div className="fixed inset-0 z-[100] md:hidden" onClick={() => setShowMobileMenu(false)}>
+      {showMobileMenu && mounted && createPortal(
+        <div className="fixed inset-0 z-[100] flex flex-col justify-end md:hidden" onClick={() => setShowMobileMenu(false)}>
           {/* Backdrop */}
-          <div className="absolute inset-0 bg-slate-950/45 dark:bg-neutral-950/80 backdrop-blur-sm transition-opacity" />
+          <div className="absolute inset-0 bg-slate-950/45 dark:bg-neutral-950/80 backdrop-blur-sm transition-opacity -z-10" />
 
           {/* Sheet */}
           <div
-            className="absolute bottom-0 left-0 right-0 bg-white dark:bg-neutral-900 rounded-t-3xl shadow-2xl animate-slide-up pb-safe"
+            className="relative w-full bg-white dark:bg-neutral-900 rounded-t-3xl shadow-2xl animate-slide-up pb-safe flex flex-col max-h-[85vh] overflow-hidden"
             onClick={e => e.stopPropagation()}
           >
             {/* Handle */}
@@ -206,7 +209,7 @@ export default React.memo(function DashboardHeader({
             </div>
 
             {/* Navigation Grid */}
-            <div className="p-5 grid grid-cols-3 gap-3">
+            <div className="p-5 grid grid-cols-3 gap-3 overflow-y-auto">
               {moreMenuTabs.length > 0 ? (
                 moreMenuTabs.map(tab => {
                   const Icon = tab.icon
@@ -242,7 +245,7 @@ export default React.memo(function DashboardHeader({
             </div>
 
             {/* Footer Actions */}
-            <div className="px-5 pb-5 pt-2 flex gap-3">
+            <div className="px-5 pb-5 pt-2 flex gap-3 shrink-0">
               <button
                 onClick={() => setShowMobileMenu(false)}
                 className="flex-1 py-3.5 rounded-2xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-slate-700 dark:text-neutral-300 font-bold text-sm hover:bg-slate-50 dark:hover:bg-neutral-700 active:bg-slate-100 dark:active:bg-neutral-600 transition-all shadow-sm"
@@ -261,7 +264,8 @@ export default React.memo(function DashboardHeader({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Profile Modal */}

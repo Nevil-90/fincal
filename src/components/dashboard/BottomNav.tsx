@@ -43,6 +43,7 @@ export default React.memo(function BottomNav({
     <>
       {/* Floating Add Button */}
       <button
+        data-tour="add-transaction"
         onClick={onAddTransaction}
         className="fixed bottom-20 right-4 z-50 md:hidden w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30 active:scale-95 transition-transform"
       >
@@ -64,6 +65,7 @@ export default React.memo(function BottomNav({
               return (
                 <button
                   key={`${tab}-${index}`}
+                  data-tour={`bottomnav-${tab}`}
                   onClick={() => onTabChange(tab)}
                   className={`flex flex-col items-center justify-end gap-1 pt-2 pb-2 w-full transition-colors ${
                     activeTab === tab ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-neutral-500'

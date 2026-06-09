@@ -5,6 +5,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { enhancedStaticDataManager } from '@/lib/enhanced-static-data-manager'
 import { useScrollLock } from '@/hooks/useScrollLock'
+import { useNavPreferences } from '@/hooks/useNavPreferences'
 
 import { formatCurrency } from '@/lib/financial-utils'
 import { useUser, useTransactionSummary, useTransactions, useGoals } from '@/hooks/useApi'
@@ -18,8 +19,11 @@ const TravelingTab = dynamic(() => import('./TravelingTab'), { ssr: false })
 const SettingsPanel = dynamic(() => import('./SettingsPanel').then(mod => mod.SettingsPanel), { ssr: false })
 const CalendarTab = dynamic(() => import('./CalendarTab'), { ssr: false })
 const AdminTab = dynamic(() => import('./dashboard/AdminTab'), { ssr: false })
-import OnboardingWizard from './OnboardingWizard'
+
 import BottomNav from './dashboard/BottomNav'
+
+import { TourProvider, useTour } from './tour/TourContext'
+import { TourOverlay } from './tour/TourOverlay'
 
 import CommandPalette from '@/components/ui/CommandPalette'
 import Sidebar from './dashboard/Sidebar'
@@ -89,7 +93,7 @@ const DASHBOARD_TABS: DashboardTab[] = [
 ]
 
 
-export default function ModernDashboard() {
+function ModernDashboardContent() {
   const { user, isLoading: isLoadingUser } = useUser()
   const [overviewPeriod, setOverviewPeriod] = useState<{
     year: number
@@ -119,7 +123,8 @@ export default function ModernDashboard() {
   const { goals, isLoading: isLoadingGoals, mutate: mutateGoals } = useGoals()
 
   const [showAddTransaction, setShowAddTransaction] = useState(false)
-  const [showOnboarding, setShowOnboarding] = useState(false)
+  const { startTour, isActive: isTourActive } = useTour()
+  const { slots, isLoading: isLoadingNav } = useNavPreferences()
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
@@ -130,7 +135,7 @@ export default function ModernDashboard() {
   const isInitialGoalsLoading = !goals && isLoadingGoals
   const loading = isInitialSummaryLoading || isInitialUserLoading || isInitialGoalsLoading
 
-  useScrollLock(showAddTransaction || showOnboarding)
+  useScrollLock(showAddTransaction || isTourActive)
 
   const [activeTab, setActiveTab] = useState<DashboardTab>('overview')
 
@@ -187,11 +192,119 @@ export default function ModernDashboard() {
   const availableBalance = summary?.global?.balance || 0
   const availableYears = (summary?.availableYears || [new Date().getFullYear()]) as number[]
 
+  const getFilteredTourSteps = useCallback(() => {
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    
+      const baseSteps = [
+      {
+        title: "Welcome to FinTracker! 🎉",
+        content: "Let's take a quick tour to understand how everything works.",
+        placement: "center",
+        onBeforeActive: () => setActiveTab('overview')
+      },
+      {
+        target: '[data-tour="overview-stats"]',
+        title: "Your Financial Command Center",
+        content: "This shows your overall health at a glance. Track income, expenses, and savings seamlessly.",
+        placement: "bottom",
+        onBeforeActive: () => setActiveTab('overview')
+      },
+      {
+        target: '[data-tour="sidebar-transactions"], [data-tour="bottomnav-transactions"]',
+        title: "Transactions",
+        content: "Log and manage all your day-to-day income and expenses here.",
+        placement: "right",
+        onBeforeActive: () => setActiveTab('transactions')
+      },
+      {
+        target: '[data-tour="add-transaction"]',
+        title: "Add Transactions",
+        content: "Whenever you spend or receive money, log it here to keep your records accurate.",
+        placement: "top",
+        onBeforeActive: () => setActiveTab('transactions')
+      },
+      {
+        target: '[data-tour="sidebar-goals"], [data-tour="bottomnav-goals"]',
+        title: "Savings Goals",
+        content: "Set aside money for your dream purchases or emergency funds.",
+        placement: "right",
+        onBeforeActive: () => setActiveTab('goals')
+      },
+      {
+        target: '[data-tour="sidebar-recurring"], [data-tour="bottomnav-recurring"]',
+        title: "Recurring Bills",
+        content: "Never miss a payment. Manage subscriptions and regular bills here.",
+        placement: "right",
+        onBeforeActive: () => setActiveTab('recurring')
+      },
+      {
+        target: '[data-tour="sidebar-analytics"], [data-tour="bottomnav-analytics"]',
+        title: "Analytics",
+        content: "Deep dive into your spending habits with detailed charts and trends.",
+        placement: "right",
+        onBeforeActive: () => setActiveTab('analytics')
+      },
+      {
+        target: '[data-tour="sidebar-calendar"], [data-tour="bottomnav-calendar"]',
+        title: "Calendar View",
+        content: "See your daily expenses and income at a glance on a monthly calendar.",
+        placement: "right",
+        onBeforeActive: () => setActiveTab('calendar')
+      },
+      {
+        target: '[data-tour="sidebar-traveling"], [data-tour="bottomnav-traveling"]',
+        title: "Traveling",
+        content: "Log travel entries, track distances, and manage your vehicle or trip expenses effortlessly.",
+        placement: "right",
+        onBeforeActive: () => setActiveTab('traveling')
+      },
+      {
+        title: "You're All Set! 🚀",
+        content: "Let's set up your financial baseline to get started.",
+        placement: "center",
+        onBeforeActive: () => setActiveTab('overview'),
+        inputs: [
+          {
+            id: 'openingBalance',
+            label: 'Opening Balance (₹)',
+            type: 'number',
+            placeholder: 'e.g. 50000'
+          },
+          {
+            id: 'monthlySpendingGoal',
+            label: 'Monthly Spending Goal (₹)',
+            type: 'number',
+            placeholder: 'e.g. 20000'
+          }
+        ]
+      }
+    ] as any[];
+
+    return baseSteps.filter(step => {
+      if (!isMobile) return true;
+      
+      const titleToSlot: Record<string, string> = {
+        "Transactions": 'transactions',
+        "Savings Goals": 'goals',
+        "Recurring Bills": 'recurring',
+        "Analytics": 'analytics',
+        "Calendar View": 'calendar',
+        "Traveling": 'traveling'
+      };
+
+      const requiredSlot = titleToSlot[step.title];
+      if (requiredSlot && !slots.includes(requiredSlot)) {
+        return false; // Skip steps for tabs that are hidden in the mobile 'more' menu
+      }
+      return true;
+    });
+  }, [slots, setActiveTab]);
+
   useEffect(() => {
-    if (user && !user.hasCompletedOnboarding) {
-      setShowOnboarding(true)
+    if (user && !user.hasCompletedOnboarding && !isTourActive && !isLoadingNav) {
+      startTour(getFilteredTourSteps())
     }
-  }, [user])
+  }, [user, startTour, isTourActive, getFilteredTourSteps, isLoadingNav])
 
   // Process overdue recurring transactions once per calendar day.
   useEffect(() => {
@@ -586,17 +699,20 @@ export default function ModernDashboard() {
         onClose={() => setIsSettingsOpen(false)}
         onDataChange={refreshAll}
         isAdmin={user?.role === 'ADMIN'}
+        onRestartTour={() => {
+          setIsSettingsOpen(false)
+          startTour(getFilteredTourSteps())
+        }}
       />
-
-      {showOnboarding && user && (
-        <OnboardingWizard
-          user={user as any}
-          onComplete={() => {
-            setShowOnboarding(false)
-            refreshAll()
-          }}
-        />
-      )}
     </div>
+  )
+}
+
+export default function ModernDashboard() {
+  return (
+    <TourProvider>
+      <ModernDashboardContent />
+      <TourOverlay />
+    </TourProvider>
   )
 }

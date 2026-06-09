@@ -28,6 +28,7 @@ interface SettingsPanelProps {
   isAdmin?: boolean
   isOpen: boolean
   onClose: () => void
+  onRestartTour?: () => void
 }
 
 const ALL_TABS = [
@@ -150,7 +151,7 @@ function AppearanceSettingsPanel() {
   )
 }
 
-export function SettingsPanel({ onDataChange, isAdmin, isOpen, onClose }: SettingsPanelProps) {
+export function SettingsPanel({ onDataChange, isAdmin, isOpen, onClose, onRestartTour }: SettingsPanelProps) {
   const { data, manager, isLoading: isDataLoading, error } = useEnhancedStaticData()
   const { slots, updateSlots, isLoading: isNavLoading } = useNavPreferences()
   const [activeSection, setActiveSection] = useState<StaticDataType | 'navigation' | 'travelSettings' | 'dataBackup'>('expenseCategories')
@@ -530,6 +531,18 @@ export function SettingsPanel({ onDataChange, isAdmin, isOpen, onClose }: Settin
                 <Download className={`h-4 w-4 ${activeSection === 'dataBackup' ? 'text-indigo-600 dark:text-indigo-400' : 'text-emerald-500 dark:text-emerald-400'}`} />
                 <span className="truncate">Backup & Restore</span>
               </button>
+
+              {onRestartTour && (
+                <div className="mt-4 pt-4 border-t border-slate-100 dark:border-neutral-800">
+                  <button
+                    onClick={onRestartTour}
+                    className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all text-slate-600 dark:text-neutral-400 hover:bg-slate-50 dark:hover:bg-neutral-800/50 border border-transparent hover:text-indigo-600 dark:hover:text-indigo-400"
+                  >
+                    <Lightbulb className="h-4 w-4 text-amber-500" />
+                    <span className="truncate">Restart App Tour</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 

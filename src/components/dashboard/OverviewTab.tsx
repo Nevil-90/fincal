@@ -266,7 +266,7 @@ export default React.memo(function OverviewTab({
 
         <div className="space-y-4 sm:space-y-5">
 
-          <div className="rounded-2xl border border-slate-200 dark:border-neutral-700/80  bg-white dark:bg-neutral-800 p-4 sm:p-5 shadow-sm">
+          <div className="rounded-2xl border border-slate-200 dark:border-neutral-700/80  bg-white dark:bg-neutral-800 p-4 sm:p-5 shadow-sm" data-tour="overview-stats">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
               <div className="flex flex-col items-center gap-2 shrink-0 w-full sm:w-auto">
                 <SpendGauge pct={overallBudgetPct} />
