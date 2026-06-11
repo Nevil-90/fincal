@@ -619,7 +619,7 @@ export function DesktopGoalsView({
                         <div
                           key={goal.id}
                           onClick={() => setSelectedCompletedGoal(goal.id)}
-                          className={`border rounded-2xl p-4 shadow-sm hover:shadow-md cursor-pointer group active:scale-[0.99] transition-all flex flex-col justify-between min-h-[120px] bg-gradient-to-br from-emerald-50/30 to-green-50/10 hover:border-emerald-200 ${isSelected ? 'border-2 border-emerald-500 shadow-emerald-500/5' : 'border-slate-100 dark:border-neutral-800'}`}
+                          className={`border rounded-2xl p-4 shadow-sm hover:shadow-md cursor-pointer group active:scale-[0.99] transition-all flex flex-col justify-between min-h-[120px] bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-900/20 dark:to-emerald-900/10 hover:border-emerald-300 dark:hover:border-emerald-700 ${isSelected ? 'border-2 border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.15)]' : 'border-emerald-100 dark:border-emerald-900/50'}`}
                         >
                           <div className="flex justify-between items-start mb-3">
                             <div className="flex items-center gap-2.5 flex-1 min-w-0 pr-2">

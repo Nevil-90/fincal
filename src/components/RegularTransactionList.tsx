@@ -113,6 +113,16 @@ export default function RegularTransactionList({
 
   const { transactions: fetchedTransactions, pagination, isLoading, mutate } = useTransactions(currentPage, pageSize, apiFilters)
 
+  // Debounce API refreshes to prevent storms when deleting rapidly
+  const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const triggerRefresh = useCallback(() => {
+    if (refreshTimeoutRef.current) clearTimeout(refreshTimeoutRef.current)
+    refreshTimeoutRef.current = setTimeout(() => {
+      mutate()
+      onTransactionDeleted()
+    }, 500)
+  }, [mutate, onTransactionDeleted])
+
   const filteredTransactions = useMemo(() => {
     return (fetchedTransactions || []).filter(t => !pendingDeleteIds.has(t.id))
   }, [fetchedTransactions, pendingDeleteIds])
@@ -196,9 +206,13 @@ export default function RegularTransactionList({
     })
 
     try {
-      await fetch(`/api/transactions?id=${id}`, { method: 'DELETE' })
-      mutate() // fire and forget mutate to update SWR cache
-      onTransactionDeleted()
+      const response = await fetch(`/api/transactions?id=${id}`, { method: 'DELETE' })
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}))
+        throw new Error(errData.error || 'Failed to delete transaction')
+      }
+
+      triggerRefresh()
       
       toast.success('Transaction deleted', {
         action: t ? {
@@ -214,8 +228,7 @@ export default function RegularTransactionList({
                   source: t.source, date: t.date, recurringTransactionId: t.recurringTransactionId
                 })
               })
-              mutate()
-              onTransactionDeleted()
+              triggerRefresh()
               toast.success('Transaction restored')
               // Also remove from pending deletes just in case
               setPendingDeleteIds(prev => { const next = new Set(prev); next.delete(id); return next; })
@@ -223,20 +236,19 @@ export default function RegularTransactionList({
               toast.error('Failed to restore transaction')
             }
           }
-        } : undefined,
-        duration: 5000
+        } : undefined
       })
-    } catch {
+    } catch (err: any) {
       setPendingDeleteIds(prev => {
         const next = new Set(prev)
         next.delete(id)
         return next
       })
-      toast.error('Failed to delete transaction')
-      onTransactionDeleted()
+      toast.error(err.message || 'Failed to delete transaction')
+      triggerRefresh()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchedTransactions, onTransactionDeleted])
+  }, [fetchedTransactions, triggerRefresh])
 
   const duplicateTransaction = useCallback(async (t: Transaction) => {
     try {
@@ -255,13 +267,12 @@ export default function RegularTransactionList({
         })
       })
       if (response.ok) {
-        mutate()
-        onTransactionDeleted()
+        triggerRefresh()
       }
     } catch (e) {
       console.error(e)
     }
-  }, [onTransactionDeleted])
+  }, [triggerRefresh])
 
   const handleMultiDelete = async () => {
     if (selectedTransactions.size === 0) return
@@ -278,9 +289,15 @@ export default function RegularTransactionList({
     })
 
     try {
-      await Promise.all(ids.map(id => fetch(`/api/transactions?id=${id}`, { method: 'DELETE' })))
-      mutate()
-      onTransactionDeleted()
+      await Promise.all(ids.map(async (id) => {
+        const response = await fetch(`/api/transactions?id=${id}`, { method: 'DELETE' })
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}))
+          throw new Error(errData.error || 'Failed to delete transaction')
+        }
+      }))
+
+      triggerRefresh()
       
       toast.success(`${ids.length} transactions deleted`, {
         action: deletedTxns.length > 0 ? {
@@ -296,8 +313,7 @@ export default function RegularTransactionList({
                   source: t.source, date: t.date, recurringTransactionId: t.recurringTransactionId
                 })
               })))
-              mutate()
-              onTransactionDeleted()
+              triggerRefresh()
               toast.success(`${deletedTxns.length} transactions restored`)
               setPendingDeleteIds(prev => { 
                 const next = new Set(prev)
@@ -308,17 +324,16 @@ export default function RegularTransactionList({
               toast.error('Failed to restore transactions')
             }
           }
-        } : undefined,
-        duration: 5000
+        } : undefined
       })
-    } catch {
+    } catch (err: any) {
       setPendingDeleteIds(prev => {
         const next = new Set(prev)
         ids.forEach(id => next.delete(id))
         return next
       })
-      toast.error('Failed to delete transactions')
-      onTransactionDeleted()
+      toast.error(err.message || 'Failed to delete transactions')
+      triggerRefresh()
     }
   }
 

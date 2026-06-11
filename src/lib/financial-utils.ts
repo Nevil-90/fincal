@@ -80,6 +80,32 @@ export function formatCurrency(amount: number): string {
   }).format(amount)
 }
 
+export function formatCompactCurrency(amount: number): string {
+  if (Math.abs(amount) >= 1000000) {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      notation: 'compact',
+      compactDisplay: 'short',
+      maximumFractionDigits: 2
+    }).format(amount)
+  }
+  return formatCurrency(amount)
+}
+
+export function formatCompactNumber(amount: number): string {
+  if (Math.abs(amount) >= 10000) {
+    return new Intl.NumberFormat('en-IN', {
+      notation: 'compact',
+      compactDisplay: 'short',
+      maximumFractionDigits: 1
+    }).format(amount)
+  }
+  return new Intl.NumberFormat('en-IN', {
+    maximumFractionDigits: 1
+  }).format(amount)
+}
+
 export function getCurrentMonthYear(): { month: number; year: number } {
   const now = new Date()
   return {

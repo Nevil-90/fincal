@@ -206,10 +206,8 @@ export default function SavingsGoalsNew({ goals, availableBalance, onRefresh }: 
   }
 
   useEffect(() => {
-    if (goalFilter === 'achieved' && completedGoals.length === 0) {
-      loadCompletedGoals()
-    }
-  }, [goalFilter])
+    loadCompletedGoals()
+  }, [])
 
   const fetchContributions = useCallback(async (goalId: string, forceRefresh = false) => {
     if (contributions[goalId] && !forceRefresh) return
@@ -282,9 +280,20 @@ export default function SavingsGoalsNew({ goals, availableBalance, onRefresh }: 
           paymentMethod: quickContribution.paymentMethod,
           description: ''
         })
+        
+        const addedAmount = parseFloat(quickContribution.amount)
+        const willComplete = currentGoal && (currentGoal.currentAmount + addedAmount >= currentGoal.targetAmount)
+
         if (onRefresh) onRefresh()
         await fetchContributions(selectedGoal, true)
         setDetailTab('history')
+        
+        if (willComplete) {
+          const completedId = selectedGoal
+          setSelectedGoal(null)
+          setGoalFilter('achieved')
+          setSelectedCompletedGoal(completedId)
+        }
       }
     } catch (error) {
       console.error('Failed to add contribution:', error)

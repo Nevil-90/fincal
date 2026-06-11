@@ -47,7 +47,7 @@ export default function RootLayout({
             <ErrorBoundary>
               {children}
             </ErrorBoundary>
-            <Toaster position="bottom-right" richColors theme="system" />
+            <Toaster position="bottom-right" richColors theme="system" closeButton duration={1000} />
           </SwrProvider>
         </ThemeProvider>
       </body>

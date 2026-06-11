@@ -161,6 +161,7 @@ export function SettingsPanel({ onDataChange, isAdmin, isOpen, onClose }: Settin
   const [searchQuery, setSearchQuery] = useState('')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
+  const [isImporting, setIsImporting] = useState(false)
   
   // Drag and drop import states
   const [isDragging, setIsDragging] = useState(false)
@@ -275,7 +276,10 @@ export function SettingsPanel({ onDataChange, isAdmin, isOpen, onClose }: Settin
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `finacal_backup_${new Date().toISOString().split('T')[0]}.json`
+      const now = new Date()
+      const dateStr = now.toISOString().split('T')[0]
+      const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-')
+      a.download = `finacal_backup_${dateStr}_${timeStr}.json`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
@@ -289,6 +293,7 @@ export function SettingsPanel({ onDataChange, isAdmin, isOpen, onClose }: Settin
   }
 
   const handleImport = async (customData?: any) => {
+    setIsImporting(true)
     try {
       // Use the edited data if available, otherwise fallback to parsed importData
       const payloadData = customData || editableData || (importData ? JSON.parse(importData).data || JSON.parse(importData) : null)
@@ -320,6 +325,8 @@ export function SettingsPanel({ onDataChange, isAdmin, isOpen, onClose }: Settin
       onDataChange?.()
     } catch (error: any) {
       toast.error(`Restore failed: ${error.message || 'Invalid JSON format.'}`)
+    } finally {
+      setIsImporting(false)
     }
   }
 
@@ -887,11 +894,18 @@ export function SettingsPanel({ onDataChange, isAdmin, isOpen, onClose }: Settin
               </button>
               <button
                 type="button"
-                onClick={handleImport}
-                disabled={!parsedPreview}
-                className="px-4 py-2 text-xs font-bold uppercase tracking-wider bg-purple-600 dark:bg-purple-700 hover:bg-purple-700 dark:hover:bg-purple-600 text-white rounded-xl disabled:bg-slate-200 dark:disabled:bg-neutral-800 disabled:text-slate-400 dark:disabled:text-neutral-600 disabled:cursor-not-allowed transition-all shadow-sm shadow-purple-600/10 cursor-pointer"
+                onClick={() => handleImport()}
+                disabled={!parsedPreview || isImporting}
+                className="px-4 py-2 text-xs font-bold uppercase tracking-wider bg-purple-600 dark:bg-purple-700 hover:bg-purple-700 dark:hover:bg-purple-600 text-white rounded-xl disabled:bg-slate-200 dark:disabled:bg-neutral-800 disabled:text-slate-400 dark:disabled:text-neutral-600 disabled:cursor-not-allowed transition-all shadow-sm shadow-purple-600/10 cursor-pointer flex items-center justify-center gap-2 min-w-[160px]"
               >
-                Confirm & Apply Data
+                {isImporting ? (
+                  <>
+                    <div className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin"></div>
+                    Importing...
+                  </>
+                ) : (
+                  'Confirm & Apply Data'
+                )}
               </button>
             </div>
           </div>

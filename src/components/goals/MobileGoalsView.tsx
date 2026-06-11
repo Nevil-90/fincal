@@ -181,7 +181,7 @@ export function MobileGoalsView({
                   <div
                     key={goal.id}
                     onClick={() => setSelectedCompletedGoal(goal.id)}
-                    className="bg-gradient-to-br from-green-50 dark:from-emerald-900/20 to-emerald-50 dark:to-emerald-900/10 border border-green-100 dark:border-emerald-800 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all cursor-pointer group active:scale-[0.98]"
+                    className={`bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-900/20 dark:to-emerald-900/10 border rounded-3xl p-6 shadow-sm hover:shadow-md transition-all cursor-pointer group active:scale-[0.98] hover:border-emerald-300 dark:hover:border-emerald-700 ${selectedCompletedGoal === goal.id ? 'border-2 border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.15)]' : 'border-emerald-100 dark:border-emerald-900/50'}`}
                   >
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex items-center gap-3">

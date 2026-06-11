@@ -33,6 +33,7 @@ model Transaction {
   @@index([userId, type])
   @@index([userId, amount])
   @@index([userId, deletedAt, date])
+  @@index([recurringTransactionId])
   @@map("transactions")
 }
 

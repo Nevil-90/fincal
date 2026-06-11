@@ -141,11 +141,25 @@ export async function GET(request: NextRequest) {
     const parser = new Parser({ fields })
     const csv = parser.parse(csvData)
 
+    let scope = 'transactions'
+    if (searchParams.get('startDate') && searchParams.get('endDate')) {
+      scope = `transactions_${searchParams.get('startDate')}_to_${searchParams.get('endDate')}`
+    } else if (searchParams.get('month') && searchParams.get('year')) {
+      scope = `transactions_${searchParams.get('year')}_${String(searchParams.get('month')).padStart(2, '0')}`
+    } else if (searchParams.get('year')) {
+      scope = `transactions_${searchParams.get('year')}`
+    }
+
+    const now = new Date()
+    const dateStr = now.toISOString().split('T')[0]
+    const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-')
+    const filename = `${scope}_${dateStr}_${timeStr}.csv`
+
     return new NextResponse(csv, {
       status: 200,
       headers: {
         'Content-Type': 'text/csv',
-        'Content-Disposition': 'attachment; filename="fintracker-statement.csv"',
+        'Content-Disposition': `attachment; filename="${filename}"`,
       }
     })
   } catch (error: any) {

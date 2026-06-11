@@ -12,8 +12,8 @@ import { useUser, useTransactionSummary, useTransactions, useGoals } from '@/hoo
 import dynamic from 'next/dynamic'
 import { motion, AnimatePresence } from 'framer-motion'
 import AddTransactionForm from './AddTransactionForm'
-import RegularTransactionList from './RegularTransactionList'
-import RecurringTransactions from './RecurringTransactions'
+const RegularTransactionList = dynamic(() => import('./RegularTransactionList'), { ssr: false, loading: () => <div className="animate-pulse bg-slate-100 dark:bg-neutral-800 rounded-2xl h-[400px] w-full mt-4" /> })
+const RecurringTransactions = dynamic(() => import('./RecurringTransactions'), { ssr: false, loading: () => <div className="animate-pulse bg-slate-100 dark:bg-neutral-800 rounded-2xl h-[400px] w-full mt-4" /> })
 const SavingsGoalsNew = dynamic(() => import('./SavingsGoalsNew'), { ssr: false })
 const TravelingTab = dynamic(() => import('./TravelingTab'), { ssr: false })
 const SettingsPanel = dynamic(() => import('./SettingsPanel').then(mod => mod.SettingsPanel), { ssr: false })

@@ -68,7 +68,7 @@ export default function AnalyticsTab({ goals }: AnalyticsTabProps) {
   } = analyticsData || {}
 
   const formatDeltaPct = (pct: number | null) => {
-    if (pct === null || Number.isNaN(pct)) return 'n/a'
+    if (pct === null || Number.isNaN(pct)) return '-'
     return `${pct > 0 ? '+' : ''}${pct.toFixed(1)}%`
   }
   const formatDeltaValue = (value: number) => {

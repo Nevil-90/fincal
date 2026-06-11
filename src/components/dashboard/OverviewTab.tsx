@@ -4,7 +4,7 @@
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { Plus, BarChart2, BarChart3, Calendar, Target, AlertCircle, TrendingUp, TrendingDown, DollarSign, Wallet, CreditCard, ArrowRight, ArrowUpRight, ArrowDownRight, ArrowDownLeft, Activity, PieChart, ShieldAlert, Zap, AlertTriangle, CheckCircle, ClipboardList, Banknote, Clock, Sparkles } from 'lucide-react'
-import { formatCurrency } from '@/lib/financial-utils'
+import { formatCurrency, formatCompactCurrency, formatCompactNumber } from '@/lib/financial-utils'
 import { useEnhancedStaticData } from '@/lib/enhanced-static-data-manager'
 import { useUser } from '@/hooks/useApi'
 import MonthlyInsights from './MonthlyInsights'
@@ -228,7 +228,7 @@ export default React.memo(function OverviewTab({
   return (
     <div className="space-y-4 sm:space-y-5 pb-24 md:pb-6">
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3" data-tour="overview-stats">
         <div>
           <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white ">Budget Overview</h1>
           <p className="text-xs text-slate-500 dark:text-neutral-400  mt-0.5">Track real spending against your budget limits in real time.</p>
@@ -270,7 +270,7 @@ export default React.memo(function OverviewTab({
 
         <div className="space-y-4 sm:space-y-5">
 
-          <div className="rounded-2xl border border-slate-200 dark:border-neutral-700/80  bg-white dark:bg-neutral-800 p-4 sm:p-5 shadow-sm" data-tour="overview-stats">
+          <div className="rounded-2xl border border-slate-200 dark:border-neutral-700/80  bg-white dark:bg-neutral-800 p-4 sm:p-5 shadow-sm">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
               <div className="flex flex-col items-center gap-2 shrink-0 w-full sm:w-auto">
                 <SpendGauge pct={overallBudgetPct} />
@@ -280,11 +280,11 @@ export default React.memo(function OverviewTab({
               <div className="flex-1 space-y-3 w-full">
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-1.5">
-                      <Clock className="h-3.5 w-3.5 text-slate-400 dark:text-neutral-500" />
-                      <span className="text-xs font-bold text-slate-500 dark:text-neutral-400 ">Month Progress</span>
+                    <div className="flex items-center gap-1.5 pr-2">
+                      <Clock className="h-3.5 w-3.5 text-slate-400 dark:text-neutral-500 shrink-0" />
+                      <span className="text-xs font-bold text-slate-500 dark:text-neutral-400 break-words">Month Progress</span>
                     </div>
-                    <span className="text-xs font-black text-slate-700 dark:text-neutral-300 ">Day {dayOfMonth} / {daysInMonth}</span>
+                    <span className="text-xs font-black text-slate-700 dark:text-neutral-300 shrink-0">Day {dayOfMonth} / {daysInMonth}</span>
                   </div>
                   <div className="h-2 bg-slate-100 dark:bg-neutral-700 rounded-full overflow-hidden">
                     <div className="h-full bg-slate-400 dark:bg-neutral-500 rounded-full transition-all duration-700" style={{ width: `${monthProgress}%` }} />
@@ -292,24 +292,24 @@ export default React.memo(function OverviewTab({
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 [&>*:last-child:nth-child(odd)]:col-span-2 sm:[&>*:last-child:nth-child(odd)]:col-span-1">
-                  <div className="rounded-xl bg-rose-50 dark:bg-rose-900/20  border border-rose-100 dark:border-rose-900/50 p-3">
+                  <div className="rounded-xl bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-900/50 p-3">
                     <p className="text-[10px] font-bold text-rose-500 dark:text-rose-400 uppercase tracking-wider">Spent</p>
-                    <p className="text-base font-black text-rose-700 dark:text-rose-400  mt-0.5 tabular-nums">{formatCurrency(balanceInfo.periodExpenses)}</p>
+                    <p className="text-base font-black text-rose-700 dark:text-rose-400 mt-0.5 tabular-nums truncate" title={formatCurrency(balanceInfo.periodExpenses)}>{formatCompactCurrency(balanceInfo.periodExpenses)}</p>
                   </div>
-                  <div className="rounded-xl bg-emerald-50 dark:bg-emerald-900/20   border border-emerald-100 dark:border-emerald-900/50 p-3">
-                    <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400  uppercase tracking-wider">Income</p>
-                    <p className="text-base font-black text-emerald-700 dark:text-emerald-400   mt-0.5 tabular-nums">{formatCurrency(balanceInfo.periodIncome)}</p>
+                  <div className="rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-900/50 p-3">
+                    <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Income</p>
+                    <p className="text-base font-black text-emerald-700 dark:text-emerald-400 mt-0.5 tabular-nums truncate" title={formatCurrency(balanceInfo.periodIncome)}>{formatCompactCurrency(balanceInfo.periodIncome)}</p>
                   </div>
-                  <div className="rounded-xl bg-blue-50 dark:bg-blue-900/20   border border-blue-100 dark:border-blue-900/50 p-3">
-                    <p className="text-[10px] font-bold text-blue-600 dark:text-blue-400  uppercase tracking-wider">Rollover</p>
-                    <p className="text-base font-black text-blue-700 dark:text-blue-400   mt-0.5 tabular-nums">+{formatCurrency(carryOver)}</p>
+                  <div className="rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/50 p-3">
+                    <p className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Rollover</p>
+                    <p className="text-base font-black text-blue-700 dark:text-blue-400 mt-0.5 tabular-nums truncate" title={`+${formatCurrency(carryOver)}`}>+{formatCompactCurrency(carryOver)}</p>
                   </div>
                   <div className="rounded-xl bg-slate-50 dark:bg-neutral-700/50 border border-slate-100 dark:border-neutral-600 p-3">
                     <p className="text-[10px] font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider">Daily Burn</p>
-                    <p className="text-base font-black text-slate-800 dark:text-neutral-200  mt-0.5 tabular-nums">{formatCurrency(actualDailyBurn)}/d</p>
+                    <p className="text-base font-black text-slate-800 dark:text-neutral-200 mt-0.5 tabular-nums truncate" title={`${formatCurrency(actualDailyBurn)}/d`}>{formatCompactCurrency(actualDailyBurn)}/d</p>
                     {expectedDailyBurn > 0 && (
-                      <p className={`text-[10px] font-bold mt-0.5 ${actualDailyBurn > expectedDailyBurn ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400 '}`}>
-                        {actualDailyBurn > expectedDailyBurn ? '▲' : '▼'} Budget: {formatCurrency(expectedDailyBurn)}/d
+                      <p className={`text-[10px] font-bold mt-0.5 truncate ${actualDailyBurn > expectedDailyBurn ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`} title={`Budget: ${formatCurrency(expectedDailyBurn)}/d`}>
+                        {actualDailyBurn > expectedDailyBurn ? '▲' : '▼'} Budget: {formatCompactCurrency(expectedDailyBurn)}/d
                       </p>
                     )}
                   </div>
@@ -350,20 +350,22 @@ export default React.memo(function OverviewTab({
                 </span>
               </div>
 
-              <div className="flex items-end justify-between mb-2">
-                <div>
-                  <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-neutral-400  font-bold">Spent so far</p>
-                  <p className="text-lg font-black text-slate-900 dark:text-white  leading-none mt-1">
-                    {formatCurrency(balanceInfo.periodExpenses)}
-                    <span className="text-sm font-medium text-slate-400 dark:text-neutral-500  ml-1">/ {formatCurrency(monthlySpendingGoal)}</span>
+              <div className="flex items-end justify-between mb-2 gap-4">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-neutral-400 font-bold">Spent so far</p>
+                  <p className="text-lg font-black text-slate-900 dark:text-white leading-none mt-1 truncate" title={`${formatCurrency(balanceInfo.periodExpenses)} / ${formatCurrency(monthlySpendingGoal)}`}>
+                    {formatCompactCurrency(balanceInfo.periodExpenses)}
+                    <span className="text-sm font-medium text-slate-400 dark:text-neutral-500 ml-1">/ {formatCompactCurrency(monthlySpendingGoal)}</span>
                   </p>
                 </div>
-                <div className="text-right">
-                  <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-neutral-400  font-bold">Remaining</p>
-                  <p className={`text-sm font-bold mt-1 ${monthlySpendingGoalStatus === 'over' ? 'text-red-600 dark:text-red-400  ' : 'text-emerald-600 dark:text-emerald-400  '}`}>
-                    {monthlySpendingGoalStatus === 'over'
+                <div className="text-right shrink-0 min-w-0 max-w-[40%]">
+                  <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-neutral-400 font-bold">Remaining</p>
+                  <p className={`text-sm font-bold mt-1 truncate ${monthlySpendingGoalStatus === 'over' ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`} title={monthlySpendingGoalStatus === 'over'
                       ? `-${formatCurrency(balanceInfo.periodExpenses - monthlySpendingGoal)}`
-                      : formatCurrency(monthlySpendingGoal - balanceInfo.periodExpenses)}
+                      : formatCurrency(monthlySpendingGoal - balanceInfo.periodExpenses)}>
+                    {monthlySpendingGoalStatus === 'over'
+                      ? `-${formatCompactCurrency(balanceInfo.periodExpenses - monthlySpendingGoal)}`
+                      : formatCompactCurrency(monthlySpendingGoal - balanceInfo.periodExpenses)}
                   </p>
                 </div>
               </div>
@@ -469,7 +471,7 @@ export default React.memo(function OverviewTab({
                     transform="rotate(-90 32 32)"
                   />
                 </svg>
-                <span className="absolute inset-0 flex items-center justify-center text-[11px] font-black text-slate-800 dark:text-neutral-200 ">{savingsRate}%</span>
+                <span className="absolute inset-0 flex items-center justify-center font-black text-slate-800 dark:text-neutral-200 px-0.5 text-center text-[11px] truncate">{formatCompactNumber(savingsRate)}%</span>
               </div>
               <div>
                 <p className="text-sm font-black text-slate-900 dark:text-white ">Savings Rate</p>
@@ -480,17 +482,17 @@ export default React.memo(function OverviewTab({
             </div>
 
             <div className="border-t border-slate-100 dark:border-neutral-800 dark:border-neutral-700 pt-3 space-y-2">
-              <div className="flex items-center justify-between text-xs">
-                <span className="flex items-center gap-1.5 text-slate-500 dark:text-neutral-400  font-medium"><TrendingUp className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400 " /> Period Income</span>
-                <span className="font-black text-slate-900 dark:text-white  tabular-nums">{formatCurrency(balanceInfo.periodIncome)}</span>
+              <div className="flex items-start justify-between text-xs gap-2 min-w-0">
+                <span className="flex items-center gap-1.5 text-slate-500 dark:text-neutral-400 font-medium shrink-0 pt-0.5"><TrendingUp className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400" /> Period Income</span>
+                <span className="font-black text-slate-900 dark:text-white tabular-nums truncate text-right" title={formatCurrency(balanceInfo.periodIncome)}>{formatCompactCurrency(balanceInfo.periodIncome)}</span>
               </div>
-              <div className="flex items-center justify-between text-xs">
-                <span className="flex items-center gap-1.5 text-slate-500 dark:text-neutral-400  font-medium"><TrendingDown className="h-3.5 w-3.5 text-rose-500 dark:text-rose-400" /> Period Expenses</span>
-                <span className="font-black text-slate-900 dark:text-white  tabular-nums">{formatCurrency(balanceInfo.periodExpenses)}</span>
+              <div className="flex items-start justify-between text-xs gap-2 min-w-0">
+                <span className="flex items-center gap-1.5 text-slate-500 dark:text-neutral-400 font-medium shrink-0 pt-0.5"><TrendingDown className="h-3.5 w-3.5 text-rose-500 dark:text-rose-400" /> Period Expenses</span>
+                <span className="font-black text-slate-900 dark:text-white tabular-nums truncate text-right" title={formatCurrency(balanceInfo.periodExpenses)}>{formatCompactCurrency(balanceInfo.periodExpenses)}</span>
               </div>
-              <div className="flex items-center justify-between text-xs border-t border-slate-100 dark:border-neutral-800 dark:border-neutral-700 pt-2 mt-1">
-                <span className="font-bold text-slate-700 dark:text-neutral-300 ">Net Saved</span>
-                <span className={`font-black tabular-nums ${balanceInfo.periodBalance >= 0 ? 'text-emerald-700 dark:text-emerald-400 ' : 'text-red-700 dark:text-red-400 '}`}>{formatCurrency(balanceInfo.periodBalance)}</span>
+              <div className="flex items-start justify-between text-xs border-t border-slate-100 dark:border-neutral-800 dark:border-neutral-700 pt-2 mt-1 gap-2 min-w-0">
+                <span className="font-bold text-slate-700 dark:text-neutral-300 shrink-0 pt-0.5">Net Saved</span>
+                <span className={`font-black tabular-nums truncate text-right ${balanceInfo.periodBalance >= 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}`} title={formatCurrency(balanceInfo.periodBalance)}>{formatCompactCurrency(balanceInfo.periodBalance)}</span>
               </div>
             </div>
           </div>

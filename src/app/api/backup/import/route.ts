@@ -61,6 +61,46 @@ export async function POST(request: NextRequest) {
       if (data.transactions?.length) await chunkInsert(tx.transaction, insertWithUserId(data.transactions))
       
       if (data.goalContributions?.length) await chunkInsert(tx.goalContribution, data.goalContributions)
+
+      const allTransactions = [...(data.transactions || []), ...(data.recurringTransactions || [])]
+      if (allTransactions.length > 0) {
+        const uniqueCategories = new Map<string, { type: string, name: string }>()
+        
+        allTransactions.forEach((t: any) => {
+          if (t.category && t.type) {
+            const dbType = t.type === 'income' ? 'income_categories' : 'expense_categories'
+            const key = `${dbType}-${t.category}`
+            if (!uniqueCategories.has(key)) {
+              uniqueCategories.set(key, { type: dbType, name: t.category })
+            }
+          }
+          if (t.paymentMethod) {
+            const key = `payment_methods-${t.paymentMethod}`
+            if (!uniqueCategories.has(key)) {
+              uniqueCategories.set(key, { type: 'payment_methods', name: t.paymentMethod })
+            }
+          }
+          if (t.source) {
+            const key = `income_sources-${t.source}`
+            if (!uniqueCategories.has(key)) {
+              uniqueCategories.set(key, { type: 'income_sources', name: t.source })
+            }
+          }
+        })
+
+        if (uniqueCategories.size > 0) {
+          const categoriesToInsert = Array.from(uniqueCategories.values()).map(c => ({
+            ...c,
+            userId: user.id,
+            isActive: true
+          }))
+          
+          await tx.staticDataCategory.createMany({
+            data: categoriesToInsert,
+            skipDuplicates: true
+          })
+        }
+      }
     }, {
       maxWait: 10000,
       timeout: 60000

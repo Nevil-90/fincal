@@ -8,6 +8,7 @@ import RecurringForm from './RecurringForm'
 import PriceHistoryModal from './PriceHistoryModal'
 import { formatCurrency } from '@/lib/financial-utils'
 import { useUser } from '@/hooks/useApi'
+import useSWR from 'swr'
 import type { RecurringTransaction, RecurringFormData } from './types'
 
 interface PaginatedRecurringResponse {
@@ -46,11 +47,7 @@ interface Filters {
 }
 
 export default function PaginatedRecurringTransactions() {
-  // Data state
-  const [recurringData, setRecurringData] = useState<PaginatedRecurringResponse | null>(null)
-  const [loading, setLoading] = useState(true)
-  
-  // Transaction history state
+  // Pagination state
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
   const [transactionHistory, setTransactionHistory] = useState<{ 
     [key: string]: {
@@ -124,55 +121,24 @@ export default function PaginatedRecurringTransactions() {
   const isTourActive = user && !user.hasCompletedOnboarding
 
   // Fetch data with pagination and filters
-  const fetchRecurringTransactions = useCallback(async (page: number = 1, signal?: AbortSignal) => {
-    if (isTourActive) {
-      setRecurringData({
-        data: [],
-        pagination: { currentPage: 1, totalPages: 1, totalCount: 0, limit: pageSize, hasNextPage: false, hasPrevPage: false },
-        filters: { categories: [], frequencies: [] }
-      })
-      setLoading(false)
-      return
-    }
+  const params = useMemo(() => new URLSearchParams({
+    page: currentPage.toString(),
+    limit: pageSize.toString(),
+    ...Object.fromEntries(
+      Object.entries(filters).filter(([, value]) => value && value !== 'all')
+    )
+  }), [currentPage, pageSize, filters])
 
-    setLoading(true)
-    try {
-      const params = new URLSearchParams({
-        page: page.toString(),
-        limit: pageSize.toString(),
-        ...Object.fromEntries(
-          Object.entries(filters).filter(([, value]) => value && value !== 'all')
-        )
-      })
+  const { data: recurringData, isLoading: loading, mutate } = useSWR<PaginatedRecurringResponse>(
+    isTourActive ? null : `/api/recurring/paginated?${params.toString()}`,
+    (url: string) => fetch(url).then(res => res.json()),
+    { keepPreviousData: true }
+  )
 
-      const response = await fetch(`/api/recurring/paginated?${params}`, { signal })
-      if (response.ok) {
-        const data = await response.json()
-        setRecurringData(data)
-        setCurrentPage(page)
-      } else {
-        console.error('Failed to fetch recurring transactions')
-      }
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
-        console.log('Fetch aborted due to React Strict Mode or component unmount');
-        return; // Ignore abort errors
-      }
-      console.error('Error fetching recurring transactions:', error)
-    } finally {
-      setLoading(false)
-    }
-  }, [pageSize, filters, isTourActive]) // Include filters dependency
-
-  useEffect(() => {
-    const controller = new AbortController()
-    fetchRecurringTransactions(1, controller.signal)
-    
-    return () => {
-      // Abort the fetch if the component unmounts or effect re-runs (React Strict Mode)
-      controller.abort()
-    }
-  }, [fetchRecurringTransactions])
+  const fetchRecurringTransactions = useCallback((page?: number) => {
+    if (page) setCurrentPage(page)
+    mutate()
+  }, [mutate])
 
   // Filter handlers
   const handleFilterChange = (key: keyof Filters, value: string) => {
@@ -186,6 +152,7 @@ export default function PaginatedRecurringTransactions() {
       category: '',
       frequency: ''
     })
+    setCurrentPage(1)
   }
 
   // Pagination handlers

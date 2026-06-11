@@ -59,10 +59,15 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    const now = new Date()
+    const dateStr = now.toISOString().split('T')[0]
+    const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-')
+    const filename = `finacal_backup_${dateStr}_${timeStr}.json`
+
     return new NextResponse(JSON.stringify(backupData, null, 2), {
       headers: {
         'Content-Type': 'application/json',
-        'Content-Disposition': `attachment; filename="finacal_backup_${new Date().toISOString().split('T')[0]}.json"`,
+        'Content-Disposition': `attachment; filename="${filename}"`,
       },
     })
   } catch (error) {

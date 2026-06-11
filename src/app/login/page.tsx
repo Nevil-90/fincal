@@ -4,7 +4,7 @@
 import React, { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Lock, Mail, ShieldAlert, ArrowRight, ArrowLeft, Eye, EyeOff } from 'lucide-react'
+import { Lock, Mail, ShieldAlert, ArrowRight, ArrowLeft, Eye, EyeOff, Loader2 } from 'lucide-react'
 
 function LoginForm() {
   const router = useRouter()
@@ -268,11 +268,16 @@ function LoginForm() {
                 disabled={loading}
                 className="group relative flex w-full justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3.5 text-sm font-bold text-white hover:from-blue-500 hover:to-indigo-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900 disabled:opacity-50 transition-all shadow-lg"
               >
-                {loading ? 'Verifying...' : (
-                  <>
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Verifying...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
                     Continue
-                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                  </>
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </span>
                 )}
               </button>
 
@@ -350,8 +355,9 @@ function LoginForm() {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex w-full justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3.5 text-sm font-bold text-white hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 transition-all shadow-lg"
+                className="flex w-full justify-center items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3.5 text-sm font-bold text-white hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 transition-all shadow-lg"
               >
+                {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                 {loading ? 'Logging in...' : 'Sign In'}
               </button>
             </form>
@@ -395,8 +401,9 @@ function LoginForm() {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex w-full justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3.5 text-sm font-bold text-white hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 transition-all shadow-lg"
+                className="flex w-full justify-center items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3.5 text-sm font-bold text-white hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 transition-all shadow-lg"
               >
+                {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                 {loading ? 'Verifying Code...' : 'Verify Email'}
               </button>
             </form>
@@ -467,8 +474,9 @@ function LoginForm() {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex w-full justify-center rounded-2xl bg-gradient-to-r from-green-600 to-emerald-600 px-4 py-3.5 text-sm font-bold text-white hover:from-green-500 hover:to-emerald-500 disabled:opacity-50 transition-all shadow-lg"
+                className="flex w-full justify-center items-center gap-2 rounded-2xl bg-gradient-to-r from-green-600 to-emerald-600 px-4 py-3.5 text-sm font-bold text-white hover:from-green-500 hover:to-emerald-500 disabled:opacity-50 transition-all shadow-lg"
               >
+                {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                 {loading ? 'Configuring Security...' : 'Complete Account Setup'}
               </button>
             </form>

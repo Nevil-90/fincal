@@ -149,7 +149,14 @@ export function DesktopRightPane({
                     placeholder="Amount"
                     step="0.01"
                     value={quickContribution.amount}
-                    onChange={(e) => setQuickContribution({ ...quickContribution, amount: e.target.value })}
+                    onChange={(e) => {
+                      let val = e.target.value;
+                      const num = parseFloat(val);
+                      if (!isNaN(num) && num > remaining) {
+                        val = remaining.toString();
+                      }
+                      setQuickContribution({ ...quickContribution, amount: val });
+                    }}
                     className="w-full pl-7 pr-3 py-2 bg-slate-50 dark:bg-neutral-800/50 border border-slate-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-purple-500 focus:bg-white dark:bg-neutral-900 transition-all text-slate-900 dark:text-white font-bold outline-none text-xs h-[40px]"
                     required
                   />
@@ -301,7 +308,7 @@ export function DesktopRightPane({
         <div className="p-4 bg-gradient-to-br from-emerald-500 to-indigo-600 text-white flex justify-between items-center relative shrink-0">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-white/10 to-transparent pointer-events-none"></div>
           <div className="relative z-10">
-            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white dark:bg-neutral-900/20 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-wider mb-1">
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white/20 dark:bg-neutral-900/20 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-wider mb-1">
               <Trophy className="h-3 w-3 text-yellow-300" /> Target Reached
             </div>
             <h3 className="text-lg font-extrabold leading-tight truncate max-w-[280px]">{g.name}</h3>
@@ -312,14 +319,14 @@ export function DesktopRightPane({
           <div className="flex items-center gap-1.5 ml-4 relative z-10">
             <button
               onClick={() => handleDeleteGoal(g)}
-              className="p-1.5 bg-white dark:bg-neutral-900/10 hover:bg-rose-500/80 text-white rounded-lg transition-colors cursor-pointer"
+              className="p-1.5 bg-white/20 dark:bg-neutral-900/10 hover:bg-rose-500/80 text-white rounded-lg transition-colors cursor-pointer"
               title="Delete Goal"
             >
               <Trash2 className="h-4 w-4" />
             </button>
             <button
               onClick={() => setSelectedCompletedGoal(null)}
-              className="p-1.5 bg-white dark:bg-neutral-900/10 hover:bg-white dark:bg-neutral-900/20 text-white rounded-lg transition-colors cursor-pointer"
+              className="p-1.5 bg-white/20 dark:bg-neutral-900/10 hover:bg-white/30 dark:hover:bg-neutral-900/20 text-white rounded-lg transition-colors cursor-pointer"
               title="Close panel"
             >
               <X className="h-4 w-4" />

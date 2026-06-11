@@ -150,7 +150,14 @@ export function MobileActiveGoalModal({
                         placeholder="1000"
                         step="0.01"
                         value={quickContribution.amount}
-                        onChange={(e) => setQuickContribution({ ...quickContribution, amount: e.target.value })}
+                        onChange={(e) => {
+                          let val = e.target.value;
+                          const num = parseFloat(val);
+                          if (!isNaN(num) && num > remaining) {
+                            val = remaining.toString();
+                          }
+                          setQuickContribution({ ...quickContribution, amount: val });
+                        }}
                         className="w-full pl-8 pr-3 py-2.5 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-xl focus:ring-2 focus:ring-green-500 focus:bg-white dark:focus:bg-neutral-900 transition-colors text-gray-900 dark:text-white font-medium outline-none text-sm"
                         required
                       />
