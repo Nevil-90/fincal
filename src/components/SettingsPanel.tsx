@@ -839,14 +839,14 @@ export function SettingsPanel({ onDataChange, isAdmin, isOpen, onClose }: Settin
                         <button
                           type="button"
                           onClick={() => setImportMode('preview')}
-                          className={`px-3 py-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-md transition-colors ${importMode === 'preview' ? 'bg-white dark:bg-neutral-800 text-indigo-700 dark:text-indigo-400 shadow-sm' : 'text-slate-500 dark:text-neutral-500 hover:text-slate-700 dark:hover:text-neutral-300'}`}
+                          className="px-3 py-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-md transition-colors bg-white dark:bg-neutral-800 text-indigo-700 dark:text-indigo-400 shadow-sm"
                         >
                           Visual Preview
                         </button>
                         <button
                           type="button"
                           onClick={() => setImportMode('spreadsheet')}
-                          className={`px-3 py-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-md transition-colors ${importMode === 'spreadsheet' ? 'bg-white dark:bg-neutral-800 text-indigo-700 dark:text-indigo-400 shadow-sm' : 'text-slate-500 dark:text-neutral-500 hover:text-slate-700 dark:hover:text-neutral-300'}`}
+                          className="px-3 py-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-md transition-colors text-slate-500 dark:text-neutral-500 hover:text-slate-700 dark:hover:text-neutral-300"
                         >
                           Spreadsheet Editor
                         </button>

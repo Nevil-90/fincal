@@ -38,7 +38,7 @@ interface OverviewTabProps {
   summary: Record<string, any>
   overviewPeriod: OverviewPeriod
   onPeriodChange: (period: OverviewPeriod) => void
-  onTabChange: (tab: 'overview' | 'analytics' | 'transactions' | 'goals' | 'recurring' | 'calendar' | 'traveling' | 'settings') => void
+  onTabChange: (tab: 'overview' | 'analytics' | 'transactions' | 'goals' | 'recurring' | 'calendar' | 'traveling' | 'admin') => void
   onShowAddTransaction: () => void
   onOpenSettings: () => void
 }

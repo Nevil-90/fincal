@@ -313,7 +313,7 @@ export function NavSettingsDnd({ slots, updateSlots, isAdmin }: { slots: string[
           </div>
         </div>
 
-        <DragOverlay dropAnimation={defaultDropAnimationSideEffects({ duration: 250, easing: 'ease' })}>
+        <DragOverlay dropAnimation={{ duration: 250, easing: 'ease' }}>
           {activeItemData ? (
             isDraggingActive ? (
               <div className="shrink-0 flex flex-col items-center justify-center gap-2 w-20 h-20 bg-white border-2 border-indigo-400 rounded-xl shadow-lg cursor-grabbing relative">

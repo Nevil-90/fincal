@@ -10,7 +10,7 @@ import { mutate } from 'swr'
 import { toast } from 'sonner'
 
 interface CommandPaletteProps {
-  onNavigate: (tab: string) => void
+  onNavigate: (tab: 'overview' | 'analytics' | 'transactions' | 'goals' | 'recurring' | 'calendar' | 'traveling' | 'admin') => void
   onAddTransaction: () => void
   onTransactionAdded?: () => void
   isAdmin?: boolean
@@ -282,7 +282,7 @@ export default function CommandPalette({ onNavigate, onAddTransaction, onTransac
                     ].map((item) => (
                       <Command.Item
                         key={item.id}
-                        onSelect={() => runCommand(() => onNavigate(item.id))}
+                        onSelect={() => runCommand(() => onNavigate(item.id as 'overview' | 'analytics' | 'transactions' | 'goals' | 'recurring' | 'calendar' | 'traveling' | 'admin'))}
                         className="flex items-center gap-3 px-3 py-2.5 mt-1 text-sm text-slate-700 dark:text-neutral-200 rounded-lg cursor-pointer aria-selected:bg-slate-100 dark:aria-selected:bg-neutral-800 transition-colors"
                       >
                         <item.icon className="h-4 w-4 text-slate-400" />

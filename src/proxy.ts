@@ -21,7 +21,7 @@ async function verifyJwt(token: string, secret: string): Promise<{ userId: strin
   }
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname
 
   if (
