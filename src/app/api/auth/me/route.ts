@@ -28,7 +28,10 @@ export async function GET(request: NextRequest) {
     })
 
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      const response = NextResponse.json({ error: 'User not found' }, { status: 404 })
+      response.cookies.delete('access_token')
+      response.cookies.delete('refresh_token')
+      return response
     }
 
     return NextResponse.json({ success: true, user })

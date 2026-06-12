@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
           data: {
             type: 'expense',
             amount: parseFloat(amount),
-            category: 'Investment',
+            category: (goal as any).category,
             description: description || `Savings contribution to ${goal.name}`,
             paymentMethod: paymentMethod || null,
             source: 'Savings Goal Contribution',

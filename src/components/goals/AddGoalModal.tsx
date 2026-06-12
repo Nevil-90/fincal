@@ -6,6 +6,7 @@ interface NewGoal {
   name: string
   targetAmount: string
   deadline: string
+  category?: string
 }
 
 interface AddGoalModalProps {
@@ -14,9 +15,10 @@ interface AddGoalModalProps {
   newGoal: NewGoal
   setNewGoal: (goal: NewGoal) => void
   handleAddGoal: (e: React.FormEvent) => void
+  categories?: { id: string, name: string }[]
 }
 
-export function AddGoalModal({ isOpen, onClose, newGoal, setNewGoal, handleAddGoal }: AddGoalModalProps) {
+export function AddGoalModal({ isOpen, onClose, newGoal, setNewGoal, handleAddGoal, categories = [] }: AddGoalModalProps) {
   useEffect(() => {
     if (isOpen && window.innerWidth < 1024) {
       document.body.style.overflow = 'hidden'
@@ -71,6 +73,22 @@ export function AddGoalModal({ isOpen, onClose, newGoal, setNewGoal, handleAddGo
                 />
               </div>
             </div>
+            {categories.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1.5">Category</label>
+                <select
+                  value={newGoal.category || ''}
+                  onChange={(e) => setNewGoal({ ...newGoal, category: e.target.value })}
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-2xl focus:ring-2 focus:ring-purple-500 focus:bg-white dark:focus:bg-neutral-900 transition-colors text-gray-900 dark:text-white outline-none cursor-pointer"
+                  required
+                >
+                  <option value="" disabled>Select a Category</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.name}>{cat.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1.5">Target Date <span className="text-gray-400 dark:text-neutral-500 font-normal">(Optional)</span></label>
               <div className="relative w-full">

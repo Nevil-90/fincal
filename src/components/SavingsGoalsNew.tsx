@@ -85,7 +85,8 @@ export default function SavingsGoalsNew({ goals, availableBalance, onRefresh }: 
   const [newGoal, setNewGoal] = useState({
     name: '',
     targetAmount: '',
-    deadline: ''
+    deadline: '',
+    category: ''
   })
 
   const [quickContribution, setQuickContribution] = useState({
@@ -248,7 +249,7 @@ export default function SavingsGoalsNew({ goals, availableBalance, onRefresh }: 
       })
       if (response.ok) {
         setShowAddForm(false)
-        setNewGoal({ name: '', targetAmount: '', deadline: '' })
+        setNewGoal({ name: '', targetAmount: '', deadline: '', category: '' })
         if (onRefresh) onRefresh()
       }
     } catch (error) {
@@ -318,14 +319,15 @@ export default function SavingsGoalsNew({ goals, availableBalance, onRefresh }: 
   }
 
   const handleDeleteGoal = async (goal: SavingsGoal) => {
+    if (!confirm(`Are you sure you want to delete "${goal.name}"?`)) return
+
+    let deleteTransactions = false
     if (goal.currentAmount > 0) {
-      if (!confirm(`Are you sure you want to delete "${goal.name}"? You have already allocated ${goal.currentAmount} to it.`)) {
-        return
-      }
+      deleteTransactions = confirm('This goal has contributions. Do you also want to delete all related transactions from your expenses?\n\nClick OK to delete the transactions, or Cancel to keep them in your expenses.')
     }
     
     try {
-      const response = await fetch(`/api/goals?id=${goal.id}`, {
+      const response = await fetch(`/api/goals?id=${goal.id}&deleteTransactions=${deleteTransactions}`, {
         method: 'DELETE'
       })
       
@@ -427,6 +429,7 @@ export default function SavingsGoalsNew({ goals, availableBalance, onRefresh }: 
         newGoal={newGoal}
         setNewGoal={setNewGoal}
         handleAddGoal={handleAddGoal}
+        categories={staticData.expenseCategories.filter(c => c.isActive)}
       />
     </>
   )

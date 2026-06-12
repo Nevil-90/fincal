@@ -6,6 +6,11 @@ import useSWR from 'swr'
 export const fetcher = async (url: string) => {
   const res = await fetch(url)
   if (!res.ok) {
+    if (res.status === 401 || res.status === 404) {
+      if (typeof window !== 'undefined' && !window.location.pathname.includes('/login') && url === '/api/auth/me') {
+        window.location.href = '/login'
+      }
+    }
     const error = new Error('An error occurred while fetching the data.')
     error.message = await res.text()
     throw error

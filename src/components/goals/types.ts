@@ -6,6 +6,7 @@ export interface SavingsGoal {
   currentAmount: number
   priority: number
   deadline?: string
+  category?: string
   isCompleted?: boolean
   completedAt?: string
   createdAt?: Date

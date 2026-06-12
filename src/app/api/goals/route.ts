@@ -38,9 +38,9 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, targetAmount, currentAmount, deadline } = body
+    const { name, targetAmount, currentAmount, deadline, category } = body
 
-    if (!name || !targetAmount) {
+    if (!name || !targetAmount || !category) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
@@ -50,8 +50,9 @@ export async function POST(request: NextRequest) {
         targetAmount: parseFloat(targetAmount),
         currentAmount: parseFloat(currentAmount) || 0,
         deadline: deadline ? new Date(deadline) : null,
-        userId: currentUserId
-      }
+        userId: currentUserId,
+        category
+      } as any
     })
 
     return NextResponse.json(goal)
@@ -125,22 +126,38 @@ export async function DELETE(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
+    const deleteTransactions = searchParams.get('deleteTransactions') === 'true'
 
     if (!id) {
       return NextResponse.json({ error: 'Goal ID is required' }, { status: 400 })
     }
 
     const existingGoal = await prisma.savingsGoal.findFirst({
-      where: { id, userId: currentUserId }
+      where: { id, userId: currentUserId },
+      include: { contributions: true }
     })
     
     if (!existingGoal) {
       return NextResponse.json({ error: 'Goal not found or access denied' }, { status: 404 })
     }
 
-    await prisma.savingsGoal.update({
-      where: { id },
-      data: { deletedAt: new Date() }
+    // Wrap the deletion in a transaction to ensure all or nothing
+    await prisma.$transaction(async (tx) => {
+      // 1. Soft delete the goal
+      await tx.savingsGoal.update({
+        where: { id },
+        data: { deletedAt: new Date() }
+      })
+
+      // 2. Soft delete related transactions if requested
+      if (deleteTransactions && existingGoal.contributions.length > 0) {
+        const transactionIds = existingGoal.contributions.map(c => c.transactionId)
+        
+        await tx.transaction.updateMany({
+          where: { id: { in: transactionIds } },
+          data: { deletedAt: new Date() }
+        })
+      }
     })
 
     return NextResponse.json({ success: true })

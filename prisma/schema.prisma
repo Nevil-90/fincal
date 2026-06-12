@@ -44,6 +44,7 @@ model SavingsGoal {
   currentAmount Decimal            @default(0)
   priority      Int                @default(1)
   deadline      DateTime?
+  category      String
   isCompleted   Boolean            @default(false)
   completedAt   DateTime?
   createdAt     DateTime           @default(now())
