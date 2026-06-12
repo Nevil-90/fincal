@@ -37,10 +37,14 @@ import {
   Banknote,
   Clock,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  Plus
 } from 'lucide-react'
 import { formatCurrency } from '@/lib/financial-utils'
 import { useTransactions } from '@/hooks/useApi'
+import AddTransactionForm from './AddTransactionForm'
+import RecurringForm from './recurring/RecurringForm'
+import type { RecurringFormData } from './recurring/types'
 
 interface Transaction {
   id: string
@@ -110,7 +114,24 @@ function CalendarTab({}: CalendarTabProps) {
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
   const [showFilters, setShowFilters] = useState(false)
 
-  useScrollLock(!!selectedDay || !!selectedTransaction)
+  // Modals for adding from calendar
+  const [addTxnDate, setAddTxnDate] = useState<string | null>(null)
+  const [addRecDate, setAddRecDate] = useState<string | null>(null)
+  
+  const [recFormData, setRecFormData] = useState<RecurringFormData>({
+    type: 'expense',
+    amount: '',
+    category: '',
+    description: '',
+    paymentMethod: '',
+    source: '',
+    frequency: 'monthly',
+    startDate: new Date().toISOString().split('T')[0],
+    splitType: 'personal',
+  })
+  const [recFormLoading, setRecFormLoading] = useState(false)
+
+  useScrollLock(!!selectedDay || !!selectedTransaction || !!addTxnDate || !!addRecDate)
 
   // ─── Calendar Grid ───
   const monthStart = startOfMonth(currentDate)
@@ -118,10 +139,29 @@ function CalendarTab({}: CalendarTabProps) {
   const gridStart = startOfWeek(monthStart)
   const gridEnd = endOfWeek(monthEnd)
 
-  const { transactions: fetchedTransactions, isLoading: fetchLoading } = useTransactions(1, 1000, {
+  const { transactions: fetchedTransactions, isLoading: fetchLoading, mutate: mutateTransactions } = useTransactions(1, 1000, {
     startDate: format(gridStart, 'yyyy-MM-dd'),
     endDate: format(gridEnd, 'yyyy-MM-dd')
   })
+  
+  const handleAddRecurringSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!recFormData.amount || !recFormData.category) return
+    setRecFormLoading(true)
+    try {
+      const response = await fetch('/api/recurring', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...recFormData, startDate: addRecDate || recFormData.startDate }),
+      })
+      if (response.ok) {
+        setAddRecDate(null)
+        mutateTransactions()
+      }
+    } finally {
+      setRecFormLoading(false)
+    }
+  }
   
   const transactions = fetchedTransactions || []
 
@@ -707,8 +747,25 @@ function CalendarTab({}: CalendarTabProps) {
             <div className="overflow-y-auto max-h-[60vh] p-4 space-y-2">
               {(txByDate.get(format(selectedDay, 'yyyy-MM-dd')) || []).length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-slate-400 dark:text-neutral-500">
-                  <CalendarIcon className="h-8 w-8 mb-2 opacity-30" />
-                  <p className="text-sm font-semibold">No transactions on this day</p>
+                  <CalendarIcon className="h-8 w-8 mb-3 opacity-30" />
+                  <p className="text-sm font-semibold mb-5">No transactions on this day</p>
+                  <div className="flex items-center justify-center gap-3 w-full max-w-xs mx-auto">
+                    <button
+                      onClick={() => setAddTxnDate(format(selectedDay, 'yyyy-MM-dd'))}
+                      className="flex-1 py-2 px-3 bg-blue-600 text-white rounded-xl text-xs font-bold shadow-sm hover:bg-blue-700 transition-colors flex justify-center items-center gap-1.5"
+                    >
+                      <Plus className="h-3.5 w-3.5" /> Normal
+                    </button>
+                    <button
+                      onClick={() => {
+                        setRecFormData(prev => ({ ...prev, startDate: format(selectedDay, 'yyyy-MM-dd') }))
+                        setAddRecDate(format(selectedDay, 'yyyy-MM-dd'))
+                      }}
+                      className="flex-1 py-2 px-3 bg-indigo-600 text-white rounded-xl text-xs font-bold shadow-sm hover:bg-indigo-700 transition-colors flex justify-center items-center gap-1.5"
+                    >
+                      <Repeat className="h-3.5 w-3.5" /> Recurring
+                    </button>
+                  </div>
                 </div>
               ) : (
                 (txByDate.get(format(selectedDay, 'yyyy-MM-dd')) || []).map(t => renderFullRow(t))
@@ -780,6 +837,34 @@ function CalendarTab({}: CalendarTabProps) {
               )
             })()}
           </div>
+        </div>
+      )}
+
+      {/* Add Transaction Modals */}
+      {addTxnDate && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center bg-slate-950/45 dark:bg-neutral-950/80 p-3 sm:p-4 backdrop-blur-sm overflow-hidden">
+          <div className="w-full max-w-md rounded-3xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-2xl flex flex-col max-h-[90vh] sm:max-h-[85vh] overflow-hidden" onClick={e => e.stopPropagation()}>
+            <AddTransactionForm
+              initialData={{ date: addTxnDate } as any}
+              onTransactionAdded={() => {
+                setAddTxnDate(null)
+                mutateTransactions()
+              }}
+              onClose={() => setAddTxnDate(null)}
+            />
+          </div>
+        </div>
+      )}
+      
+      {addRecDate && (
+        <div className="fixed inset-0 z-[300]">
+          <RecurringForm
+            formData={recFormData}
+            setFormData={setRecFormData}
+            onSubmit={handleAddRecurringSubmit}
+            onCancel={() => setAddRecDate(null)}
+            formLoading={recFormLoading}
+          />
         </div>
       )}
     </div>

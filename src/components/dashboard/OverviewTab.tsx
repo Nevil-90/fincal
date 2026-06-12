@@ -3,7 +3,8 @@
 'use client'
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react'
-import { Plus, BarChart2, BarChart3, Calendar, Target, AlertCircle, TrendingUp, TrendingDown, DollarSign, Wallet, CreditCard, ArrowRight, ArrowUpRight, ArrowDownRight, ArrowDownLeft, Activity, PieChart, ShieldAlert, Zap, AlertTriangle, CheckCircle, ClipboardList, Banknote, Clock, Sparkles } from 'lucide-react'
+import { createPortal } from 'react-dom'
+import { Plus, BarChart2, BarChart3, Calendar, Target, AlertCircle, TrendingUp, TrendingDown, DollarSign, Wallet, CreditCard, ArrowRight, ArrowUpRight, ArrowDownRight, ArrowDownLeft, Activity, PieChart, ShieldAlert, Zap, AlertTriangle, CheckCircle, ClipboardList, Banknote, Clock, Sparkles, X } from 'lucide-react'
 import { formatCurrency, formatCompactCurrency, formatCompactNumber } from '@/lib/financial-utils'
 import { useEnhancedStaticData } from '@/lib/enhanced-static-data-manager'
 import { useUser } from '@/hooks/useApi'
@@ -80,6 +81,8 @@ export default React.memo(function OverviewTab({
 }: OverviewTabProps) {
   const { data: staticData } = useEnhancedStaticData()
   const now = new Date()
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
 
   const activeYear = overviewPeriod.year
   const activeMonth = overviewPeriod.month ?? (now.getMonth() + 1)
@@ -268,7 +271,7 @@ export default React.memo(function OverviewTab({
 
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-4 sm:gap-5">
 
-        <div className="space-y-4 sm:space-y-5">
+        <div className="space-y-4 sm:space-y-5 min-w-0">
 
           <div className="rounded-2xl border border-slate-200 dark:border-neutral-700/80  bg-white dark:bg-neutral-800 p-4 sm:p-5 shadow-sm">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
@@ -449,7 +452,7 @@ export default React.memo(function OverviewTab({
           )}
         </div>
 
-        <div className="space-y-4 sm:space-y-5">
+        <div className="space-y-4 sm:space-y-5 min-w-0">
 
           <div className="rounded-2xl border border-slate-200 dark:border-neutral-700/80  bg-white dark:bg-neutral-800 p-4 sm:p-5 shadow-sm space-y-4">
             <div>
@@ -556,31 +559,59 @@ export default React.memo(function OverviewTab({
 
           <div className="bg-white dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700/70  rounded-3xl shadow-sm overflow-hidden">
             <button
-              onClick={() => setShowInsights(v => !v)}
-              className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50 dark:bg-neutral-800/50 dark:hover:bg-neutral-700/50 transition-colors"
+              onClick={() => setShowInsights(true)}
+              className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50 dark:bg-neutral-800/50 dark:hover:bg-neutral-700/50 transition-colors text-left"
             >
-              <div className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-blue-500 dark:text-blue-400 " />
-                <span className="text-sm font-bold text-slate-800 dark:text-neutral-200 ">Monthly Insights Report</span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 text-blue-500 dark:text-blue-400 shrink-0" />
+                  <span className="text-sm font-bold text-slate-800 dark:text-neutral-200 truncate">{MONTH_NAMES[activeMonth - 1]} {activeYear} Insights Report</span>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-neutral-400 mt-1 pl-7 pr-2 line-clamp-2">Deep dive into your financial health, savings rate, and spending patterns.</p>
               </div>
-              <span className="text-xs font-bold text-blue-600 dark:text-blue-400   bg-blue-50 dark:bg-blue-900/20  dark:bg-blue-900/30 px-3 py-1 rounded-xl">
-                {showInsights ? 'Hide ↑' : 'View →'}
+              <span className="text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 dark:bg-blue-900/30 px-3 py-1 rounded-xl shrink-0 ml-3">
+                View →
               </span>
             </button>
-            {showInsights && (
-              <div className="border-t border-slate-100 dark:border-neutral-800 dark:border-neutral-700 p-5">
-                <MonthlyInsights
-                  periodTxns={periodTxns}
-                  categorySpend={categorySpend}
-                  prevExpense={summary?.period?.prevExpense || 0}
-                  month={activeMonth}
-                  year={activeYear}
-                />
-              </div>
-            )}
           </div>
         </div>
       </div>
+
+      {mounted && showInsights && createPortal(
+        <div className="fixed inset-0 z-[500] flex justify-end">
+          <div 
+            className="absolute inset-0 bg-slate-950/45 dark:bg-neutral-950/80 backdrop-blur-sm transition-opacity animate-fade-in" 
+            onClick={() => setShowInsights(false)} 
+          />
+          <div 
+            className="relative w-full max-w-md bg-slate-50 dark:bg-neutral-900 shadow-2xl h-full flex flex-col animate-slide-left sm:rounded-l-2xl overflow-hidden"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center px-5 py-4 border-b border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shrink-0">
+              <div className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-blue-500 dark:text-blue-400" />
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">{MONTH_NAMES[activeMonth - 1]} {activeYear} Insights</h2>
+              </div>
+              <button 
+                onClick={() => setShowInsights(false)}
+                className="rounded-lg p-1.5 text-slate-400 dark:text-neutral-500 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="p-5 overflow-y-auto flex-1">
+              <MonthlyInsights
+                periodTxns={periodTxns}
+                categorySpend={categorySpend}
+                prevExpense={summary?.period?.prevExpense || 0}
+                month={activeMonth}
+                year={activeYear}
+              />
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   )
 })
