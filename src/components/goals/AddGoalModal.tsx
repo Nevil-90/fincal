@@ -6,7 +6,7 @@ interface NewGoal {
   name: string
   targetAmount: string
   deadline: string
-  category?: string
+  category: string
 }
 
 interface AddGoalModalProps {
@@ -32,73 +32,121 @@ export function AddGoalModal({ isOpen, onClose, newGoal, setNewGoal, handleAddGo
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-      <div className="fixed inset-0 bg-slate-950/45 dark:bg-neutral-950/80 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
-      <div className="bg-white dark:bg-neutral-900 rounded-3xl w-full max-w-md relative z-10 animate-slide-up shadow-2xl overflow-hidden max-h-[90vh] flex flex-col overscroll-contain">
-        <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-neutral-800 shrink-0">
-          <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <div className="p-1.5 bg-purple-100 dark:bg-purple-900/20 rounded-lg text-purple-600 dark:text-purple-400">
-              <Target className="h-4 w-4" />
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-slate-950/50 dark:bg-neutral-950/85 backdrop-blur-sm transition-opacity"
+        onClick={onClose}
+      />
+
+      {/* Modal */}
+      <div className="bg-white dark:bg-neutral-900 rounded-2xl w-full max-w-md relative z-10 animate-slide-up shadow-2xl overflow-hidden max-h-[90vh] flex flex-col border border-slate-200/50 dark:border-neutral-800">
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-neutral-800 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-violet-100 dark:bg-violet-900/25 rounded-xl">
+              <Target className="h-4 w-4 text-violet-600 dark:text-violet-400" />
             </div>
-            New Savings Goal
-          </h3>
-          <button onClick={onClose} className="rounded-lg p-1.5 text-slate-400 dark:text-neutral-500 transition-all duration-200 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-500 dark:hover:text-rose-400 hover:shadow-[0_0_12px_rgba(244,63,94,0.4)]">
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">New Savings Goal</h3>
+              <p className="text-[10px] text-slate-400 dark:text-neutral-500 mt-0.5">Define your next financial milestone</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 text-slate-400 dark:text-neutral-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 hover:text-rose-500 dark:hover:text-rose-400 rounded-lg transition-all cursor-pointer"
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="p-6 overflow-y-auto">
+
+        {/* Form Body */}
+        <div className="p-5 overflow-y-auto flex-1 custom-scrollbar">
           <form onSubmit={handleAddGoal} className="space-y-5">
+
+            {/* Goal Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1.5">What are you saving for?</label>
+              <label className="block text-xs font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-widest mb-2">
+                What are you saving for?
+              </label>
               <input
                 type="text"
-                placeholder="e.g., Dream Vacation, New Car..."
+                placeholder="e.g. Dream Vacation, New Car, Emergency Fund…"
                 value={newGoal.name}
                 onChange={(e) => setNewGoal({ ...newGoal, name: e.target.value })}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-2xl focus:ring-2 focus:ring-purple-500 focus:bg-white dark:focus:bg-neutral-900 transition-colors text-gray-900 dark:text-white outline-none"
+                className="w-full px-4 py-3 bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 rounded-xl focus:ring-2 focus:ring-violet-500 focus:bg-white dark:focus:bg-neutral-900 transition-colors text-slate-900 dark:text-white outline-none text-sm placeholder:text-slate-400 dark:placeholder:text-neutral-600"
                 required
               />
             </div>
+
+            {/* Target Amount */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1.5">Target Amount</label>
+              <label className="block text-xs font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-widest mb-2">
+                Target Amount
+              </label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-neutral-500 font-medium">₹</span>
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-neutral-500 font-bold text-sm">₹</span>
                 <input
                   type="number"
                   placeholder="100000"
                   value={newGoal.targetAmount}
                   onChange={(e) => setNewGoal({ ...newGoal, targetAmount: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-2xl focus:ring-2 focus:ring-purple-500 focus:bg-white dark:focus:bg-neutral-900 transition-colors text-gray-900 dark:text-white outline-none"
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 rounded-xl focus:ring-2 focus:ring-violet-500 focus:bg-white dark:focus:bg-neutral-900 transition-colors text-slate-900 dark:text-white outline-none text-sm"
                   step="0.01"
                   required
                 />
               </div>
+
+              {/* Quick amount presets */}
+              <div className="flex flex-wrap gap-2 mt-2">
+                {[10000, 50000, 100000, 500000].map((amt) => (
+                  <button
+                    key={amt}
+                    type="button"
+                    onClick={() => setNewGoal({ ...newGoal, targetAmount: amt.toString() })}
+                    className={`px-3 py-1 text-xs font-semibold border rounded-lg transition-all cursor-pointer ${
+                      newGoal.targetAmount === amt.toString()
+                        ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/25 text-violet-700 dark:text-violet-400'
+                        : 'border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-slate-500 dark:text-neutral-400 hover:border-violet-300'
+                    }`}
+                  >
+                    ₹{amt >= 100000 ? `${amt / 100000}L` : `${amt / 1000}k`}
+                  </button>
+                ))}
+              </div>
             </div>
+
+            {/* Category (if available) */}
             {categories.length > 0 && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1.5">Category</label>
+                <label className="block text-xs font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-widest mb-2">Category</label>
                 <select
-                  value={newGoal.category || ''}
+                  value={newGoal.category}
                   onChange={(e) => setNewGoal({ ...newGoal, category: e.target.value })}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-2xl focus:ring-2 focus:ring-purple-500 focus:bg-white dark:focus:bg-neutral-900 transition-colors text-gray-900 dark:text-white outline-none cursor-pointer"
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 rounded-xl focus:ring-2 focus:ring-violet-500 focus:bg-white dark:focus:bg-neutral-900 transition-colors text-slate-900 dark:text-white outline-none text-sm cursor-pointer"
                   required
                 >
-                  <option value="" disabled>Select a Category</option>
+                  <option value="" disabled>Select a category</option>
                   {categories.map((cat) => (
                     <option key={cat.id} value={cat.name}>{cat.name}</option>
                   ))}
                 </select>
               </div>
             )}
+
+            {/* Target Date */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1.5">Target Date <span className="text-gray-400 dark:text-neutral-500 font-normal">(Optional)</span></label>
-              <div className="relative w-full">
-                <div className="w-full px-4 py-3 bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-2xl text-gray-900 dark:text-white flex items-center justify-between pointer-events-none transition-colors">
-                  <span className={newGoal.deadline ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-neutral-500'}>
+              <label className="block text-xs font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-widest mb-2">
+                Target Date <span className="text-slate-300 dark:text-neutral-600 font-normal normal-case tracking-normal">(Optional)</span>
+              </label>
+              <div className="relative">
+                <div className="w-full px-4 py-3 bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 rounded-xl text-slate-900 dark:text-white flex items-center justify-between pointer-events-none transition-colors text-sm">
+                  <span className={newGoal.deadline ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-neutral-600'}>
                     {newGoal.deadline
                       ? new Date(newGoal.deadline).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-                      : 'yyyy-mm-dd'}
+                      : 'Select target date'}
                   </span>
-                  <Calendar className="h-5 w-5 text-gray-400 dark:text-neutral-500" />
+                  <Calendar className="h-4 w-4 text-slate-400 dark:text-neutral-500" />
                 </div>
                 <input
                   type="date"
@@ -106,19 +154,19 @@ export function AddGoalModal({ isOpen, onClose, newGoal, setNewGoal, handleAddGo
                   onChange={(e) => setNewGoal({ ...newGoal, deadline: e.target.value })}
                   onClick={(e) => {
                     try {
-                      if ('showPicker' in HTMLInputElement.prototype) {
-                        (e.target as HTMLInputElement).showPicker();
-                      }
-                    } catch (err) {}
+                      if ('showPicker' in HTMLInputElement.prototype) (e.target as HTMLInputElement).showPicker()
+                    } catch {}
                   }}
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 />
               </div>
             </div>
-            <div className="pt-2">
+
+            {/* Submit */}
+            <div className="pt-1">
               <button
                 type="submit"
-                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3.5 px-4 rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all font-semibold shadow-lg shadow-purple-500/25 flex justify-center items-center gap-2"
+                className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white py-3.5 px-4 rounded-xl transition-all font-bold shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 flex justify-center items-center gap-2 cursor-pointer active:scale-[0.97]"
               >
                 <Plus className="h-5 w-5" /> Create Goal
               </button>

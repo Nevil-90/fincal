@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     const recurringId = searchParams.get('recurringId')
     
     const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10))
-    const limit = Math.max(1, Math.min(parseInt(searchParams.get('limit') || '50', 10), 200))
+    const limit = Math.max(1, Math.min(parseInt(searchParams.get('limit') || '50', 10), 10000))
     const offset = (page - 1) * limit
     
     const category = searchParams.get('category')

@@ -64,7 +64,7 @@ export default function MonthlyInsights({ periodTxns, categorySpend, prevExpense
   const bestDay = Object.entries(dayMap).sort((a, b) => a[1] - b[1])[0]
 
   const healthColor = healthScore >= 70 ? 'text-emerald-600 dark:text-emerald-400' : healthScore >= 40 ? 'text-amber-600 dark:text-amber-400' : 'text-rose-600 dark:text-rose-400'
-  const healthBg = healthScore >= 70 ? 'from-emerald-50 to-green-50 border-emerald-200' : healthScore >= 40 ? 'from-amber-50 to-yellow-50 border-amber-200' : 'from-rose-50 to-red-50 border-rose-200'
+  const healthBg = healthScore >= 70 ? 'from-emerald-50 to-green-50 border-emerald-200 dark:from-emerald-900/20 dark:to-green-900/20 dark:border-emerald-900/50' : healthScore >= 40 ? 'from-amber-50 to-yellow-50 border-amber-200 dark:from-amber-900/20 dark:to-yellow-900/20 dark:border-amber-900/50' : 'from-rose-50 to-red-50 border-rose-200 dark:from-rose-900/20 dark:to-red-900/20 dark:border-rose-900/50'
 
   if (periodTxns.length === 0) {
     return (
@@ -82,7 +82,7 @@ export default function MonthlyInsights({ periodTxns, categorySpend, prevExpense
       <div className={`bg-gradient-to-r ${healthBg} border rounded-2xl p-4 flex items-center gap-4`}>
         <div className="relative w-16 h-16 shrink-0">
           <svg viewBox="0 0 64 64" className="w-full h-full -rotate-90">
-            <circle cx="32" cy="32" r="26" fill="none" stroke="#e2e8f0" strokeWidth="6" />
+            <circle cx="32" cy="32" r="26" fill="none" stroke="currentColor" className="text-slate-200 dark:text-neutral-800" strokeWidth="6" />
             <circle
               cx="32" cy="32" r="26" fill="none"
               stroke={healthScore >= 70 ? '#22c55e' : healthScore >= 40 ? '#f59e0b' : '#ef4444'}
@@ -125,7 +125,7 @@ export default function MonthlyInsights({ periodTxns, categorySpend, prevExpense
       {/* vs Last Month */}
       {prevExpense > 0 && (
         <div className={`flex items-center gap-3 rounded-2xl p-3.5 border ${
-          expenseChange < 0 ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200' : 'bg-rose-50 dark:bg-rose-900/20 border-rose-200'
+          expenseChange < 0 ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-900/50' : 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-900/50'
         }`}>
           {expenseChange < 0 ? (
             <TrendingDown className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
@@ -189,13 +189,13 @@ export default function MonthlyInsights({ periodTxns, categorySpend, prevExpense
       {/* Best/Worst Day */}
       {worstDay && (
         <div className="grid grid-cols-2 gap-3 [&>*:last-child:nth-child(odd)]:col-span-2">
-          <div className="bg-rose-50 dark:bg-rose-900/20 border border-rose-200 rounded-2xl p-3.5 min-w-0">
+          <div className="bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-900/50 rounded-2xl p-3.5 min-w-0">
             <p className="text-[10px] font-bold uppercase tracking-wider text-rose-500 dark:text-rose-400">Highest Spend Day</p>
             <p className="text-base font-black text-rose-700 dark:text-rose-400 mt-1 truncate" title={worstDay[0]}>{worstDay[0]}</p>
             <p className="text-xs text-rose-500 dark:text-rose-400 truncate" title={`${formatCurrency(worstDay[1])} avg`}>{formatCompactCurrency(worstDay[1])} avg</p>
           </div>
           {bestDay && bestDay[0] !== worstDay[0] && (
-            <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 rounded-2xl p-3.5 min-w-0">
+            <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-900/50 rounded-2xl p-3.5 min-w-0">
               <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-500 dark:text-emerald-400">Lowest Spend Day</p>
               <p className="text-base font-black text-emerald-700 dark:text-emerald-400 mt-1 truncate" title={bestDay[0]}>{bestDay[0]}</p>
               <p className="text-xs text-emerald-500 dark:text-emerald-400 truncate" title={`${formatCurrency(bestDay[1])} avg`}>{formatCompactCurrency(bestDay[1])} avg</p>

@@ -194,8 +194,8 @@ function ModernDashboardContent() {
 
   const getFilteredTourSteps = useCallback(() => {
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-    
-      const baseSteps = [
+
+    const baseSteps = [
       {
         title: "Welcome to FinTracker! 🎉",
         content: "Let's take a quick tour to understand how everything works.",
@@ -282,7 +282,7 @@ function ModernDashboardContent() {
 
     return baseSteps.filter(step => {
       if (!isMobile) return true;
-      
+
       const titleToSlot: Record<string, string> = {
         "Transactions": 'transactions',
         "Savings Goals": 'goals',
@@ -453,7 +453,7 @@ function ModernDashboardContent() {
         <main className="flex-1 bg-transparent px-4 py-6 sm:px-6 lg:px-8 pb-24 md:pb-6 relative overflow-hidden">
           <AnimatePresence mode="wait">
             {activeTab === 'overview' && (
-              <motion.div 
+              <motion.div
                 key="overview"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -474,7 +474,7 @@ function ModernDashboardContent() {
             )}
 
             {activeTab === 'analytics' && (
-              <motion.div 
+              <motion.div
                 key="analytics"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -487,7 +487,7 @@ function ModernDashboardContent() {
             )}
 
             {activeTab === 'goals' && (
-              <motion.div 
+              <motion.div
                 key="goals"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -504,21 +504,23 @@ function ModernDashboardContent() {
             )}
 
             {activeTab === 'transactions' && (
-              <motion.div 
+              <motion.div
                 key="transactions"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
-                className="space-y-6"
+                className="space-y-0 sm:space-y-6"
               >
-                <div className="rounded-2xl md:rounded-[28px] border border-slate-200/70 dark:border-neutral-800/70 bg-white/90 dark:bg-neutral-900/90 p-4 sm:p-6 shadow-[0_20px_50px_-35px_rgba(15,23,42,0.5)] dark:shadow-none">
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                    <div>
+                <div className="rounded-2xl md:rounded-[28px] border border-slate-200/70 dark:border-neutral-800/70 bg-white/90 dark:bg-neutral-900/90 p-3 sm:p-6 shadow-[0_20px_50px_-35px_rgba(15,23,42,0.5)] dark:shadow-none sm:mb-0">
+                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4">
+                    {/* Desktop Headers (Hidden on Mobile) */}
+                    <div className="hidden sm:block">
                       <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-blue-600 dark:text-blue-500">Transactions</p>
                       <h3 className="mt-2 text-2xl sm:text-3xl font-semibold tracking-tight text-slate-950 dark:text-white">Dashboard</h3>
                       <p className="mt-1 text-sm text-slate-500 dark:text-neutral-400">Filter, inspect, and audit income and expense flows.</p>
 
+                      {/* Desktop Summary Badges */}
                       <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-neutral-400">
                         <div className="rounded-xl bg-slate-100 dark:bg-neutral-800 px-2.5 py-1.5 font-medium text-slate-700 dark:text-neutral-300">
                           {filteredSummary.count} Transactions
@@ -538,70 +540,124 @@ function ModernDashboardContent() {
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-2 mt-3 lg:mt-0 w-full lg:w-auto">
-                      <select
-                        value={advancedFilters.year || 'all'}
-                        onChange={(e) => {
-                          const year = e.target.value === 'all' ? undefined : parseInt(e.target.value)
-                          setAdvancedFilters(prev => ({ ...prev, year, month: undefined }))
-                        }}
-                        className="flex-1 lg:flex-initial min-w-[110px] rounded-xl border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 px-3 py-2 text-xs font-semibold text-slate-800 dark:text-neutral-200 shadow-sm transition-all focus:border-slate-300 dark:focus:border-neutral-500 focus:bg-white dark:focus:bg-neutral-900 focus:outline-none"
-                      >
-                        <option value="all">All Years</option>
-                        {availableYears.map(year => (
-                          <option key={year} value={year}>
-                            {year}
-                          </option>
-                        ))}
-                      </select>
-
-                      {advancedFilters.year && (
+                    {/* Mobile Compact Controls (Txn count + Selects) */}
+                    <div className="flex items-center justify-between gap-2 w-full lg:w-auto">
+                      {/* Mobile Active Date Range Label */}
+                      <div className="sm:hidden flex items-center font-bold text-slate-800 dark:text-neutral-200 text-sm">
+                        {!advancedFilters.year ? 'All Years' : 
+                         (advancedFilters.month !== undefined 
+                            ? `${new Date(2024, advancedFilters.month, 1).toLocaleDateString('en-US', { month: 'short' })} ${advancedFilters.year}` 
+                            : `Year: ${advancedFilters.year}`)}
+                      </div>
+                      
+                      <div className="hidden sm:flex items-center gap-1.5 sm:gap-2 flex-1 justify-end">
                         <select
-                          value={advancedFilters.month !== undefined ? advancedFilters.month : 'all'}
+                          value={advancedFilters.year || 'all'}
                           onChange={(e) => {
-                            const month = e.target.value === 'all' ? undefined : parseInt(e.target.value)
-                            setAdvancedFilters(prev => ({ ...prev, month }))
+                            const year = e.target.value === 'all' ? undefined : parseInt(e.target.value)
+                            setAdvancedFilters(prev => ({ ...prev, year, month: undefined }))
                           }}
-                          className="flex-1 lg:flex-initial min-w-[110px] rounded-xl border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 px-3 py-2 text-xs font-semibold text-slate-800 dark:text-neutral-200 shadow-sm transition-all focus:border-slate-300 dark:focus:border-neutral-500 focus:bg-white dark:focus:bg-neutral-900 focus:outline-none"
+                          className="w-full sm:w-auto min-w-[90px] rounded-xl border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 px-2 sm:px-3 py-1.5 sm:py-2 text-xs font-semibold text-slate-800 dark:text-neutral-200 shadow-sm transition-all focus:border-slate-300 dark:focus:border-neutral-500 focus:bg-white dark:focus:bg-neutral-900 focus:outline-none appearance-none"
                         >
-                          <option value="all">All Months</option>
-                          {Array.from({ length: 12 }, (_, i) => (
-                            <option key={i} value={i}>
-                              {new Date(2024, i, 1).toLocaleDateString('en-US', { month: 'long' })}
+                          <option value="all">All Years</option>
+                          {availableYears.map(year => (
+                            <option key={year} value={year}>
+                              {year}
                             </option>
                           ))}
                         </select>
-                      )}
 
-                      {(advancedFilters.year || advancedFilters.month !== undefined) && (
-                        <button
-                          onClick={() => setAdvancedFilters({})}
-                          className="rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-neutral-300 shadow-sm transition-all hover:bg-slate-50 dark:hover:bg-neutral-700"
-                        >
-                          Clear
-                        </button>
-                      )}
+                        {advancedFilters.year && (
+                          <select
+                            value={advancedFilters.month !== undefined ? advancedFilters.month : 'all'}
+                            onChange={(e) => {
+                              const month = e.target.value === 'all' ? undefined : parseInt(e.target.value)
+                              setAdvancedFilters(prev => ({ ...prev, month }))
+                            }}
+                            className="w-full sm:w-auto min-w-[90px] rounded-xl border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 px-2 sm:px-3 py-1.5 sm:py-2 text-xs font-semibold text-slate-800 dark:text-neutral-200 shadow-sm transition-all focus:border-slate-300 dark:focus:border-neutral-500 focus:bg-white dark:focus:bg-neutral-900 focus:outline-none appearance-none"
+                          >
+                            <option value="all">All Months</option>
+                            {Array.from({ length: 12 }, (_, i) => (
+                              <option key={i} value={i}>
+                                {new Date(2024, i, 1).toLocaleDateString('en-US', { month: 'short' })}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+
+                        {(advancedFilters.year || advancedFilters.month !== undefined) && (
+                          <button
+                            onClick={() => setAdvancedFilters({})}
+                            className="rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs font-semibold text-slate-700 dark:text-neutral-300 shadow-sm transition-all hover:bg-slate-50 dark:hover:bg-neutral-700 shrink-0"
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4 [&>*:last-child:nth-child(odd)]:col-span-2 lg:[&>*:last-child:nth-child(odd)]:col-span-1">
+                  {/* Desktop: Full Card Grid */}
+                  <div className="hidden sm:grid mt-5 grid-cols-4 gap-3">
                     <div className="rounded-xl border border-slate-200 dark:border-neutral-700/50 bg-white dark:bg-neutral-800/50 p-3 shadow-sm">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Income</p>
-                      <p className="mt-0.5 text-base font-black text-emerald-600 dark:text-emerald-500">{formatCurrency(filteredSummary.income)}</p>
+                      <p className="mt-0.5 text-base font-black text-emerald-600 dark:text-emerald-500 truncate">{formatCurrency(filteredSummary.income)}</p>
                     </div>
                     <div className="rounded-xl border border-slate-200 dark:border-neutral-700/50 bg-white dark:bg-neutral-800/50 p-3 shadow-sm">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Expense</p>
-                      <p className="mt-0.5 text-base font-black text-rose-600 dark:text-rose-500">{formatCurrency(filteredSummary.expense)}</p>
+                      <p className="mt-0.5 text-base font-black text-rose-600 dark:text-rose-500 truncate">{formatCurrency(filteredSummary.expense)}</p>
                     </div>
                     <div className="rounded-xl border border-slate-200 dark:border-neutral-700/50 bg-white dark:bg-neutral-800/50 p-3 shadow-sm">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Net</p>
-                      <p className="mt-0.5 text-base font-black text-slate-900 dark:text-white">{formatCurrency(filteredSummary.net)}</p>
+                      <p className="mt-0.5 text-base font-black text-slate-900 dark:text-white truncate">{formatCurrency(filteredSummary.net)}</p>
                     </div>
                     <div className="rounded-xl border border-slate-200 dark:border-neutral-700/50 bg-white dark:bg-neutral-800/50 p-3 shadow-sm">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Latest Entry</p>
                       <p className="mt-0.5 text-base font-black text-slate-900 dark:text-white truncate">{filteredSummary.latestDate}</p>
                     </div>
                   </div>
+
+                  {/* Mobile: Modern segmented summary */}
+                  <div className="mt-3 sm:hidden space-y-2.5">
+                    {/* Income vs Expense bar */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex items-center gap-1.5">
+                          <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                          <span className="text-[10px] font-semibold text-slate-500 dark:text-neutral-400">Income</span>
+                          <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">{formatCurrency(filteredSummary.income)}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-black text-rose-600 dark:text-rose-400">{formatCurrency(filteredSummary.expense)}</span>
+                          <span className="text-[10px] font-semibold text-slate-500 dark:text-neutral-400">Expense</span>
+                          <div className="h-2 w-2 rounded-full bg-rose-500" />
+                        </div>
+                      </div>
+                      {/* Segmented bar */}
+                      <div className="h-2 w-full rounded-full bg-slate-100 dark:bg-neutral-800 overflow-hidden flex">
+                        <div
+                          className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-l-full transition-all duration-400"
+                          style={{ width: `${filteredSummary.income + filteredSummary.expense > 0 ? (filteredSummary.income / (filteredSummary.income + filteredSummary.expense)) * 100 : 50}%` }}
+                        />
+                        <div
+                          className="h-full bg-gradient-to-r from-rose-400 to-rose-500 rounded-r-full transition-all duration-400"
+                          style={{ width: `${filteredSummary.income + filteredSummary.expense > 0 ? (filteredSummary.expense / (filteredSummary.income + filteredSummary.expense)) * 100 : 50}%` }}
+                        />
+                      </div>
+                    </div>
+                    {/* Net + Count */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-semibold text-slate-400 dark:text-neutral-500 uppercase tracking-wider">Net</span>
+                        <span className={`text-sm font-black ${filteredSummary.net >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                          {filteredSummary.net >= 0 ? '+' : ''}{formatCurrency(filteredSummary.net)}
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-medium text-slate-400 dark:text-neutral-500">{filteredSummary.count} transactions</span>
+                    </div>
+                  </div>
+
+
                 </div>
 
                 <RegularTransactionList
@@ -609,12 +665,15 @@ function ModernDashboardContent() {
                   selectedYear={advancedFilters.year}
                   viewMode={advancedFilters.month !== undefined ? 'month' : (advancedFilters.year ? 'year' : 'all')}
                   onTransactionDeleted={onTransactionDeleted}
+                  onYearChange={(year) => setAdvancedFilters(prev => ({ ...prev, year, month: undefined }))}
+                  onMonthChange={(month) => setAdvancedFilters(prev => ({ ...prev, month }))}
+                  availableYears={availableYears}
                 />
               </motion.div>
             )}
 
             {activeTab === 'recurring' && (
-              <motion.div 
+              <motion.div
                 key="recurring"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -629,7 +688,7 @@ function ModernDashboardContent() {
             )}
 
             {activeTab === 'calendar' && (
-              <motion.div 
+              <motion.div
                 key="calendar"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -642,7 +701,7 @@ function ModernDashboardContent() {
             )}
 
             {activeTab === 'traveling' && (
-              <motion.div 
+              <motion.div
                 key="traveling"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -655,7 +714,7 @@ function ModernDashboardContent() {
             )}
 
             {activeTab === 'admin' && user?.role === 'ADMIN' && (
-              <motion.div 
+              <motion.div
                 key="admin"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -670,11 +729,11 @@ function ModernDashboardContent() {
         </main>
       </div>
 
-      <CommandPalette 
-        onNavigate={handleTabChange} 
-        onAddTransaction={handleShowAddTransaction} 
+      <CommandPalette
+        onNavigate={handleTabChange}
+        onAddTransaction={handleShowAddTransaction}
         onTransactionAdded={onTransactionAdded}
-        isAdmin={user?.role === 'ADMIN'} 
+        isAdmin={user?.role === 'ADMIN'}
       />
 
       <BottomNav

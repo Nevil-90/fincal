@@ -1,21 +1,19 @@
-// Desktop view for savings goals dashboard, showing progress metrics and goal lists.
-import { Target, Trophy, Sparkles, Plus, Filter, History, Clock, Save, Loader2, Calendar, Trash2, Check, AlertTriangle, Lightbulb } from 'lucide-react'
+'use client'
+
+import { Target, Trophy, Plus, Trash2, History, TrendingUp, Calendar, Zap, Save, Loader2, Check, AlertTriangle, X, ChevronRight, Lightbulb } from 'lucide-react'
 import { formatCurrency } from '@/lib/financial-utils'
 import { SavingsGoal, GoalContribution, BulkEntry } from './types'
-import { DesktopRightPane } from './DesktopRightPane'
 import { useEnhancedStaticData } from '@/lib/enhanced-static-data-manager'
+import { useState } from 'react'
 
 interface QuickContribution {
-  amount: string
-  date: string
-  paymentMethod: string
-  description: string
+  amount: string; date: string; paymentMethod: string; description: string
 }
 
 interface DesktopGoalsViewProps {
   goalFilter: 'overview' | 'active' | 'achieved' | 'bulk_add'
-  setGoalFilter: (filter: 'overview' | 'active' | 'achieved' | 'bulk_add') => void
-  setShowAddForm: (show: boolean) => void
+  setGoalFilter: (f: 'overview' | 'active' | 'achieved' | 'bulk_add') => void
+  setShowAddForm: (s: boolean) => void
   filteredGoals: SavingsGoal[]
   completedGoals: SavingsGoal[]
   goals: SavingsGoal[]
@@ -24,10 +22,10 @@ interface DesktopGoalsViewProps {
   selectedCompletedGoal: string | null
   setSelectedCompletedGoal: (id: string | null) => void
   viewMode: 'cards' | 'list'
-  setViewMode: (mode: 'cards' | 'list') => void
+  setViewMode: (m: 'cards' | 'list') => void
   desktopSort: 'priority' | 'deadline' | 'progress' | 'name'
-  setDesktopSort: (sort: 'priority' | 'deadline' | 'progress' | 'name') => void
-  getSortedGoals: (goalsList: SavingsGoal[]) => SavingsGoal[]
+  setDesktopSort: (s: 'priority' | 'deadline' | 'progress' | 'name') => void
+  getSortedGoals: (list: SavingsGoal[]) => SavingsGoal[]
   overallProgress: number
   totalActiveSaved: number
   totalActiveTarget: number
@@ -36,773 +34,800 @@ interface DesktopGoalsViewProps {
   nextMilestoneGoal?: SavingsGoal
   totalCompletedSaved: number
   calculatePace: (goal: SavingsGoal) => number
-  // Props for DesktopRightPane
   contributions: Record<string, GoalContribution[]>
   loadingContributions: string | null
   detailTab: 'quick' | 'history'
-  setDetailTab: (tab: 'quick' | 'history') => void
+  setDetailTab: (t: 'quick' | 'history') => void
   quickContribution: QuickContribution
   setQuickContribution: React.Dispatch<React.SetStateAction<QuickContribution>>
   handleQuickAddContribution: (e: React.FormEvent) => void
   handleDeleteContribution: (id: string, goalId: string) => void
   handleDeleteGoal: (goal: SavingsGoal) => void
   availableBalance: number
-  // Props for Bulk Add
   bulkEntries: BulkEntry[]
-  handleBulkEntryChange: (entryId: string, field: keyof BulkEntry, value: string) => void
+  handleBulkEntryChange: (id: string, field: keyof BulkEntry, value: string) => void
   handleSaveBulkAllocation: (e: React.FormEvent) => void
   handleAddBulkRow: (goalId: string) => void
-  handleRemoveBulkRow: (entryId: string) => void
+  handleRemoveBulkRow: (id: string) => void
   bulkSaving: boolean
 }
 
-export function DesktopGoalsView({
-  goalFilter,
-  setGoalFilter,
-  setShowAddForm,
-  filteredGoals,
-  completedGoals,
-  goals,
-  selectedGoal,
-  setSelectedGoal,
-  selectedCompletedGoal,
-  setSelectedCompletedGoal,
-  viewMode,
-  setViewMode,
-  desktopSort,
-  setDesktopSort,
-  getSortedGoals,
-  overallProgress,
-  totalActiveSaved,
-  totalActiveTarget,
-  totalMonthlySavingRequired,
-  monthlySavingPotential,
-  nextMilestoneGoal,
-  totalCompletedSaved,
-  calculatePace,
-  contributions,
-  loadingContributions,
-  detailTab,
-  setDetailTab,
-  quickContribution,
-  setQuickContribution,
-  handleQuickAddContribution,
-  handleDeleteContribution,
-  handleDeleteGoal,
-  availableBalance,
-  bulkEntries,
-  handleBulkEntryChange,
-  handleSaveBulkAllocation,
-  handleAddBulkRow,
-  handleRemoveBulkRow,
-  bulkSaving
-}: DesktopGoalsViewProps) {
-  const { data: staticData } = useEnhancedStaticData()
+/* ─── SVG Circular Ring ─── */
+function Ring({ pct, size = 80, stroke = 8, color = '#7c3aed', bg = '#ede9fe', label }: {
+  pct: number; size?: number; stroke?: number; color?: string; bg?: string; label?: string
+}) {
+  const r = (size - stroke) / 2
+  const circ = 2 * Math.PI * r
+  const dash = (Math.min(pct, 100) / 100) * circ
+  const fontSize = size >= 80 ? 13 : size >= 60 ? 10 : 8
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0">
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={bg} strokeWidth={stroke} />
+      <circle
+        cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke}
+        strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
+        transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        style={{ transition: 'stroke-dasharray 0.8s ease' }}
+      />
+      {label && (
+        <text
+          x={size / 2} y={size / 2}
+          textAnchor="middle" dominantBaseline="central"
+          fontSize={fontSize} fontWeight={900} fill={color}
+        >{label}</text>
+      )}
+    </svg>
+  )
+}
 
-  // Calculate bulk total on the fly
-  const currentBulkTotal = bulkEntries.reduce((sum, entry) => {
-    const amt = parseFloat(entry.amount)
-    return sum + (isNaN(amt) ? 0 : amt)
+export function DesktopGoalsView(p: DesktopGoalsViewProps) {
+  const { data: staticData } = useEnhancedStaticData()
+  const [activeSection, setActiveSection] = useState<'active' | 'achieved' | 'bulk'>('active')
+
+  const bulkTotal = p.bulkEntries.reduce((s, e) => {
+    const n = parseFloat(e.amount); return s + (isNaN(n) ? 0 : n)
   }, 0)
 
+  const activeGoal = p.filteredGoals.find(g => g.id === p.selectedGoal)
+  const achievedGoal = p.completedGoals.find(g => g.id === p.selectedCompletedGoal)
+
+  const ringColor = (pct: number) =>
+    pct >= 75 ? '#059669' : pct >= 40 ? '#7c3aed' : '#d97706'
+  const ringBg = (pct: number) =>
+    pct >= 75 ? '#d1fae5' : pct >= 40 ? '#ede9fe' : '#fef3c7'
+
   return (
-    <div className="hidden lg:flex flex-col gap-4 relative h-[calc(100vh-130px)] overflow-hidden text-slate-800 dark:text-neutral-200 animate-fade-in w-full">
-      {/* 1. Header Row */}
-      <div className="flex justify-between items-center w-full">
-        <div className="min-w-0 pr-4">
-          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2 truncate">
-            Goals Dashboard <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/40 px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0">Pro</span>
-          </h2>
-          <p className="text-slate-500 dark:text-neutral-400 text-xs mt-1 truncate">Track and manage your savings goals.</p>
+    <div className="hidden lg:flex flex-col h-[calc(100vh-130px)] overflow-hidden w-full gap-4">
+
+      {/* ════════ HERO BANNER — matches app card style ════════ */}
+      <div className="shrink-0 rounded-2xl border border-slate-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm overflow-hidden">
+        <div className="flex items-center gap-0 px-6 py-4">
+
+          {/* Ring */}
+          <div className="shrink-0 mr-5">
+            <Ring pct={p.overallProgress} size={80} stroke={7} color="#7c3aed" bg="#ede9fe" label={`${p.overallProgress.toFixed(0)}%`} />
+          </div>
+
+          {/* Title */}
+          <div className="mr-8 shrink-0">
+            <p className="text-violet-600 dark:text-violet-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-1">Portfolio</p>
+            <h1 className="text-slate-900 dark:text-white text-xl font-black leading-none">Savings Goals</h1>
+            <p className="text-slate-400 dark:text-neutral-500 text-xs mt-1">{formatCurrency(p.totalActiveSaved)} of {formatCurrency(p.totalActiveTarget)}</p>
+          </div>
+
+          <div className="w-px h-12 bg-slate-100 dark:bg-neutral-800 mx-5 shrink-0" />
+
+          {/* Monthly */}
+          <div className="mr-8 shrink-0">
+            <p className="text-slate-400 dark:text-neutral-500 text-[10px] font-bold uppercase tracking-widest mb-1">Monthly Needed</p>
+            <p className="text-slate-900 dark:text-white text-lg font-black">{formatCurrency(p.totalMonthlySavingRequired)}</p>
+            <div className="flex items-center gap-1 mt-0.5">
+              {p.monthlySavingPotential >= p.totalMonthlySavingRequired
+                ? <><Check className="w-3 h-3 text-emerald-500" /><span className="text-emerald-600 dark:text-emerald-400 text-[10px] font-bold">On Track</span></>
+                : <><AlertTriangle className="w-3 h-3 text-amber-500" /><span className="text-amber-600 dark:text-amber-400 text-[10px] font-bold">Behind Pace</span></>
+              }
+            </div>
+          </div>
+
+          <div className="w-px h-12 bg-slate-100 dark:bg-neutral-800 mx-5 shrink-0" />
+
+          {/* Active goals */}
+          <div className="mr-8 shrink-0">
+            <p className="text-slate-400 dark:text-neutral-500 text-[10px] font-bold uppercase tracking-widest mb-1">Active Goals</p>
+            <p className="text-slate-900 dark:text-white text-2xl font-black leading-none">{p.filteredGoals.length}</p>
+            <p className="text-slate-400 dark:text-neutral-500 text-[10px] mt-0.5">in progress</p>
+          </div>
+
+          <div className="w-px h-12 bg-slate-100 dark:bg-neutral-800 mx-5 shrink-0" />
+
+          {/* Achieved */}
+          <div className="shrink-0">
+            <p className="text-slate-400 dark:text-neutral-500 text-[10px] font-bold uppercase tracking-widest mb-1">Achieved</p>
+            <div className="flex items-baseline gap-1.5">
+              <p className="text-slate-900 dark:text-white text-2xl font-black leading-none">{p.completedGoals.length}</p>
+              <Trophy className="w-3.5 h-3.5 text-amber-500 mb-0.5" />
+            </div>
+            <p className="text-slate-400 dark:text-neutral-500 text-[10px] mt-0.5">{formatCurrency(p.totalCompletedSaved)} saved</p>
+          </div>
+
+          {/* New Goal button */}
+          <div className="ml-auto shrink-0">
+            <button
+              onClick={() => p.setShowAddForm(true)}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-bold text-sm shadow-md shadow-violet-500/25 transition-all active:scale-95 cursor-pointer"
+            >
+              <Plus className="w-4 h-4" /> New Goal
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ════════ BODY ════════ */}
+      <div className="flex-1 min-h-0 flex gap-4 overflow-hidden">
+
+        {/* ── LEFT SIDEBAR ── */}
+        <div className="w-64 shrink-0 flex flex-col rounded-2xl border border-slate-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 overflow-hidden shadow-sm">
+
+          {/* Section pills */}
+          <div className="p-3 border-b border-slate-100 dark:border-neutral-800 shrink-0">
+            <div className="flex gap-1 p-1 rounded-xl bg-slate-100 dark:bg-neutral-800">
+              {[
+                { key: 'active', label: 'Active', count: p.filteredGoals.length },
+                { key: 'achieved', label: 'Done', count: p.completedGoals.length },
+                { key: 'bulk', label: 'Bulk' },
+              ].map(s => (
+                <button
+                  key={s.key}
+                  onClick={() => {
+                    setActiveSection(s.key as any)
+                    if (s.key === 'active') { p.setGoalFilter('active'); p.setSelectedCompletedGoal(null) }
+                    if (s.key === 'achieved') { p.setGoalFilter('achieved'); p.setSelectedGoal(null) }
+                    if (s.key === 'bulk') { p.setGoalFilter('bulk_add'); p.setSelectedGoal(null); p.setSelectedCompletedGoal(null) }
+                  }}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                    activeSection === s.key
+                      ? 'bg-white dark:bg-neutral-900 text-violet-600 dark:text-violet-400 shadow-sm'
+                      : 'text-slate-500 dark:text-neutral-400 hover:text-slate-700 dark:hover:text-neutral-300'
+                  }`}
+                >
+                  {s.label}
+                  {s.count !== undefined && (
+                    <span className={`text-[10px] font-bold px-1.5 rounded-full ${
+                      activeSection === s.key
+                        ? 'bg-violet-100 dark:bg-violet-900/50 text-violet-600 dark:text-violet-400'
+                        : 'bg-slate-200 dark:bg-neutral-700 text-slate-400 dark:text-neutral-500'
+                    }`}>{s.count}</span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* List */}
+          <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+
+            {activeSection === 'active' && (
+              p.filteredGoals.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full py-10 px-4 text-center">
+                  <div className="w-12 h-12 rounded-2xl bg-violet-50 dark:bg-violet-900/30 flex items-center justify-center mb-3">
+                    <Target className="w-6 h-6 text-violet-400" />
+                  </div>
+                  <p className="text-sm font-semibold text-slate-700 dark:text-neutral-300 mb-1">No Active Goals</p>
+                  <button onClick={() => p.setShowAddForm(true)} className="mt-2 px-4 py-2 bg-violet-600 text-white text-xs font-bold rounded-lg cursor-pointer hover:bg-violet-700 transition-colors">
+                    + New Goal
+                  </button>
+                </div>
+              ) : (
+                <div className="py-1">
+                  {p.getSortedGoals(p.filteredGoals).map(goal => {
+                    const pct = Math.min((goal.currentAmount / goal.targetAmount) * 100, 100)
+                    const isSelected = p.selectedGoal === goal.id
+                    return (
+                      <button
+                        key={goal.id}
+                        onClick={() => { p.setSelectedGoal(goal.id); p.setGoalFilter('active') }}
+                        className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-all cursor-pointer border-l-2 ${
+                          isSelected
+                            ? 'border-violet-500 bg-violet-50 dark:bg-violet-950/40'
+                            : 'border-transparent hover:bg-slate-50 dark:hover:bg-neutral-800'
+                        }`}
+                      >
+                        <Ring pct={pct} size={38} stroke={4} color={ringColor(pct)} bg={ringBg(pct)} label={`${pct.toFixed(0)}`} />
+                        <div className="min-w-0 flex-1">
+                          <p className={`text-sm font-semibold truncate ${isSelected ? 'text-violet-700 dark:text-violet-300' : 'text-slate-800 dark:text-neutral-200'}`}>{goal.name}</p>
+                          <p className="text-xs text-slate-400 dark:text-neutral-500 mt-0.5 truncate">{formatCurrency(goal.currentAmount)} / {formatCurrency(goal.targetAmount)}</p>
+                        </div>
+                        <ChevronRight className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-violet-400' : 'text-slate-300 dark:text-neutral-600'}`} />
+                      </button>
+                    )
+                  })}
+                </div>
+              )
+            )}
+
+            {activeSection === 'achieved' && (
+              p.completedGoals.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full py-10 px-4 text-center">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center mb-3">
+                    <Trophy className="w-6 h-6 text-emerald-400" />
+                  </div>
+                  <p className="text-sm font-semibold text-slate-700 dark:text-neutral-300">No completed goals yet</p>
+                </div>
+              ) : (
+                <div className="py-1">
+                  {p.completedGoals.map(goal => {
+                    const isSelected = p.selectedCompletedGoal === goal.id
+                    return (
+                      <button
+                        key={goal.id}
+                        onClick={() => { p.setSelectedCompletedGoal(goal.id); p.setGoalFilter('achieved') }}
+                        className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-all cursor-pointer border-l-2 ${
+                          isSelected
+                            ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30'
+                            : 'border-transparent hover:bg-slate-50 dark:hover:bg-neutral-800'
+                        }`}
+                      >
+                        <div className="w-9 h-9 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center shrink-0">
+                          <Trophy className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className={`text-sm font-semibold truncate ${isSelected ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-800 dark:text-neutral-200'}`}>{goal.name}</p>
+                          <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5 font-semibold">{formatCurrency(goal.targetAmount)} ✓</p>
+                        </div>
+                        <ChevronRight className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-emerald-400' : 'text-slate-300 dark:text-neutral-600'}`} />
+                      </button>
+                    )
+                  })}
+                </div>
+              )
+            )}
+
+            {activeSection === 'bulk' && (
+              <div className="flex flex-col items-center justify-center h-full py-10 px-4 text-center">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center mb-3">
+                  <Zap className="w-6 h-6 text-indigo-400" />
+                </div>
+                <p className="text-sm font-semibold text-slate-700 dark:text-neutral-300">Bulk Add Mode</p>
+                <p className="text-xs text-slate-400 dark:text-neutral-500 mt-1">Fill the form on the right →</p>
+              </div>
+            )}
+          </div>
         </div>
 
+        {/* ── RIGHT MAIN PANEL ── */}
+        <div className="flex-1 min-w-0 min-h-0 overflow-hidden">
+
+          {/* Active: no selection */}
+          {activeSection === 'active' && !p.selectedGoal && (
+            <div className="h-full overflow-y-auto custom-scrollbar flex flex-col gap-4">
+              {/* Coach card */}
+              <div className="rounded-2xl border border-violet-100 dark:border-violet-900/50 bg-gradient-to-r from-violet-50 to-indigo-50 dark:from-violet-950/30 dark:to-indigo-950/30 p-5">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-violet-100 dark:bg-violet-900/50 flex items-center justify-center shrink-0">
+                    <Lightbulb className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-slate-900 dark:text-white text-sm mb-1">Goal Coach</p>
+                    <p className="text-sm text-slate-600 dark:text-neutral-300 leading-relaxed">
+                      {(() => {
+                        const rg = p.goals.filter(g => !g.isCompleted).find(g => (g.targetAmount - g.currentAmount) <= p.availableBalance)
+                        const hg = [...p.goals].filter(g => !g.isCompleted).sort((a, b) => (b.currentAmount / b.targetAmount) - (a.currentAmount / a.targetAmount))[0]
+                        if (rg) return `🎯 You can complete "${rg.name}" right now! You have ${formatCurrency(p.availableBalance)} available — it only needs ${formatCurrency(rg.targetAmount - rg.currentAmount)} more.`
+                        if (hg) return `💪 "${hg.name}" is at ${((hg.currentAmount / hg.targetAmount) * 100).toFixed(0)}%. You have ${formatCurrency(p.availableBalance)} available to push it further.`
+                        return 'Create your first savings goal and we\'ll give you personalized tips to reach it faster.'
+                      })()}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Goals list */}
+              {p.filteredGoals.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-48 rounded-2xl border-2 border-dashed border-slate-200 dark:border-neutral-700">
+                  <Target className="w-10 h-10 text-slate-300 dark:text-neutral-600 mb-3" />
+                  <p className="text-slate-500 dark:text-neutral-400 font-semibold text-sm">No active goals yet</p>
+                  <button onClick={() => p.setShowAddForm(true)} className="mt-4 px-5 py-2 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-xl text-sm cursor-pointer transition-colors">
+                    + Create First Goal
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {p.getSortedGoals(p.filteredGoals).map(goal => {
+                    const pct = Math.min((goal.currentAmount / goal.targetAmount) * 100, 100)
+                    const remaining = Math.max(0, goal.targetAmount - goal.currentAmount)
+                    const rc = ringColor(pct)
+                    const rb = ringBg(pct)
+                    return (
+                      <div
+                        key={goal.id}
+                        onClick={() => p.setSelectedGoal(goal.id)}
+                        className="flex items-center gap-5 px-6 py-5 rounded-2xl border border-slate-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:border-violet-300 dark:hover:border-violet-700 hover:shadow-md cursor-pointer transition-all active:scale-[0.99] shadow-sm"
+                      >
+                        <Ring pct={pct} size={64} stroke={6} color={rc} bg={rb} label={`${pct.toFixed(0)}%`} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <h3 className="text-base font-bold text-slate-900 dark:text-white truncate">{goal.name}</h3>
+                            {goal.deadline && (
+                              <span className="text-xs text-slate-400 dark:text-neutral-500 flex items-center gap-1 shrink-0">
+                                <Calendar className="w-3 h-3" />
+                                {new Date(goal.deadline).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-baseline gap-1.5">
+                            <span className="text-xl font-black text-slate-900 dark:text-white">{formatCurrency(goal.currentAmount)}</span>
+                            <span className="text-sm text-slate-400 dark:text-neutral-500">of {formatCurrency(goal.targetAmount)}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-5 shrink-0">
+                          <div className="text-right">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-500 mb-0.5">Remaining</p>
+                            <p className="text-sm font-bold text-slate-700 dark:text-neutral-300">{formatCurrency(remaining)}</p>
+                          </div>
+                          <button
+                            onClick={e => { e.stopPropagation(); p.setSelectedGoal(goal.id) }}
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-xs font-bold cursor-pointer transition-all shadow-md shadow-violet-500/20 whitespace-nowrap"
+                          >
+                            <Plus className="w-3.5 h-3.5" /> Add Funds
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Active: goal selected */}
+          {activeSection === 'active' && p.selectedGoal && activeGoal && (
+            <ActiveGoalDetail
+              goal={activeGoal}
+              contributions={p.contributions}
+              loadingContributions={p.loadingContributions}
+              detailTab={p.detailTab}
+              setDetailTab={p.setDetailTab}
+              quickContribution={p.quickContribution}
+              setQuickContribution={p.setQuickContribution}
+              handleQuickAddContribution={p.handleQuickAddContribution}
+              handleDeleteContribution={p.handleDeleteContribution}
+              handleDeleteGoal={p.handleDeleteGoal}
+              calculatePace={p.calculatePace}
+              availableBalance={p.availableBalance}
+              monthlySavingPotential={p.monthlySavingPotential}
+              onClose={() => p.setSelectedGoal(null)}
+              staticData={staticData}
+              ringColor={ringColor}
+              ringBg={ringBg}
+            />
+          )}
+
+          {/* Achieved: nothing selected */}
+          {activeSection === 'achieved' && !p.selectedCompletedGoal && (
+            <div className="h-full flex flex-col items-center justify-center gap-3 text-center">
+              <div className="w-20 h-20 rounded-3xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
+                <Trophy className="w-10 h-10 text-emerald-400" />
+              </div>
+              <p className="text-xl font-bold text-slate-800 dark:text-neutral-200">
+                {p.completedGoals.length} Goal{p.completedGoals.length !== 1 ? 's' : ''} Achieved
+              </p>
+              <p className="text-slate-400 dark:text-neutral-500 text-sm max-w-xs">
+                {p.completedGoals.length === 0
+                  ? 'Keep contributing to your active goals and celebrate when you hit 100%!'
+                  : 'Select a goal from the left to view its contribution history.'}
+              </p>
+              {p.completedGoals.length > 0 && (
+                <p className="text-base font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(p.totalCompletedSaved)} total saved</p>
+              )}
+            </div>
+          )}
+
+          {/* Achieved: goal selected */}
+          {activeSection === 'achieved' && p.selectedCompletedGoal && achievedGoal && (
+            <AchievedGoalDetail
+              goal={achievedGoal}
+              contributions={p.contributions}
+              loadingContributions={p.loadingContributions}
+              handleDeleteGoal={p.handleDeleteGoal}
+              handleDeleteContribution={p.handleDeleteContribution}
+              onClose={() => p.setSelectedCompletedGoal(null)}
+            />
+          )}
+
+          {/* Bulk add */}
+          {activeSection === 'bulk' && (
+            <BulkAddPanel
+              goals={p.goals}
+              bulkEntries={p.bulkEntries}
+              handleBulkEntryChange={p.handleBulkEntryChange}
+              handleSaveBulkAllocation={p.handleSaveBulkAllocation}
+              handleAddBulkRow={p.handleAddBulkRow}
+              handleRemoveBulkRow={p.handleRemoveBulkRow}
+              bulkSaving={p.bulkSaving}
+              bulkTotal={bulkTotal}
+              staticData={staticData}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════
+   ACTIVE GOAL DETAIL — no-scroll layout
+═══════════════════════════════════ */
+function ActiveGoalDetail({
+  goal, contributions, loadingContributions, detailTab, setDetailTab,
+  quickContribution, setQuickContribution, handleQuickAddContribution,
+  handleDeleteContribution, handleDeleteGoal, calculatePace,
+  availableBalance, monthlySavingPotential, onClose, staticData, ringColor, ringBg
+}: any) {
+  const pct = Math.min((goal.currentAmount / goal.targetAmount) * 100, 100)
+  const remaining = Math.max(0, goal.targetAmount - goal.currentAmount)
+  const pace = calculatePace(goal)
+  const rc = ringColor(pct)
+  const rb = ringBg(pct)
+
+  return (
+    /* IMPORTANT: This whole panel must fit without scrolling. */
+    <div className="h-full flex flex-col rounded-2xl border border-slate-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 overflow-hidden shadow-sm">
+
+      {/* ── Compact header ── */}
+      <div className="shrink-0 flex items-center gap-4 px-5 py-4 border-b border-slate-100 dark:border-neutral-800 bg-slate-50 dark:bg-neutral-950">
+        <Ring pct={pct} size={56} stroke={5} color={rc} bg={rb} label={`${pct.toFixed(0)}%`} />
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-violet-600 dark:text-violet-400 mb-0.5">Active Goal</p>
+          <h2 className="text-lg font-black text-slate-900 dark:text-white leading-tight truncate">{goal.name}</h2>
+          {goal.deadline && (
+            <p className="text-xs text-slate-400 dark:text-neutral-500 mt-0.5 flex items-center gap-1">
+              <Calendar className="w-3 h-3 text-violet-400" />
+              Due {new Date(goal.deadline).toLocaleDateString('en-IN', { year: 'numeric', month: 'long' })}
+            </p>
+          )}
+        </div>
+        {/* 3 mini stats */}
         <div className="flex items-center gap-3 shrink-0">
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white h-9 px-4 rounded-xl font-bold flex items-center gap-1.5 shadow-md shadow-purple-500/20 hover:shadow-lg transition-all active:scale-[0.98] text-xs cursor-pointer"
-          >
-            <Plus className="h-4 w-4" /> New Goal
+          <div className="text-right">
+            <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-500">Saved</p>
+            <p className="text-sm font-black text-violet-600 dark:text-violet-400">{formatCurrency(goal.currentAmount)}</p>
+          </div>
+          <div className="w-px h-8 bg-slate-200 dark:bg-neutral-700" />
+          <div className="text-right">
+            <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-500">Remaining</p>
+            <p className="text-sm font-black text-slate-900 dark:text-white">{formatCurrency(remaining)}</p>
+          </div>
+          {pace > 0 && (
+            <>
+              <div className="w-px h-8 bg-slate-200 dark:bg-neutral-700" />
+              <div className="text-right">
+                <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-500">Monthly</p>
+                <p className="text-sm font-black text-slate-900 dark:text-white">{formatCurrency(pace)}</p>
+              </div>
+            </>
+          )}
+        </div>
+        {/* Actions */}
+        <div className="flex items-center gap-1 shrink-0 ml-2">
+          <button onClick={() => handleDeleteGoal(goal)} className="p-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-300 dark:text-neutral-600 hover:text-red-500 dark:hover:text-red-400 transition-colors cursor-pointer">
+            <Trash2 className="w-4 h-4" />
+          </button>
+          <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-neutral-800 text-slate-300 dark:text-neutral-600 hover:text-slate-600 dark:hover:text-neutral-300 transition-colors cursor-pointer">
+            <X className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      {/* Sub-Tabs Navigation */}
-      <div className="flex flex-row items-center gap-2 overflow-x-auto w-full border-b border-slate-200 dark:border-neutral-700 pb-2 shrink-0">
+      {/* ── Tab strip ── */}
+      <div className="shrink-0 flex border-b border-slate-100 dark:border-neutral-800">
         {[
-          { id: 'overview', label: 'Overview' },
-          { id: 'active', label: `Active Goals (${filteredGoals.length})` },
-          { id: 'achieved', label: `Achieved (${completedGoals.length})` },
-          { id: 'bulk_add', label: 'Bulk Add' }
-        ].map(tab => (
+          { key: 'quick', label: 'Add Contribution', icon: <Plus className="w-3.5 h-3.5" /> },
+          { key: 'history', label: 'History', icon: <History className="w-3.5 h-3.5" /> },
+        ].map(t => (
           <button
-            key={tab.id}
-            onClick={() => {
-              setGoalFilter(tab.id as any)
-              if (tab.id !== 'active') setSelectedGoal(null)
-              if (tab.id !== 'achieved') setSelectedCompletedGoal(null)
-            }}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${goalFilter === tab.id
-                ? 'bg-slate-900 text-white shadow-sm'
-                : 'text-slate-500 dark:text-neutral-400 hover:bg-slate-50 dark:hover:bg-neutral-800/50 dark:bg-neutral-800/50 hover:text-slate-700 dark:text-neutral-300'
-              }`}
+            key={t.key}
+            onClick={() => setDetailTab(t.key)}
+            className={`flex items-center gap-1.5 px-5 py-3 text-sm font-semibold border-b-2 transition-all cursor-pointer ${
+              detailTab === t.key
+                ? 'text-violet-600 dark:text-violet-400 border-violet-600 dark:border-violet-400 bg-violet-50/40 dark:bg-violet-900/10'
+                : 'text-slate-500 dark:text-neutral-400 border-transparent hover:text-slate-700 dark:hover:text-neutral-300 hover:border-slate-200 dark:hover:border-neutral-700'
+            }`}
           >
-            {tab.label}
+            {t.icon} {t.label}
           </button>
         ))}
       </div>
 
-      {/* Content Area */}
-      <div className="flex-1 min-h-0 flex overflow-hidden w-full gap-5">
+      {/* ── Content: FIXED HEIGHT, no flex scroll ── */}
+      <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
 
-        {/* OVERVIEW TAB CONTENT */}
-        {goalFilter === 'overview' && (
-          <div className="flex flex-col gap-5 w-full h-full overflow-y-auto pr-2 custom-scrollbar">
-            {/* Executive Summary Metrics Grid */}
-            <div className="grid grid-cols-4 gap-4 shrink-0">
-              {/* Card 1: Portfolio Progress */}
-              <div className="bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-800 rounded-2xl p-4 shadow-sm flex flex-col justify-between min-h-[120px]">
-                <div className="flex justify-between items-center mb-3">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-500">Portfolio Progress</span>
-                  <span className="p-1.5 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-lg">
-                    <Target className="h-4 w-4" />
-                  </span>
-                </div>
-                <div>
-                  <div className="flex justify-between items-end mb-2">
-                    <span className="text-2xl font-black text-slate-900 dark:text-white leading-none">
-                      {overallProgress.toFixed(1)}%
-                    </span>
-                    <span className="text-[10px] font-bold text-slate-500 dark:text-neutral-400">
-                      {formatCurrency(totalActiveSaved)} / {formatCurrency(totalActiveTarget)}
-                    </span>
-                  </div>
-                  <div className="w-full bg-slate-100 dark:bg-neutral-800 rounded-full h-1.5 overflow-hidden">
-                    <div
-                      className="bg-gradient-to-r from-purple-500 to-indigo-500 h-full rounded-full transition-all duration-1000"
-                      style={{ width: `${overallProgress}%` }}
-                    ></div>
-                  </div>
-                </div>
-              </div>
+        {detailTab === 'quick' && (
+          <form onSubmit={handleQuickAddContribution} className="p-5 flex flex-col gap-4">
 
-              {/* Card 2: Savings Velocity Analyzer */}
-              <div className="bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-800 rounded-2xl p-4 shadow-sm flex flex-col justify-between min-h-[120px]">
-                <div className="flex justify-between items-center mb-3">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-500">Savings Rate</span>
-                  {monthlySavingPotential >= totalMonthlySavingRequired ? (
-                    <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 px-2 py-1 rounded-md uppercase tracking-wider">
-                      On Track
-                    </span>
-                  ) : (
-                    <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 px-2 py-1 rounded-md uppercase tracking-wider">
-                      Under Pace
-                    </span>
-                  )}
+            {/* Amount + chips in one compact block */}
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-neutral-500 mb-1.5">Amount</label>
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">₹</span>
+                  <input
+                    type="number" step="0.01" placeholder="Enter amount"
+                    value={quickContribution.amount}
+                    onChange={e => {
+                      let v = e.target.value
+                      const n = parseFloat(v)
+                      if (!isNaN(n) && n > remaining) v = remaining.toString()
+                      setQuickContribution((prev: any) => ({ ...prev, amount: v }))
+                    }}
+                    className="w-full pl-8 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-950 text-slate-900 dark:text-white font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:bg-white dark:focus:bg-neutral-900 transition-all"
+                    required
+                  />
                 </div>
-                <div>
-                  <div className="flex justify-between items-baseline mb-2">
-                    <div className="flex flex-col">
-                      <span className="text-[9px] font-bold text-slate-400 dark:text-neutral-500 uppercase">Monthly Needed</span>
-                      <span className="text-base font-black text-slate-900 dark:text-white leading-none mt-1">
-                        {formatCurrency(totalMonthlySavingRequired)}
-                      </span>
-                    </div>
-                    <div className="flex flex-col text-right">
-                      <span className="text-[9px] font-bold text-slate-400 dark:text-neutral-500 uppercase">Savings Capacity</span>
-                      <span className="text-xs font-bold text-slate-600 dark:text-neutral-400 leading-none mt-1">
-                        {formatCurrency(monthlySavingPotential)}
-                      </span>
-                    </div>
-                  </div>
-                  <p className="text-[9px] text-slate-400 dark:text-neutral-500 mt-1 truncate">
-                    {monthlySavingPotential >= totalMonthlySavingRequired
-                      ? <span className="flex items-center gap-1"><Check className="h-2.5 w-2.5 text-emerald-500 dark:text-emerald-400" /> Capability covers required pace.</span>
-                      : <span className="flex items-center gap-1"><AlertTriangle className="h-2.5 w-2.5 text-orange-500" /> Increase savings or extend deadlines.</span>}
-                  </p>
-                </div>
-              </div>
-
-              {/* Card 3: Landmark Milestone */}
-              <div className="bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-800 rounded-2xl p-4 shadow-sm flex flex-col justify-between min-h-[120px]">
-                <div className="flex justify-between items-center mb-3">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-500">Next Milestone</span>
-                  <span className="p-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg">
-                    <Clock className="h-4 w-4" />
-                  </span>
-                </div>
-                <div>
-                  {nextMilestoneGoal ? (
-                    <div>
-                      <h4 className="font-bold text-slate-900 dark:text-white text-xs truncate leading-none mb-2">{nextMilestoneGoal.name}</h4>
-                      <div className="flex justify-between items-center mt-2">
-                        <span className="text-[10px] font-semibold text-slate-400 dark:text-neutral-500">
-                          Due: {new Date(nextMilestoneGoal.deadline!).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
-                        </span>
-                        <span className="text-[10px] font-bold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-1.5 py-0.5 rounded leading-none">
-                          {Math.min((nextMilestoneGoal.currentAmount / nextMilestoneGoal.targetAmount) * 100, 100).toFixed(0)}%
-                        </span>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-[10px] text-slate-400 dark:text-neutral-500 mt-2">No active deadline goals.</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Card 4: Achievements */}
-              <div className="bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-800 rounded-2xl p-4 shadow-sm flex flex-col justify-between min-h-[120px]">
-                <div className="flex justify-between items-center mb-3">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-500">Achievements</span>
-                  <span className="p-1.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-lg">
-                    <Trophy className="h-4 w-4" />
-                  </span>
-                </div>
-                <div>
-                  <div className="flex items-baseline gap-2 mb-2">
-                    <span className="text-2xl font-black text-slate-900 dark:text-white leading-none">{completedGoals.length}</span>
-                    <span className="text-[10px] font-semibold text-slate-500 dark:text-neutral-400">Goals Achieved</span>
-                  </div>
-                  <p className="text-[10px] text-slate-400 dark:text-neutral-500 mt-1 truncate">
-                    Total saved: {formatCurrency(totalCompletedSaved)}
-                  </p>
+                {/* Quick chips inline */}
+                <div className="flex gap-1.5">
+                  {[500, 1000, 5000, 10000].map(amt => (
+                    <button key={amt} type="button"
+                      onClick={() => setQuickContribution((prev: any) => ({ ...prev, amount: amt.toString() }))}
+                      className={`px-2.5 py-2.5 text-xs font-bold rounded-xl border transition-all cursor-pointer whitespace-nowrap ${
+                        quickContribution.amount === amt.toString()
+                          ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400'
+                          : 'border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-slate-500 dark:text-neutral-400 hover:border-violet-300'
+                      }`}
+                    >
+                      +{amt >= 1000 ? `${amt / 1000}k` : amt}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
 
-            {/* Goal Coach Panel */}
-            <div className="bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-800 rounded-3xl p-5 shadow-sm flex flex-col">
-              <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-neutral-800">
-                <div className="p-2 bg-amber-50 dark:bg-amber-900/20 text-amber-500 dark:text-amber-400 rounded-lg">
-                  <Sparkles className="h-5 w-5" />
-                </div>
-                <div>
-                  <h4 className="font-extrabold text-slate-900 dark:text-white text-sm">Goal Coach & Insights</h4>
-                  <p className="text-[10px] text-slate-400 dark:text-neutral-500 font-bold uppercase tracking-wider mt-0.5">Personal Finance assistant</p>
+            {/* Date + Method side by side */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-neutral-500 mb-1.5">Date</label>
+                <div className="relative">
+                  <div className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-950 text-slate-900 dark:text-white text-xs font-medium flex items-center justify-between pointer-events-none">
+                    <span>{quickContribution.date ? new Date(quickContribution.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Pick date'}</span>
+                    <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                  </div>
+                  <input type="date" value={quickContribution.date}
+                    onChange={e => setQuickContribution((prev: any) => ({ ...prev, date: e.target.value }))}
+                    onClick={(e: any) => { try { if ('showPicker' in HTMLInputElement.prototype) e.target.showPicker() } catch {} }}
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full" required />
                 </div>
               </div>
-
-              <div className="grid grid-cols-2 gap-4 mt-4 [&>*:last-child:nth-child(odd)]:col-span-2">
-                {/* Advice column */}
-                <div className="space-y-3">
-                  <div className="p-4 bg-gradient-to-br from-indigo-50/75 to-purple-50/40 dark:from-indigo-900/30 dark:to-purple-900/30 border border-indigo-100/50 dark:border-indigo-900/50 rounded-2xl">
-                    <p className="text-[11px] font-bold text-indigo-950 dark:text-indigo-300 flex items-center gap-1.5 mb-2">
-                      <span className="flex items-center gap-1.5"><Lightbulb className="h-3.5 w-3.5" /> Coach Allocation Advice</span>
-                    </p>
-
-                    {(() => {
-                      const readyToCompleteGoal = goals
-                        .filter(g => !g.isCompleted)
-                        .find(g => (g.targetAmount - g.currentAmount) <= availableBalance)
-
-                      const highestProgressGoal = [...goals]
-                        .filter(g => !g.isCompleted)
-                        .sort((a, b) => {
-                          const progA = a.targetAmount > 0 ? (a.currentAmount / a.targetAmount) : 0
-                          const progB = b.targetAmount > 0 ? (b.currentAmount / b.targetAmount) : 0
-                          return progB - progA
-                        })[0]
-
-                      if (readyToCompleteGoal) {
-                        return (
-                          <p className="text-xs text-slate-700 dark:text-neutral-300 leading-relaxed">
-                            Fantastic! You have an available balance of <strong>{formatCurrency(availableBalance)}</strong>, which is enough to immediately achieve your <strong>"{readyToCompleteGoal.name}"</strong> goal (needs {formatCurrency(readyToCompleteGoal.targetAmount - readyToCompleteGoal.currentAmount)}). Head to the Active Goals tab to fund it!
-                          </p>
-                        )
-                      } else if (highestProgressGoal) {
-                        return (
-                          <p className="text-xs text-slate-700 dark:text-neutral-300 leading-relaxed">
-                            Your goal <strong>"{highestProgressGoal.name}"</strong> is currently closest to the finish line at <strong>{((highestProgressGoal.currentAmount / highestProgressGoal.targetAmount) * 100).toFixed(0)}%</strong>. Consider allocating some of your <strong>{formatCurrency(availableBalance)}</strong> available balance to speed it up.
-                          </p>
-                        )
-                      } else {
-                        return (
-                          <p className="text-xs text-slate-700 dark:text-neutral-300 leading-relaxed">
-                            No active savings goals found. Create a savings goal and we will analyze your available balance to help you pace your contributions.
-                          </p>
-                        )
-                      }
-                    })()}
-                  </div>
-
-                  <div className="p-3 bg-purple-50 dark:bg-purple-900/30 border border-purple-100 dark:border-purple-900/50 rounded-2xl">
-                    <p className="text-xs text-purple-700 dark:text-purple-300 leading-relaxed font-medium">
-                      <Lightbulb className="h-4 w-4 shrink-0 text-yellow-600 mt-0.5" /> <span><strong>Smart Tip:</strong> Automated weekly contributions are statistically proven to help complete goals 40% faster than monthly transfers. Try creating a recurring payment!</span>
-                    </p>
-                  </div>
-                </div>
-
-                {/* Priority List Column */}
-                <div className="flex flex-col bg-slate-50 dark:bg-neutral-800 rounded-2xl border border-slate-100 dark:border-neutral-700 p-4">
-                  <h5 className="text-[10px] font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider mb-3">Active Targets Hierarchy</h5>
-                  {goals.filter(g => !g.isCompleted).length > 0 ? (
-                    <div className="space-y-2.5">
-                      {goals
-                        .filter(g => !g.isCompleted)
-                        .slice(0, 4)
-                        .map((g) => {
-                          const progress = Math.min((g.currentAmount / g.targetAmount) * 100, 100)
-                          return (
-                            <div key={g.id} className="flex flex-col gap-1.5 p-2.5 bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-700 rounded-xl">
-                              <div className="flex justify-between items-center">
-                                <span className="text-xs font-bold text-slate-800 dark:text-neutral-200 truncate">{g.name}</span>
-                                <span className="text-[10px] font-semibold text-slate-500 dark:text-neutral-400">{formatCurrency(g.currentAmount)}</span>
-                              </div>
-                              <div className="w-full bg-slate-100 dark:bg-neutral-700 h-1.5 rounded-full overflow-hidden">
-                                <div className="bg-purple-500 dark:bg-purple-400 h-full transition-all" style={{ width: `${progress}%` }}></div>
-                              </div>
-                            </div>
-                          )
-                        })}
-                    </div>
-                  ) : (
-                    <div className="flex-1 flex items-center justify-center">
-                      <p className="text-slate-400 dark:text-neutral-500 text-sm">No active targets to display.</p>
-                    </div>
-                  )}
-                </div>
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-neutral-500 mb-1.5">Payment Method</label>
+                <select
+                  value={quickContribution.paymentMethod}
+                  onChange={e => setQuickContribution((prev: any) => ({ ...prev, paymentMethod: e.target.value }))}
+                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-950 text-sm font-medium text-slate-700 dark:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-violet-500 cursor-pointer transition-all"
+                >
+                  {staticData.paymentMethods.filter((m: any) => m.isActive).map((m: any) => (
+                    <option key={m.id} value={m.name}>{m.name}</option>
+                  ))}
+                </select>
               </div>
             </div>
-          </div>
+
+            {/* Note */}
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-neutral-500 mb-1.5">Note (Optional)</label>
+              <input type="text" placeholder="e.g. salary bonus, side income…"
+                value={quickContribution.description}
+                onChange={e => setQuickContribution((prev: any) => ({ ...prev, description: e.target.value }))}
+                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-950 text-sm text-slate-700 dark:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all"
+              />
+            </div>
+
+            <button type="submit"
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md shadow-violet-500/20 transition-all cursor-pointer active:scale-[0.98]"
+            >
+              <Plus className="w-4 h-4" /> Add Contribution
+            </button>
+
+            {monthlySavingPotential > 0 && (
+              <p className="text-xs text-slate-400 dark:text-neutral-500 text-center flex items-center justify-center gap-1">
+                <Lightbulb className="w-3 h-3 text-amber-500" />
+                You can safely add up to {formatCurrency(monthlySavingPotential)} this month
+              </p>
+            )}
+          </form>
         )}
 
-        {/* ACTIVE GOALS TAB CONTENT */}
-        {goalFilter === 'active' && (
-          <>
-            {/* Left Column (List) */}
-            <div className={`bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-800 rounded-3xl shadow-sm flex flex-col min-h-0 overflow-hidden ${selectedGoal ? 'w-[60%] shrink-0' : 'flex-1'} transition-all duration-300`}>
-
-              {/* Header controls (Sorting, View Toggle) */}
-              <div className="h-[60px] px-5 flex justify-between items-center border-b border-slate-100 dark:border-neutral-800 bg-white dark:bg-neutral-900 shrink-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-slate-400 dark:text-neutral-500 flex items-center gap-1.5">
-                    <Filter className="h-3.5 w-3.5" /> Sort:
-                  </span>
-                  <select
-                    value={desktopSort}
-                    onChange={(e) => setDesktopSort(e.target.value as any)}
-                    className="border border-slate-200 dark:border-neutral-700 rounded-xl text-xs font-bold px-2.5 py-1 bg-slate-50 dark:bg-neutral-800/50 text-slate-700 dark:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white dark:bg-neutral-900 transition-colors cursor-pointer"
-                  >
-                    <option value="priority">Priority</option>
-                    <option value="deadline">Target Date</option>
-                    <option value="progress">Progress %</option>
-                    <option value="name">Name A-Z</option>
-                  </select>
-                </div>
-
-                <div className="flex border border-slate-200 dark:border-neutral-700 rounded-xl p-0.5 bg-slate-50 dark:bg-neutral-800/50">
-                  <button
-                    onClick={() => setViewMode('cards')}
-                    className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === 'cards' ? 'bg-white dark:bg-neutral-900 text-purple-600 dark:text-purple-400 shadow-sm' : 'text-slate-400 dark:text-neutral-500 hover:text-slate-600 dark:text-neutral-400'}`}
-                    title="Card Grid View"
-                  >
-                    <Sparkles className="h-3.5 w-3.5" />
-                  </button>
-                  <button
-                    onClick={() => setViewMode('list')}
-                    className={`p-1.5 rounded-lg transition-all cursor-pointer ${viewMode === 'list' ? 'bg-white dark:bg-neutral-900 text-purple-600 dark:text-purple-400 shadow-sm' : 'text-slate-400 dark:text-neutral-500 hover:text-slate-600 dark:text-neutral-400'}`}
-                    title="Spreadsheet List View"
-                  >
-                    <History className="h-3.5 w-3.5" />
-                  </button>
-                </div>
+        {detailTab === 'history' && (
+          <div className="p-5">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-neutral-500 mb-4 flex items-center gap-2">
+              <History className="w-3.5 h-3.5 text-violet-500" /> Contribution History
+            </h3>
+            {loadingContributions === goal.id ? (
+              <div className="space-y-3">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="animate-pulse flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-slate-200 dark:bg-neutral-700" />
+                    <div className="flex-1"><div className="h-3 bg-slate-200 dark:bg-neutral-700 rounded w-20 mb-1.5" /><div className="h-2.5 bg-slate-100 dark:bg-neutral-800 rounded w-28" /></div>
+                  </div>
+                ))}
               </div>
-
-              {/* List / Grid Display */}
-              <div className="flex-1 min-h-0 overflow-y-auto p-5 custom-scrollbar">
-                {filteredGoals.length === 0 ? (
-                  <div className="text-center py-16 px-5 flex-1 flex flex-col justify-center items-center h-full">
-                    <div className="w-16 h-16 bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-800 shadow-sm rounded-2xl flex items-center justify-center mb-4">
-                      <Target className="h-8 w-8 text-purple-500" />
+            ) : (contributions[goal.id]?.length > 0) ? (
+              <div className="space-y-1">
+                {contributions[goal.id].map((c: GoalContribution) => (
+                  <div key={c.id} className="group flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
+                      <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     </div>
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1.5">No Active Goals</h3>
-                    <p className="text-slate-500 dark:text-neutral-400 text-xs max-w-sm mb-5 leading-relaxed">Create a savings goal to start tracking progress towards your financial goals.</p>
-                    <button
-                      onClick={() => setShowAddForm(true)}
-                      className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 px-5 rounded-xl transition-colors text-xs shadow-md cursor-pointer"
-                    >
-                      Create your first savings goal
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-slate-900 dark:text-white text-sm">+{formatCurrency(c.amount)}</p>
+                      <p className="text-xs text-slate-400 dark:text-neutral-500 mt-0.5 truncate">
+                        {new Date(c.date).toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                        {c.description ? ` · ${c.description}` : ''}
+                      </p>
+                    </div>
+                    <button type="button" onClick={() => handleDeleteContribution(c.id, goal.id)}
+                      className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-300 hover:text-red-500 transition-all cursor-pointer">
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
-                ) : viewMode === 'cards' ? (
-                  /* Card Grid View */
-                  <div className={`grid ${selectedGoal ? 'grid-cols-1 xl:grid-cols-2 xl:[&>*:last-child:nth-child(odd)]:col-span-2' : 'grid-cols-2 xl:grid-cols-3 [&>*:last-child:nth-child(odd)]:col-span-2 xl:[&>*:last-child:nth-child(odd)]:col-span-1'} gap-4 content-start animate-fade-in`}>
-                    {getSortedGoals(filteredGoals).map((goal) => {
-                      const progress = Math.min((goal.currentAmount / goal.targetAmount) * 100, 100)
-                      const remaining = Math.max(0, goal.targetAmount - goal.currentAmount)
-                      const isSelected = selectedGoal === goal.id
-
-                      return (
-                        <div
-                          key={goal.id}
-                          onClick={() => setSelectedGoal(goal.id)}
-                          className={`bg-white dark:bg-neutral-900 border rounded-2xl p-4 shadow-sm hover:shadow-md hover:border-purple-200 cursor-pointer group active:scale-[0.99] transition-all flex flex-col justify-between min-h-[130px] ${isSelected ? 'border-2 border-purple-600 bg-purple-50 dark:bg-purple-900/20 shadow-purple-500/5' : 'border-slate-100 dark:border-neutral-800'}`}
-                        >
-                          <div className="flex justify-between items-start mb-3">
-                            <div className="flex items-center gap-2.5">
-                              <div className={`h-10 w-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105 ${isSelected ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400' : 'bg-slate-50 dark:bg-neutral-800/50 text-slate-600 dark:text-neutral-400'}`}>
-                                <Target className="h-5 w-5" />
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <h4 className="font-bold text-slate-900 dark:text-white text-xs truncate pr-2">{goal.name}</h4>
-                                {goal.deadline ? (
-                                  <p className="text-[10px] font-semibold text-slate-400 dark:text-neutral-500 flex items-center gap-1 mt-0.5">
-                                    <Calendar className="h-3 w-3" /> By {new Date(goal.deadline).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
-                                  </p>
-                                ) : (
-                                  <p className="text-[10px] font-semibold text-slate-300 mt-0.5">No date limit</p>
-                                )}
-                              </div>
-                            </div>
-                            <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full shrink-0 ${progress >= 75 ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400' : progress >= 40 ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400' : 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400'}`}>
-                              {progress.toFixed(0)}%
-                            </span>
-                          </div>
-
-                          <div className="mt-auto">
-                            <div className="flex justify-between items-baseline mb-1.5">
-                              <span className="text-lg font-black text-slate-900 dark:text-white tracking-tight">
-                                {formatCurrency(goal.currentAmount)}
-                              </span>
-                              <span className="text-[10px] text-slate-400 dark:text-neutral-500 font-semibold">
-                                Target: {formatCurrency(goal.targetAmount)}
-                              </span>
-                            </div>
-
-                            <div className="w-full bg-slate-100 dark:bg-neutral-800 rounded-full h-2 overflow-hidden relative">
-                              <div
-                                className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full transition-all duration-1000 ease-out"
-                                style={{ width: `${progress}%` }}
-                              ></div>
-                            </div>
-
-                            <div className="mt-4 border-t border-slate-100 dark:border-neutral-800 pt-3">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedGoal(goal.id);
-                                }}
-                                className="w-full py-2 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
-                              >
-                                <Plus className="h-3.5 w-3.5" /> Add Funds
-                              </button>
-                            </div>
-
-                            <div className="flex justify-between items-center text-[9px] text-slate-400 dark:text-neutral-500 font-bold uppercase tracking-wider mt-3">
-                              <span>Remaining: <strong className="text-slate-700 dark:text-neutral-300 font-extrabold text-[10px] ml-1">{formatCurrency(remaining)}</strong></span>
-                              {goal.deadline && (
-                                <span>Pace: <strong className="text-slate-700 dark:text-neutral-300 font-extrabold text-[10px] ml-1">{formatCurrency(calculatePace(goal))}</strong></span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                ) : (
-                  /* List View (Table Layout) */
-                  <div className="overflow-x-auto animate-fade-in">
-                    <table className="w-full text-left border-collapse min-w-[650px]">
-                      <thead>
-                        <tr className="border-b border-slate-100 dark:border-neutral-800 text-[10px] font-black uppercase text-slate-400 dark:text-neutral-500 tracking-wider">
-                          <th className="pb-2 font-extrabold px-2">Goal Name</th>
-                          <th className="pb-2 font-extrabold px-2">Progress</th>
-                          <th className="pb-2 font-extrabold px-2 text-right">Saved</th>
-                          <th className="pb-2 font-extrabold px-2 text-right">Target</th>
-                          <th className="pb-2 font-extrabold px-2 text-right">Remaining</th>
-                          <th className="pb-2 font-extrabold px-2">Target Date</th>
-                          <th className="pb-2 font-extrabold px-2 text-right">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-50">
-                        {getSortedGoals(filteredGoals).map((goal) => {
-                          const progress = Math.min((goal.currentAmount / goal.targetAmount) * 100, 100)
-                          const remaining = Math.max(0, goal.targetAmount - goal.currentAmount)
-                          const isSelected = selectedGoal === goal.id
-
-                          return (
-                            <tr
-                              key={goal.id}
-                              onClick={() => setSelectedGoal(goal.id)}
-                              className={`hover:bg-slate-50 dark:hover:bg-neutral-800/50 dark:bg-neutral-800/50 transition-colors cursor-pointer group ${isSelected ? 'bg-purple-50 dark:bg-purple-900/20' : ''}`}
-                            >
-                              <td className="py-3 px-2 font-bold text-slate-900 dark:text-white text-xs max-w-[180px] truncate">
-                                {goal.name}
-                              </td>
-                              <td className="py-3 px-2">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-16 bg-slate-100 dark:bg-neutral-800 rounded-full h-1 overflow-hidden">
-                                    <div
-                                      className="bg-gradient-to-r from-purple-500 to-indigo-500 h-full rounded-full"
-                                      style={{ width: `${progress}%` }}
-                                    ></div>
-                                  </div>
-                                  <span className="text-[10px] font-extrabold text-slate-600 dark:text-neutral-400 bg-slate-100 dark:bg-neutral-800 px-1.5 py-0.5 rounded">
-                                    {progress.toFixed(0)}%
-                                  </span>
-                                </div>
-                              </td>
-                              <td className="py-3 px-2 text-right font-semibold text-slate-700 dark:text-neutral-300 text-xs">
-                                {formatCurrency(goal.currentAmount)}
-                              </td>
-                              <td className="py-3 px-2 text-right font-semibold text-slate-400 dark:text-neutral-500 text-xs">
-                                {formatCurrency(goal.targetAmount)}
-                              </td>
-                              <td className="py-3 px-2 text-right font-bold text-slate-900 dark:text-white text-xs">
-                                {formatCurrency(remaining)}
-                              </td>
-                              <td className="py-3 px-2 text-slate-500 dark:text-neutral-400 text-[10px] font-semibold">
-                                {goal.deadline ? new Date(goal.deadline).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
-                              </td>
-                              <td className="py-3 px-2 text-right">
-                                <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 group-hover:underline">
-                                  Manage
-                                </span>
-                              </td>
-                            </tr>
-                          )
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+                ))}
               </div>
-            </div>
-
-            {/* Right Column (Details) */}
-            {selectedGoal && (
-              <div className="flex-1 min-w-0 h-full">
-                <DesktopRightPane
-                  goalFilter={goalFilter}
-                  selectedGoal={selectedGoal}
-                  setSelectedGoal={setSelectedGoal}
-                  selectedCompletedGoal={selectedCompletedGoal}
-                  setSelectedCompletedGoal={setSelectedCompletedGoal}
-                  goals={goals}
-                  completedGoals={completedGoals}
-                  contributions={contributions}
-                  loadingContributions={loadingContributions}
-                  detailTab={detailTab}
-                  setDetailTab={setDetailTab}
-                  quickContribution={quickContribution}
-                  setQuickContribution={setQuickContribution}
-                  handleQuickAddContribution={handleQuickAddContribution}
-                  handleDeleteContribution={handleDeleteContribution}
-                  handleDeleteGoal={handleDeleteGoal}
-                  calculatePace={calculatePace}
-                  availableBalance={availableBalance}
-                  monthlySavingPotential={monthlySavingPotential}
-                />
+            ) : (
+              <div className="flex flex-col items-center justify-center h-36 text-center">
+                <div className="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-neutral-800 flex items-center justify-center mb-2.5">
+                  <History className="w-5 h-5 text-slate-300 dark:text-neutral-600" />
+                </div>
+                <p className="text-slate-500 dark:text-neutral-400 font-semibold text-sm">No contributions yet</p>
+                <p className="text-xs text-slate-400 dark:text-neutral-500 mt-1">Switch to Add tab to make your first deposit.</p>
               </div>
             )}
-          </>
-        )}
-
-        {/* ACHIEVED GOALS TAB CONTENT */}
-        {goalFilter === 'achieved' && (
-          <>
-            {/* Left Column (List) */}
-            <div className={`bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-800 rounded-3xl shadow-sm flex flex-col min-h-0 overflow-hidden ${selectedCompletedGoal ? 'w-[60%] shrink-0' : 'flex-1'} transition-all duration-300`}>
-              <div className="flex-1 min-h-0 overflow-y-auto p-5 custom-scrollbar">
-                {completedGoals.length === 0 ? (
-                  <div className="text-center py-16 px-5 flex-1 flex flex-col justify-center items-center h-full">
-                    <div className="w-16 h-16 bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-800 shadow-sm rounded-2xl flex items-center justify-center mb-4">
-                      <Trophy className="h-8 w-8 text-green-500 dark:text-emerald-400" />
-                    </div>
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1.5">No Achieved Goals Yet</h3>
-                    <p className="text-slate-500 dark:text-neutral-400 text-xs max-w-sm leading-relaxed">Every small contribution counts. Keep saving to hit your targets and they will appear here!</p>
-                  </div>
-                ) : (
-                  <div className={`grid ${selectedCompletedGoal ? 'grid-cols-1 xl:grid-cols-2 xl:[&>*:last-child:nth-child(odd)]:col-span-2' : 'grid-cols-2 xl:grid-cols-3 [&>*:last-child:nth-child(odd)]:col-span-2 xl:[&>*:last-child:nth-child(odd)]:col-span-1'} gap-4 content-start animate-fade-in`}>
-                    {completedGoals.map((goal) => {
-                      const isSelected = selectedCompletedGoal === goal.id
-                      return (
-                        <div
-                          key={goal.id}
-                          onClick={() => setSelectedCompletedGoal(goal.id)}
-                          className={`border rounded-2xl p-4 shadow-sm hover:shadow-md cursor-pointer group active:scale-[0.99] transition-all flex flex-col justify-between min-h-[120px] bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-900/20 dark:to-emerald-900/10 hover:border-emerald-300 dark:hover:border-emerald-700 ${isSelected ? 'border-2 border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.15)]' : 'border-emerald-100 dark:border-emerald-900/50'}`}
-                        >
-                          <div className="flex justify-between items-start mb-3">
-                            <div className="flex items-center gap-2.5 flex-1 min-w-0 pr-2">
-                              <div className={`h-9 w-9 rounded-xl flex items-center justify-center transition-transform group-hover:rotate-6 bg-white dark:bg-neutral-900 shadow-sm shrink-0 ${isSelected ? 'text-emerald-600 dark:text-emerald-400' : 'text-emerald-500 dark:text-emerald-400'}`}>
-                                <Trophy className="h-4 w-4 text-yellow-500" />
-                              </div>
-                              <div className="min-w-0">
-                                <h4 className="font-bold text-slate-900 dark:text-white text-xs truncate">{goal.name}</h4>
-                                <p className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 mt-0.5 truncate">
-                                  Achieved {goal.completedAt ? new Date(goal.completedAt).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) : 'Recently'}
-                                </p>
-                              </div>
-                            </div>
-                            <span className="text-[9px] font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 px-1.5 py-0.5 rounded-full uppercase tracking-wider shrink-0">
-                              100% Completed
-                            </span>
-                          </div>
-
-                          <div className="border-t border-slate-100 dark:border-neutral-800/50 pt-2 flex justify-between items-baseline mt-auto">
-                            <span className="text-[9px] font-bold text-slate-400 dark:text-neutral-500 uppercase tracking-wider">Target Reached</span>
-                            <span className="text-lg font-black text-emerald-700 dark:text-emerald-400 tracking-tight">
-                              {formatCurrency(goal.targetAmount)}
-                            </span>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Right Column (Details) */}
-            {selectedCompletedGoal && (
-              <div className="flex-1 min-w-0 h-full">
-                <DesktopRightPane
-                  goalFilter={goalFilter}
-                  selectedGoal={selectedGoal}
-                  setSelectedGoal={setSelectedGoal}
-                  selectedCompletedGoal={selectedCompletedGoal}
-                  setSelectedCompletedGoal={setSelectedCompletedGoal}
-                  goals={goals}
-                  completedGoals={completedGoals}
-                  contributions={contributions}
-                  loadingContributions={loadingContributions}
-                  detailTab={detailTab}
-                  setDetailTab={setDetailTab}
-                  quickContribution={quickContribution}
-                  setQuickContribution={setQuickContribution}
-                  handleQuickAddContribution={handleQuickAddContribution}
-                  handleDeleteContribution={handleDeleteContribution}
-                  handleDeleteGoal={handleDeleteGoal}
-                  calculatePace={calculatePace}
-                  availableBalance={availableBalance}
-                  monthlySavingPotential={monthlySavingPotential}
-                />
-              </div>
-            )}
-          </>
-        )}
-
-        {/* BULK ADD TAB CONTENT */}
-        {goalFilter === 'bulk_add' && (
-          <div className="flex-1 bg-white dark:bg-neutral-900 border border-slate-100 dark:border-neutral-800 rounded-3xl shadow-sm flex flex-col min-h-0 overflow-hidden">
-            <div className="flex-1 overflow-x-auto p-5">
-              <table className="w-full text-left border-collapse min-w-[800px]">
-                <thead>
-                  <tr className="border-b border-slate-100 dark:border-neutral-800 text-[10px] font-black uppercase text-slate-400 dark:text-neutral-500 tracking-wider">
-                    <th className="pb-2 font-extrabold px-2">Goal Name</th>
-                    <th className="pb-2 font-extrabold px-2">Amount (₹)</th>
-                    <th className="pb-2 font-extrabold px-2">Date</th>
-                    <th className="pb-2 font-extrabold px-2">Payment Method</th>
-                    <th className="pb-2 font-extrabold px-2">Notes</th>
-                    <th className="pb-2 font-extrabold text-right px-2">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50">
-                  {bulkEntries.map((entry) => {
-                    const goal = goals.find(g => g.id === entry.goalId)
-                    if (!goal) return null
-                    const progress = Math.min((goal.currentAmount / goal.targetAmount) * 100, 100)
-                    return (
-                      <tr key={entry.id} className="hover:bg-slate-50 dark:hover:bg-neutral-800/50 dark:bg-neutral-800/50 transition-colors">
-                        <td className="py-3 px-2 w-[22%] align-top">
-                          <h4 className="font-bold text-slate-900 dark:text-white text-xs truncate max-w-[160px]">{goal.name}</h4>
-                          <div className="flex items-center gap-1.5 mt-1">
-                            <div className="w-16 bg-slate-100 dark:bg-neutral-800 rounded-full h-1 overflow-hidden">
-                              <div
-                                className="bg-gradient-to-r from-purple-500 to-indigo-500 h-full rounded-full"
-                                style={{ width: `${progress}%` }}
-                              ></div>
-                            </div>
-                            <span className="text-[10px] font-extrabold text-slate-400 dark:text-neutral-500">
-                              {progress.toFixed(0)}%
-                            </span>
-                          </div>
-                        </td>
-                        <td className="py-3 px-2 w-[18%] align-top">
-                          <input
-                            type="number"
-                            step="0.01"
-                            placeholder="0.00"
-                            value={entry.amount}
-                            onChange={(e) => handleBulkEntryChange(entry.id, 'amount', e.target.value)}
-                            className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-neutral-800/50 border border-slate-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-purple-500 focus:bg-white dark:bg-neutral-900 transition-colors text-slate-900 dark:text-white font-bold outline-none text-xs"
-                          />
-                        </td>
-                        <td className="py-3 px-2 w-[15%] align-top">
-                          <input
-                            type="date"
-                            value={entry.date}
-                            onChange={(e) => handleBulkEntryChange(entry.id, 'date', e.target.value)}
-                            className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-neutral-800/50 border border-slate-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-purple-500 focus:bg-white dark:bg-neutral-900 transition-colors text-slate-900 dark:text-white font-semibold outline-none text-xs"
-                          />
-                        </td>
-                        <td className="py-3 px-2 w-[18%] align-top">
-                          <select
-                            value={entry.paymentMethod}
-                            onChange={(e) => handleBulkEntryChange(entry.id, 'paymentMethod', e.target.value)}
-                            className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-neutral-800/50 border border-slate-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-purple-500 focus:bg-white dark:bg-neutral-900 transition-colors text-slate-900 dark:text-white font-semibold outline-none text-xs cursor-pointer"
-                          >
-                            {staticData.paymentMethods.filter(pm => pm.isActive).map((method) => (
-                              <option key={method.id} value={method.name}>{method.name}</option>
-                            ))}
-                          </select>
-                        </td>
-                        <td className="py-3 px-2 w-[18%] align-top">
-                          <input
-                            type="text"
-                            placeholder="Optional"
-                            value={entry.description}
-                            onChange={(e) => handleBulkEntryChange(entry.id, 'description', e.target.value)}
-                            className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-neutral-800/50 border border-slate-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-purple-500 focus:bg-white dark:bg-neutral-900 transition-colors text-slate-900 dark:text-white font-medium outline-none text-xs"
-                          />
-                        </td>
-                        <td className="py-3 px-2 align-top text-right">
-                          <div className="flex items-center justify-end gap-1 mt-0.5">
-                            <button
-                              onClick={() => handleAddBulkRow(goal.id)}
-                              className="p-1.5 text-slate-400 dark:text-neutral-500 hover:text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:bg-purple-900/20 rounded-xl transition-colors cursor-pointer"
-                              title="Add another entry for this goal"
-                            >
-                              <Plus className="h-3.5 w-3.5" />
-                            </button>
-                            <button
-                              onClick={() => handleRemoveBulkRow(entry.id)}
-                              className="p-1.5 text-slate-400 dark:text-neutral-500 hover:text-red-600 dark:text-red-400 hover:bg-red-50 dark:bg-red-900/20 rounded-xl transition-colors cursor-pointer"
-                              title="Remove this entry"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="p-4 border-t border-slate-100 dark:border-neutral-800 bg-slate-50 dark:bg-neutral-800/50 flex justify-between items-center shrink-0">
-              <div className="text-xs font-bold text-slate-500 dark:text-neutral-400 flex items-center gap-1.5">
-                Total Allocation:
-                <span className="bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400 px-2 py-0.5 rounded-lg border border-purple-200 text-sm">
-                  {formatCurrency(currentBulkTotal)}
-                </span>
-              </div>
-              <button
-                onClick={handleSaveBulkAllocation}
-                disabled={bulkSaving || currentBulkTotal === 0}
-                className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-xl font-bold transition-all shadow-md active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 text-xs cursor-pointer"
-              >
-                {bulkSaving ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Save className="h-4 w-4" />
-                )}
-                Save All Contributions
-              </button>
-            </div>
           </div>
         )}
+      </div>
+    </div>
+  )
+}
 
+/* ═══════════════════════════════════
+   ACHIEVED GOAL DETAIL
+═══════════════════════════════════ */
+function AchievedGoalDetail({ goal, contributions, loadingContributions, handleDeleteGoal, handleDeleteContribution, onClose }: any) {
+  return (
+    <div className="h-full flex flex-col rounded-2xl overflow-hidden border border-emerald-200 dark:border-emerald-900/50 shadow-sm">
+      <div className="bg-gradient-to-r from-emerald-600 to-teal-600 p-5 shrink-0">
+        <div className="flex items-start justify-between">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white/20 rounded-full text-white text-[10px] font-bold uppercase tracking-wider mb-2.5">
+              <Trophy className="w-3 h-3 text-amber-300" /> Goal Achieved
+            </div>
+            <h2 className="text-xl font-black text-white">{goal.name}</h2>
+            <p className="text-emerald-100 text-xs mt-1">
+              {formatCurrency(goal.targetAmount)} — completed {goal.completedAt
+                ? new Date(goal.completedAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'long' })
+                : 'recently'}
+            </p>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <button onClick={() => handleDeleteGoal(goal)} className="p-2 rounded-xl bg-white/10 hover:bg-red-500/40 text-white transition-colors cursor-pointer"><Trash2 className="w-4 h-4" /></button>
+            <button onClick={onClose} className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"><X className="w-4 h-4" /></button>
+          </div>
+        </div>
+      </div>
+      <div className="flex-1 min-h-0 overflow-y-auto p-5 bg-slate-50 dark:bg-neutral-950 custom-scrollbar">
+        <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-neutral-500 mb-4 flex items-center gap-2">
+          <History className="w-3.5 h-3.5 text-emerald-500" /> Contribution Journey
+        </h3>
+        <div className="rounded-2xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 overflow-hidden">
+          {loadingContributions === goal.id ? (
+            <div className="p-5 space-y-3 animate-pulse">
+              {[1, 2, 3].map(i => <div key={i} className="flex items-center gap-3"><div className="w-9 h-9 bg-slate-200 dark:bg-neutral-700 rounded-xl" /><div className="flex-1"><div className="h-3 bg-slate-200 dark:bg-neutral-700 rounded w-24 mb-1.5" /><div className="h-2.5 bg-slate-100 dark:bg-neutral-800 rounded w-16" /></div></div>)}
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-50 dark:divide-neutral-800">
+              {(contributions[goal.id] || goal.contributions || []).length > 0 ? (
+                (contributions[goal.id] || goal.contributions || []).map((c: any) => (
+                  <div key={c.id} className="flex items-center gap-3 p-4 hover:bg-slate-50 dark:hover:bg-neutral-800/50 transition-colors">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center shrink-0 text-xs font-black text-emerald-600 dark:text-emerald-400">✓</div>
+                    <div className="flex-1">
+                      <p className="font-bold text-slate-900 dark:text-white text-sm">+{formatCurrency(c.amount)}</p>
+                      <p className="text-xs text-slate-400 dark:text-neutral-500 mt-0.5">{new Date(c.date).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="py-10 text-center text-slate-400 dark:text-neutral-500 text-sm">No contribution data stored.</div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════
+   BULK ADD PANEL
+═══════════════════════════════════ */
+function BulkAddPanel({ goals, bulkEntries, handleBulkEntryChange, handleSaveBulkAllocation, handleAddBulkRow, handleRemoveBulkRow, bulkSaving, bulkTotal, staticData }: any) {
+  return (
+    <div className="h-full flex flex-col rounded-2xl border border-slate-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 overflow-hidden shadow-sm">
+      <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100 dark:border-neutral-800 shrink-0 bg-slate-50 dark:bg-neutral-950">
+        <div className="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center">
+          <Zap className="w-4.5 h-4.5 text-indigo-600 dark:text-indigo-400" />
+        </div>
+        <div>
+          <p className="font-bold text-slate-900 dark:text-white text-sm">Bulk Contributions</p>
+          <p className="text-xs text-slate-400 dark:text-neutral-500">Add contributions to multiple goals at once</p>
+        </div>
+      </div>
+      <div className="flex-1 overflow-auto p-5 custom-scrollbar">
+        <table className="w-full border-collapse min-w-[760px]">
+          <thead>
+            <tr className="border-b-2 border-slate-100 dark:border-neutral-800">
+              {['Goal', 'Amount (₹)', 'Date', 'Payment Method', 'Notes', ''].map((h, i) => (
+                <th key={h} className={`pb-3 pt-1 px-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-500 text-left ${i === 5 ? 'text-right' : ''}`}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-50 dark:divide-neutral-800/60">
+            {bulkEntries.map((entry: BulkEntry) => {
+              const goal = goals.find((g: SavingsGoal) => g.id === entry.goalId)
+              if (!goal) return null
+              const pct = Math.min((goal.currentAmount / goal.targetAmount) * 100, 100)
+              return (
+                <tr key={entry.id} className="hover:bg-slate-50 dark:hover:bg-neutral-800/30 transition-colors group">
+                  <td className="py-3 px-2 w-[22%] align-middle">
+                    <p className="font-semibold text-slate-900 dark:text-white text-sm truncate max-w-[130px]">{goal.name}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="w-10 bg-slate-100 dark:bg-neutral-700 rounded-full h-1.5 overflow-hidden"><div className="bg-violet-500 h-full" style={{ width: `${pct}%` }} /></div>
+                      <span className="text-xs text-slate-400">{pct.toFixed(0)}%</span>
+                    </div>
+                  </td>
+                  <td className="py-3 px-2 w-[16%] align-middle">
+                    <input type="number" step="0.01" placeholder="0.00" value={entry.amount}
+                      onChange={e => handleBulkEntryChange(entry.id, 'amount', e.target.value)}
+                      className="w-full px-3 py-2 text-sm font-semibold bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-700 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                  </td>
+                  <td className="py-3 px-2 w-[15%] align-middle">
+                    <input type="date" value={entry.date}
+                      onChange={e => handleBulkEntryChange(entry.id, 'date', e.target.value)}
+                      className="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-700 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                  </td>
+                  <td className="py-3 px-2 w-[18%] align-middle">
+                    <select value={entry.paymentMethod} onChange={e => handleBulkEntryChange(entry.id, 'paymentMethod', e.target.value)}
+                      className="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-700 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500 cursor-pointer">
+                      {staticData.paymentMethods.filter((m: any) => m.isActive).map((m: any) => (
+                        <option key={m.id} value={m.name}>{m.name}</option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="py-3 px-2 align-middle">
+                    <input type="text" placeholder="Optional note" value={entry.description}
+                      onChange={e => handleBulkEntryChange(entry.id, 'description', e.target.value)}
+                      className="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-700 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                  </td>
+                  <td className="py-3 px-2 align-middle text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <button onClick={() => handleAddBulkRow(goal.id)} className="p-1.5 rounded-lg hover:bg-violet-100 dark:hover:bg-violet-900/30 text-slate-400 hover:text-violet-600 cursor-pointer transition-colors"><Plus className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => handleRemoveBulkRow(entry.id)} className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 cursor-pointer transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                    </div>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+      <div className="flex items-center justify-between px-5 py-3.5 border-t border-slate-100 dark:border-neutral-800 bg-slate-50 dark:bg-neutral-950 shrink-0">
+        <div className="flex items-center gap-2.5">
+          <span className="text-sm font-semibold text-slate-600 dark:text-neutral-300">Total:</span>
+          <span className="px-3.5 py-1.5 rounded-xl bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 font-bold text-sm border border-violet-200 dark:border-violet-800">
+            {formatCurrency(bulkTotal)}
+          </span>
+        </div>
+        <button onClick={handleSaveBulkAllocation} disabled={bulkSaving || bulkTotal === 0}
+          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl text-sm shadow-md shadow-violet-500/20 transition-all cursor-pointer active:scale-95">
+          {bulkSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          Save All
+        </button>
       </div>
     </div>
   )

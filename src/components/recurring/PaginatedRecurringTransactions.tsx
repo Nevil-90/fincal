@@ -6,7 +6,7 @@ import { createPortal } from 'react-dom'
 import { Search, Filter, Plus, RefreshCw, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Repeat, X, ArrowDownLeft, ArrowUpRight, History, Pause, Play, Trash2, FileText, BarChart2 } from 'lucide-react'
 import RecurringForm from './RecurringForm'
 import PriceHistoryModal from './PriceHistoryModal'
-import { formatCurrency } from '@/lib/financial-utils'
+import { formatCurrency, formatCompactCurrency } from '@/lib/financial-utils'
 import { useUser } from '@/hooks/useApi'
 import useSWR from 'swr'
 import type { RecurringTransaction, RecurringFormData } from './types'
@@ -49,7 +49,7 @@ interface Filters {
 export default function PaginatedRecurringTransactions() {
   // Pagination state
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
-  const [transactionHistory, setTransactionHistory] = useState<{ 
+  const [transactionHistory, setTransactionHistory] = useState<{
     [key: string]: {
       transactions: Array<{
         id: string
@@ -69,11 +69,11 @@ export default function PaginatedRecurringTransactions() {
     }
   }>({})
   const [loadingHistory, setLoadingHistory] = useState<{ [key: string]: boolean }>({})
-  
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize] = useState(10)
-  
+
   // Filter state
   const [filters, setFilters] = useState<Filters>({
     status: 'all',
@@ -82,11 +82,11 @@ export default function PaginatedRecurringTransactions() {
     frequency: ''
   })
   const [showFilters, setShowFilters] = useState(false)
-  
+
   // Form state
   const [showAddForm, setShowAddForm] = useState(false)
   const [formLoading, setFormLoading] = useState(false)
-  
+
   // Price history modal state
   const [priceHistoryModal, setPriceHistoryModal] = useState<{
     isOpen: boolean;
@@ -95,15 +95,15 @@ export default function PaginatedRecurringTransactions() {
     isOpen: false,
     recurringTransaction: null
   })
-  
+
   const [analyticsRecurring, setAnalyticsRecurring] = useState<PaginatedRecurringResponse['data'][0] | null>(null)
-  
+
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type })
-    setTimeout(() => setToast(null), 4000)
+    setTimeout(() => setToast(null), 3000)
   }
-  
+
   // Form data
   const [formData, setFormData] = useState<RecurringFormData>({
     type: 'expense',
@@ -165,38 +165,38 @@ export default function PaginatedRecurringTransactions() {
   // Transaction history handlers
   const toggleRowExpansion = async (recurringId: string) => {
     const newExpanded = new Set(expandedRows)
-    
+
     if (expandedRows.has(recurringId)) {
       // Collapse row
       newExpanded.delete(recurringId)
     } else {
       // Expand row and fetch history if not already loaded
       newExpanded.add(recurringId)
-      
+
       if (!transactionHistory[recurringId]) {
         await fetchTransactionHistory(recurringId)
       }
     }
-    
+
     setExpandedRows(newExpanded)
   }
 
   const fetchTransactionHistory = async (recurringId: string, page: number = 1, limit: number = 10) => {
     setLoadingHistory(prev => ({ ...prev, [recurringId]: true }))
-    
+
     try {
       const response = await fetch(`/api/transactions?recurringId=${recurringId}&page=${page}&limit=${limit}`)
       if (response.ok) {
         const data = await response.json()
-        
+
         // Handle both paginated and non-paginated responses
         const transactions = data.transactions || data
         const pagination = data.pagination || null
-        
+
         setTransactionHistory(prev => ({
           ...prev,
           [recurringId]: {
-            transactions: Array.isArray(transactions) ? transactions.sort((a, b) => 
+            transactions: Array.isArray(transactions) ? transactions.sort((a, b) =>
               new Date(b.date).getTime() - new Date(a.date).getTime()
             ) : [],
             pagination,
@@ -306,7 +306,7 @@ export default function PaginatedRecurringTransactions() {
   const handlePriceChangeAdded = async () => {
     // Refresh the current page data to show updated price changes
     await fetchRecurringTransactions(currentPage)
-    
+
     // Also refresh any expanded transaction history to show new amounts
     const expandedRecurringIds = Array.from(expandedRows)
     for (const recurringId of expandedRecurringIds) {
@@ -326,7 +326,7 @@ export default function PaginatedRecurringTransactions() {
 
       if (response.ok) {
         showToast('Transaction deleted successfully!', 'success')
-        
+
         // Refresh both recurring data and clear transaction history cache
         fetchRecurringTransactions(currentPage)
         setTransactionHistory({})
@@ -370,7 +370,7 @@ export default function PaginatedRecurringTransactions() {
       if (response.ok) {
         const result = await response.json()
         showToast(`Recurring transaction created successfully!\n\n${result.message || 'Transaction will be processed automatically.'}`, 'success')
-        
+
         // Reset form
         setFormData({
           type: 'expense',
@@ -383,7 +383,7 @@ export default function PaginatedRecurringTransactions() {
           startDate: new Date().toISOString().split('T')[0],
           splitType: 'personal',
         })
-        
+
         setShowAddForm(false)
         fetchRecurringTransactions(1) // Go to first page to see new transaction
       } else {
@@ -404,10 +404,10 @@ export default function PaginatedRecurringTransactions() {
     }
     const active = recurringData.data.filter(r => r.isActive)
     const inactive = recurringData.data.filter(r => !r.isActive).length
-    
+
     let totalMonthlyCost = 0
     let totalMonthlyIncome = 0
-    
+
     active.forEach(subscription => {
       let cost = 0
       if (subscription.frequency.toLowerCase() === 'daily') {
@@ -417,12 +417,12 @@ export default function PaginatedRecurringTransactions() {
         switch (subscription.frequency.toLowerCase()) {
           case 'weekly': monthlyMultiplier = 4.33; break;
           case 'monthly': monthlyMultiplier = 1; break;
-          case 'quarterly': monthlyMultiplier = 1/3; break;
-          case 'yearly': monthlyMultiplier = 1/12; break;
+          case 'quarterly': monthlyMultiplier = 1 / 3; break;
+          case 'yearly': monthlyMultiplier = 1 / 12; break;
         }
         cost = subscription.amount * monthlyMultiplier
       }
-      
+
       if (subscription.type === 'expense') {
         totalMonthlyCost += cost
       } else if (subscription.type === 'income') {
@@ -450,50 +450,44 @@ export default function PaginatedRecurringTransactions() {
 
   return (
     <div className="space-y-6">
-      {/* Header with Search and Filters */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div className="flex items-center gap-4">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Recurring Transactions</h2>
-          <span className="text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-neutral-800 px-2 py-1 rounded">
-            {recurringData?.pagination.totalCount || 0} total
-          </span>
         </div>
-        
-        <div className="flex items-center gap-2">
+
+        <div className="flex flex-nowrap items-center justify-between sm:justify-end gap-1.5 sm:gap-2 w-full sm:w-auto">
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-700 rounded-md hover:bg-gray-50 dark:hover:bg-neutral-800"
+            className="flex items-center justify-center flex-1 sm:flex-none gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 text-[11px] sm:text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-700 rounded-md hover:bg-gray-50 dark:hover:bg-neutral-800 whitespace-nowrap"
           >
-            <Filter className="w-4 h-4" />
+            <Filter className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             Filters
           </button>
-          
+
           <button
             onClick={() => {
               fetchRecurringTransactions()
             }}
             disabled={loading}
-            className="flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-700 rounded-md hover:bg-gray-50 dark:hover:bg-neutral-800 disabled:opacity-50"
+            className="flex items-center justify-center flex-1 sm:flex-none gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 text-[11px] sm:text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-700 rounded-md hover:bg-gray-50 dark:hover:bg-neutral-800 disabled:opacity-50 whitespace-nowrap"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${loading ? 'animate-spin' : ''}`} />
             Refresh
           </button>
-          
+
           <button
             onClick={() => setShowAddForm(true)}
-            className="flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 dark:bg-blue-500 rounded-md hover:bg-blue-700 dark:hover:bg-blue-600"
+            className="flex items-center justify-center flex-1 sm:flex-none gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 text-[11px] sm:text-sm font-medium text-white bg-blue-600 dark:bg-blue-500 rounded-md hover:bg-blue-700 dark:hover:bg-blue-600 whitespace-nowrap"
           >
-            <Plus className="w-4 h-4" />
-            Add Recurring
+            <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            Add
           </button>
         </div>
       </div>
 
-      {/* Filters Panel */}
       {showFilters && (
         <div className="bg-white dark:bg-neutral-900 p-4 rounded-xl shadow-sm ring-1 ring-gray-100 dark:ring-neutral-800">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:[&>*:last-child:nth-child(odd)]:col-span-2 lg:[&>*:last-child:nth-child(odd)]:col-span-1">
-            {/* Status Filter */}
             <select
               value={filters.status}
               onChange={(e) => handleFilterChange('status', e.target.value)}
@@ -503,8 +497,7 @@ export default function PaginatedRecurringTransactions() {
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
             </select>
-            
-            {/* Type Filter */}
+
             <select
               value={filters.type}
               onChange={(e) => handleFilterChange('type', e.target.value)}
@@ -514,8 +507,7 @@ export default function PaginatedRecurringTransactions() {
               <option value="income">Income</option>
               <option value="expense">Expense</option>
             </select>
-            
-            {/* Category Filter */}
+
             <select
               value={filters.category}
               onChange={(e) => handleFilterChange('category', e.target.value)}
@@ -526,8 +518,7 @@ export default function PaginatedRecurringTransactions() {
                 <option key={category} value={category}>{category}</option>
               ))}
             </select>
-            
-            {/* Frequency Filter */}
+
             <select
               value={filters.frequency}
               onChange={(e) => handleFilterChange('frequency', e.target.value)}
@@ -539,8 +530,7 @@ export default function PaginatedRecurringTransactions() {
               ))}
             </select>
           </div>
-          
-          {/* Clear Filters */}
+
           <div className="mt-4 flex justify-end">
             <button
               onClick={clearFilters}
@@ -552,7 +542,6 @@ export default function PaginatedRecurringTransactions() {
         </div>
       )}
 
-      {/* Premium Cashflow Widget */}
       {recurringData && recurringData.data.length > 0 && (
         (() => {
           const expensePercentage = monthlyIncome > 0 ? Math.min(100, (monthlyCost / monthlyIncome) * 100) : (monthlyCost > 0 ? 100 : 0);
@@ -561,62 +550,95 @@ export default function PaginatedRecurringTransactions() {
           const isNegative = netRemaining < 0;
 
           return (
-            <div className="bg-white dark:bg-neutral-900 rounded-2xl p-4 sm:p-5 mb-6 shadow-sm ring-1 ring-gray-100 dark:ring-neutral-800">
-              <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 items-start lg:items-center">
-                
-                {/* Left: Net Remaining */}
-                <div className="flex-1 w-full min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-gray-500 dark:text-gray-400 text-[11px] font-bold uppercase tracking-wider">Net Cashflow</h3>
-                    <span className={`text-[10px] font-bold flex items-center px-1.5 py-0.5 rounded-md ${isNegative ? 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400' : 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400'}`}>
+            <div className="bg-white dark:bg-neutral-900 rounded-2xl px-3 py-2.5 mb-4 ring-1 ring-gray-100 dark:ring-neutral-800">
+
+              <div className="flex items-center gap-0 pb-2 mb-2 border-b border-gray-100 dark:border-neutral-800">
+
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-0.5">
+                    Net cashflow
+                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className="text-lg font-bold tracking-tight text-gray-900 dark:text-white whitespace-nowrap"
+                      title={formatCurrency(Math.abs(netRemaining))}
+                    >
+                      {isNegative ? '-' : ''}{formatCompactCurrency(Math.abs(netRemaining))}
+                    </span>
+                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded shrink-0 ${isNegative
+                      ? 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400'
+                      : 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400'
+                      }`}>
                       {isNegative ? 'Deficit' : 'Surplus'}
                     </span>
                   </div>
-                  <span className="text-2xl sm:text-3xl font-black tracking-tight text-gray-900 dark:text-white truncate block">
-                    {isNegative ? '-' : ''}{formatCurrency(Math.abs(netRemaining))}
-                  </span>
                 </div>
 
-                {/* Middle: Progress Bar */}
-                <div className="w-full lg:w-[45%] bg-gray-50 dark:bg-neutral-800/50 p-3 sm:p-4 rounded-xl ring-1 ring-gray-200/60 dark:ring-neutral-700/50 shrink-0">
-                  <div className="flex justify-between items-end mb-2">
-                    <div className="min-w-0">
-                      <p className="text-emerald-600 dark:text-emerald-400 text-[10px] font-bold uppercase tracking-wider">Income</p>
-                      <p className="text-sm sm:text-base font-bold text-gray-900 dark:text-white leading-none mt-0.5 truncate">{formatCurrency(monthlyIncome)}</p>
-                    </div>
-                    <div className="text-right min-w-0 pl-2">
-                      <p className="text-rose-600 dark:text-rose-400 text-[10px] font-bold uppercase tracking-wider">Cost</p>
-                      <p className="text-sm sm:text-base font-bold text-gray-900 dark:text-white leading-none mt-0.5 truncate">{formatCurrency(monthlyCost)}</p>
-                    </div>
+                <div className="w-px h-7 bg-gray-200 dark:bg-neutral-700 mx-2.5 shrink-0" />
+
+                <div className="shrink-0 text-right">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-0.5">
+                    Subs
+                  </p>
+                  <p className="text-sm font-bold text-gray-900 dark:text-white flex items-center justify-end gap-1">
+                    {activeSubscriptions.length}
+                    <Repeat className="w-3 h-3 text-blue-500 shrink-0" />
+                  </p>
+                </div>
+
+                <div className="w-px h-7 bg-gray-200 dark:bg-neutral-700 mx-2.5 shrink-0" />
+
+                <div className="shrink-0 text-right">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-0.5">
+                    Spent
+                  </p>
+                  <p
+                    className="text-sm font-bold text-gray-900 dark:text-white whitespace-nowrap"
+                    title={formatCurrency(totalSpent)}
+                  >
+                    {formatCompactCurrency(totalSpent)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5">
+
+                <div className="shrink-0">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mb-0.5">
+                    Income
+                  </p>
+                  <p className="text-xs font-bold text-gray-900 dark:text-white leading-none" title={formatCurrency(monthlyIncome)}>
+                    {formatCompactCurrency(monthlyIncome)}
+                  </p>
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="h-1.5 w-full bg-gray-200 dark:bg-neutral-700 rounded-full overflow-hidden flex">
+                    <div className="h-full bg-emerald-500 transition-all duration-700" style={{ width: `${incomePercentage}%` }} />
+                    <div className="h-full bg-rose-500 transition-all duration-700" style={{ width: `${expensePercentage}%` }} />
                   </div>
-                  
-                  <div className="h-2 w-full bg-gray-200 dark:bg-neutral-700 rounded-full overflow-hidden flex">
-                    <div className="h-full bg-emerald-500 transition-all duration-1000 ease-out" style={{ width: `${incomePercentage}%` }}></div>
-                    <div className="h-full bg-rose-500 transition-all duration-1000 ease-out" style={{ width: `${expensePercentage}%` }}></div>
-                  </div>
-                  
-                  <div className="flex justify-between items-center text-[10px] font-medium text-gray-500 dark:text-gray-400 pt-2">
-                    <p>Utilizing {expensePercentage.toFixed(1)}%</p>
+                  <div className="flex justify-between items-center mt-0.5">
+                    <p className="text-[10px] text-gray-400 dark:text-gray-500">
+                      {expensePercentage.toFixed(1)}% utilized
+                    </p>
                     {expensePercentage > 50 && monthlyIncome > 0 && (
-                      <span className={`${expensePercentage > 80 ? 'text-rose-600 dark:text-rose-400 font-bold' : 'text-amber-600 dark:text-amber-400'}`}>
-                        {expensePercentage > 80 ? 'Critical usage' : 'High usage'}
+                      <span className={`text-[10px] font-semibold ${expensePercentage > 80
+                        ? 'text-rose-600 dark:text-rose-400'
+                        : 'text-amber-500 dark:text-amber-400'
+                        }`}>
+                        {expensePercentage > 80 ? 'Critical' : 'High'}
                       </span>
                     )}
                   </div>
                 </div>
 
-                {/* Right: Sub/Spent Stats */}
-                <div className="flex-1 w-full flex lg:flex-col justify-between lg:justify-center gap-4 lg:gap-3 border-t border-gray-100 dark:border-neutral-800 pt-4 lg:border-t-0 lg:pt-0 lg:pl-4 lg:border-l min-w-0">
-                  <div className="min-w-0">
-                    <p className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase tracking-wider mb-0.5 truncate">Active Subs</p>
-                    <p className="text-base sm:text-lg font-bold text-gray-900 dark:text-white flex items-center gap-1.5 truncate">
-                      {activeSubscriptions.length} <Repeat className="w-3 h-3 text-blue-500 shrink-0" />
-                    </p>
-                  </div>
-                  <div className="text-right lg:text-left min-w-0">
-                    <p className="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase tracking-wider mb-0.5 truncate">Lifetime Spent</p>
-                    <p className="text-base sm:text-lg font-bold text-gray-900 dark:text-white truncate">{formatCurrency(totalSpent)}</p>
-                  </div>
+                <div className="shrink-0 text-right">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-rose-600 dark:text-rose-400 mb-0.5">
+                    Cost
+                  </p>
+                  <p className="text-xs font-bold text-gray-900 dark:text-white leading-none" title={formatCurrency(monthlyCost)}>
+                    {formatCompactCurrency(monthlyCost)}
+                  </p>
                 </div>
 
               </div>
@@ -625,7 +647,6 @@ export default function PaginatedRecurringTransactions() {
         })()
       )}
 
-      {/* Recurring Transactions List */}
       <div className="space-y-4">
         {recurringData?.data.length === 0 ? (
           <div className="text-center py-16 bg-white dark:bg-neutral-900 rounded-2xl shadow-sm ring-1 ring-gray-100 dark:ring-neutral-800">
@@ -637,15 +658,13 @@ export default function PaginatedRecurringTransactions() {
           recurringData?.data.map((recurring) => (
             <div key={recurring.id} className="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm ring-1 ring-gray-100 dark:ring-neutral-800 overflow-hidden">
               <div className="flex flex-col">
-                {/* Compact Transaction Header */}
                 <div className="p-4 sm:p-5 bg-slate-50/70 dark:bg-neutral-800/50">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <span className={`inline-flex px-2.5 py-1.5 text-xs font-medium rounded-full shrink-0 ${
-                        recurring.type === 'income' 
-                          ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200/50 dark:border-green-900/50' 
-                          : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200/50 dark:border-red-900/50'
-                      }`}>
+                      <span className={`inline-flex px-2.5 py-1.5 text-xs font-medium rounded-full shrink-0 ${recurring.type === 'income'
+                        ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200/50 dark:border-green-900/50'
+                        : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200/50 dark:border-red-900/50'
+                        }`}>
                         {recurring.type === 'income' ? <ArrowDownLeft className="h-4 w-4 text-emerald-600 dark:text-emerald-400" /> : <ArrowUpRight className="h-4 w-4 text-rose-600 dark:text-rose-400" />}
                       </span>
                       <button
@@ -659,7 +678,7 @@ export default function PaginatedRecurringTransactions() {
                         <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{recurring.category}</p>
                       </button>
                     </div>
-                    
+
                     <div className="flex items-center justify-between md:justify-end gap-4 border-t border-slate-200/60 dark:border-neutral-700 pt-3 md:border-t-0 md:pt-0">
                       <div className="text-left md:text-right">
                         <div className="text-base sm:text-lg font-black text-gray-900 dark:text-white">
@@ -669,8 +688,7 @@ export default function PaginatedRecurringTransactions() {
                           {recurring.frequency}
                         </div>
                       </div>
-                      
-                      {/* Individual Total Spent */}
+
                       <div className="text-left md:text-right border-l border-gray-200 dark:border-neutral-700 pl-4">
                         <span className={`text-sm font-semibold mt-1 ${recurring.type === 'income' ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-900 dark:text-neutral-100'}`}>
                           {formatCurrency(recurring.totalSpent || 0)}
@@ -679,25 +697,23 @@ export default function PaginatedRecurringTransactions() {
                           Total Spent
                         </div>
                       </div>
-                      
-                      <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-full ${
-                        (recurring.isActive && !recurring.isPaused)
-                          ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200/30 dark:border-emerald-900/30' 
-                          : 'bg-slate-50 dark:bg-neutral-800/50 text-slate-600 dark:text-neutral-400 border border-slate-200/50 dark:border-neutral-700'
-                      }`}>
+
+                      <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-full ${(recurring.isActive && !recurring.isPaused)
+                        ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200/30 dark:border-emerald-900/30'
+                        : 'bg-slate-50 dark:bg-neutral-800/50 text-slate-600 dark:text-neutral-400 border border-slate-200/50 dark:border-neutral-700'
+                        }`}>
                         {(recurring.isActive && !recurring.isPaused) ? 'Active' : 'Paused'}
                       </span>
                     </div>
                   </div>
-                  
-                  {/* Compact Info Row */}
+
                   <div className="mt-4 pt-3 border-t border-slate-200/60 dark:border-neutral-700 md:border-t-0 md:pt-0 md:mt-3.5 flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between text-xs text-gray-500 dark:text-gray-400 font-medium">
                     <div className="flex flex-wrap items-center gap-3 sm:gap-4">
                       <span>Start: {new Date(recurring.startDate || recurring.nextDue).toLocaleDateString()}</span>
                       <span className="hidden sm:inline text-gray-300 dark:text-gray-600">•</span>
                       <span>Next: {new Date(recurring.nextDue).toLocaleDateString()}</span>
                     </div>
-                    
+
                     <div className="flex items-center justify-between sm:justify-end gap-1 sm:gap-1.5 mt-3 sm:mt-0 w-full sm:w-auto">
                       <button
                         onClick={() => showPriceHistory(recurring)}
@@ -708,11 +724,10 @@ export default function PaginatedRecurringTransactions() {
                       </button>
                       <button
                         onClick={() => toggleRecurringStatus(recurring.id, recurring.isActive && !recurring.isPaused)}
-                        className={`px-1.5 sm:px-2.5 py-1.5 sm:py-1 rounded-lg text-[11px] sm:text-xs transition-colors border ${
-                          (recurring.isActive && !recurring.isPaused)
-                            ? 'text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-900/50 hover:bg-amber-100 dark:hover:bg-amber-900/40'
-                            : 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-900/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/40'
-                        }`}
+                        className={`px-1.5 sm:px-2.5 py-1.5 sm:py-1 rounded-lg text-[11px] sm:text-xs transition-colors border ${(recurring.isActive && !recurring.isPaused)
+                          ? 'text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-900/50 hover:bg-amber-100 dark:hover:bg-amber-900/40'
+                          : 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-900/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/40'
+                          }`}
                       >
                         {(recurring.isActive && !recurring.isPaused) ? <span className="flex items-center justify-center gap-1 sm:gap-1.5 whitespace-nowrap"><Pause className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Pause</span> : <span className="flex items-center justify-center gap-1 sm:gap-1.5 whitespace-nowrap"><Play className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Resume</span>}
                       </button>
@@ -737,7 +752,6 @@ export default function PaginatedRecurringTransactions() {
                   </div>
                 </div>
 
-                {/* Expanded Transaction History */}
                 {expandedRows.has(recurring.id) && (
                   <div className="p-4 border-t border-gray-100 dark:border-neutral-800 bg-white dark:bg-neutral-900">
                     <div className="flex items-center justify-between mb-3">
@@ -746,7 +760,7 @@ export default function PaginatedRecurringTransactions() {
                         {transactionHistory[recurring.id]?.transactions?.length || 0} transactions
                       </div>
                     </div>
-                    
+
                     <div className="relative min-h-[100px]">
                       {loadingHistory[recurring.id] && transactionHistory[recurring.id]?.transactions ? (
                         <div className="absolute inset-0 bg-white/60 dark:bg-neutral-900/60 backdrop-blur-[2px] z-10 flex items-center justify-center rounded-xl">
@@ -760,7 +774,6 @@ export default function PaginatedRecurringTransactions() {
                         </div>
                       ) : transactionHistory[recurring.id]?.transactions?.length > 0 ? (
                         <div className="space-y-3">
-                          {/* Compact Transaction List */}
                           <div className="space-y-1 rounded-xl ring-1 ring-gray-100 dark:ring-neutral-800 overflow-hidden">
                             {transactionHistory[recurring.id].transactions.map((transaction) => (
                               <div key={`tx-${transaction.id}`} className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-neutral-800/50 border-b border-gray-100 dark:border-neutral-800 last:border-b-0 transition-colors">
@@ -788,7 +801,6 @@ export default function PaginatedRecurringTransactions() {
                             ))}
                           </div>
 
-                          {/* Compact Pagination */}
                           {transactionHistory[recurring.id]?.pagination && transactionHistory[recurring.id].pagination!.totalPages > 1 && (
                             <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-neutral-700">
                               <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -828,7 +840,6 @@ export default function PaginatedRecurringTransactions() {
         )}
       </div>
 
-      {/* Pagination */}
       {recurringData && recurringData.pagination.totalPages > 1 && (
         <div className="flex items-center justify-between bg-white dark:bg-neutral-900 px-4 py-3 rounded-xl shadow-sm ring-1 ring-gray-100 dark:ring-neutral-800">
           <div className="flex items-center text-sm text-gray-700 dark:text-gray-300">
@@ -836,7 +847,7 @@ export default function PaginatedRecurringTransactions() {
             {Math.min(recurringData.pagination.currentPage * recurringData.pagination.limit, recurringData.pagination.totalCount)} of{' '}
             {recurringData.pagination.totalCount} results
           </div>
-          
+
           <div className="flex items-center gap-2">
             <button
               onClick={() => goToPage(recurringData.pagination.currentPage - 1)}
@@ -846,11 +857,11 @@ export default function PaginatedRecurringTransactions() {
               <ChevronLeft className="w-4 h-4" />
               Previous
             </button>
-            
+
             <span className="text-sm text-gray-700 dark:text-gray-300">
               Page {recurringData.pagination.currentPage} of {recurringData.pagination.totalPages}
             </span>
-            
+
             <button
               onClick={() => goToPage(recurringData.pagination.currentPage + 1)}
               disabled={!recurringData.pagination.hasNextPage}
@@ -863,7 +874,6 @@ export default function PaginatedRecurringTransactions() {
         </div>
       )}
 
-      {/* Add Recurring Form Modal */}
       {showAddForm && typeof document !== 'undefined' && createPortal(
         <RecurringForm
           formData={formData}
@@ -875,7 +885,6 @@ export default function PaginatedRecurringTransactions() {
         document.body
       )}
 
-      {/* Price History Modal */}
       {priceHistoryModal.isOpen && priceHistoryModal.recurringTransaction && typeof document !== 'undefined' && createPortal(
         <PriceHistoryModal
           isOpen={priceHistoryModal.isOpen}
@@ -886,7 +895,6 @@ export default function PaginatedRecurringTransactions() {
         document.body
       )}
 
-      {/* Recurring Analytics Modal */}
       {analyticsRecurring && recurringData && typeof document !== 'undefined' && createPortal(
         (() => {
           const totalSpent = analyticsRecurring.totalSpent || 0
@@ -985,14 +993,12 @@ export default function PaginatedRecurringTransactions() {
         document.body
       )}
 
-      {/* Toast Notification */}
       {toast && (
         <div className="fixed bottom-24 md:bottom-6 left-1/2 -translate-x-1/2 z-[200] animate-slide-up">
-          <div className={`flex items-center gap-2 px-4 py-3 rounded-2xl shadow-xl text-sm font-bold border ${
-            toast.type === 'success' 
-              ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
-              : 'bg-rose-50 text-rose-700 border-rose-200'
-          }`}>
+          <div className={`flex items-center gap-2 px-4 py-3 rounded-2xl shadow-xl text-sm font-bold border ${toast.type === 'success'
+            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+            : 'bg-rose-50 text-rose-700 border-rose-200'
+            }`}>
             <span>{toast.message}</span>
             <button onClick={() => setToast(null)} className="ml-2 opacity-70 hover:opacity-100">
               <X className="h-4 w-4" />

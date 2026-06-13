@@ -24,13 +24,13 @@ export function calculateFinancialSummary(
   const totalIncome = transactions
     .filter(t => t.type === 'income')
     .reduce((sum, t) => sum + Number(t.amount), 0)
-  
+
   const totalExpenses = transactions
     .filter(t => t.type === 'expense')
     .reduce((sum, t) => sum + Number(t.amount), 0)
-  
+
   const balance = totalIncome - totalExpenses + (monthlyBudget?.carryOver ? Number(monthlyBudget.carryOver) : 0)
-  
+
   return {
     totalIncome,
     totalExpenses,
@@ -44,7 +44,7 @@ export function calculateGoalTimeline(
   monthlyAvailable: number
 ): GoalCalculation {
   const remainingAmount = Number(goal.targetAmount) - Number(goal.currentAmount)
-  
+
   if (monthlyAvailable <= 0) {
     return {
       monthsToGoal: -1,
@@ -53,9 +53,9 @@ export function calculateGoalTimeline(
       timeline: 'Cannot afford with current budget'
     }
   }
-  
+
   const monthsToGoal = Math.ceil(remainingAmount / monthlyAvailable)
-  
+
   return {
     monthsToGoal,
     monthlyRequired: remainingAmount / monthsToGoal,
@@ -69,7 +69,7 @@ export function calculateMultipleGoals(
   monthlyAvailable: number
 ): GoalCalculation[] {
   const activeGoals = goals.filter(g => !g.isCompleted).sort((a, b) => a.priority - b.priority)
-  
+
   return activeGoals.map(goal => calculateGoalTimeline(goal, monthlyAvailable / activeGoals.length))
 }
 
@@ -125,7 +125,7 @@ export const EXPENSE_CATEGORIES = [
   'Food & Dining',
   'Groceries',
   'Transportation',
-  'Petrol/Fuel', 
+  'Petrol/Fuel',
   'Auto Rickshaw/Taxi',
   'Public Transport',
   'Shopping',
@@ -221,7 +221,7 @@ export const EXPENSE_PURPOSES = [
 
 export const BUDGET_CATEGORIES = [
   'Food & Dining Budget',
-  'Transportation Budget', 
+  'Transportation Budget',
   'Shopping Budget',
   'Entertainment Budget',
   'Bills & Utilities Budget',

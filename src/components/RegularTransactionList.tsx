@@ -39,6 +39,9 @@ interface RegularTransactionListProps {
   selectedYear?: number
   viewMode?: 'month' | 'year' | 'all'
   onTransactionDeleted?: () => void
+  onYearChange?: (year: number | undefined) => void
+  onMonthChange?: (month: number | undefined) => void
+  availableYears?: number[]
 }
 
 interface GroupedTransactions {
@@ -52,10 +55,13 @@ interface GroupedTransactions {
 }
 
 export default function RegularTransactionList({
-  selectedMonth = new Date().getMonth(),
-  selectedYear = new Date().getFullYear(),
+  selectedMonth,
+  selectedYear,
   viewMode = 'all',
-  onTransactionDeleted = () => { }
+  onTransactionDeleted = () => { },
+  onYearChange,
+  onMonthChange,
+  availableYears = []
 }: RegularTransactionListProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all')
@@ -63,6 +69,7 @@ export default function RegularTransactionList({
   const [filterPaymentMethod, setFilterPaymentMethod] = useState('all')
   const [filterSource, setFilterSource] = useState('all')
   const [filterRecurring, setFilterRecurring] = useState<'all' | 'recurring' | 'one-time'>('all')
+  const [sortOption, setSortOption] = useState<'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc'>('date-desc')
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(15)
   const [showDateRangePicker, setShowDateRangePicker] = useState(false)
@@ -111,7 +118,11 @@ export default function RegularTransactionList({
     return filters
   }, [searchTerm, filterType, filterCategory, filterPaymentMethod, filterSource, filterRecurring, viewMode, selectedMonth, selectedYear])
 
-  const { transactions: fetchedTransactions, pagination, isLoading, mutate } = useTransactions(currentPage, pageSize, apiFilters)
+  const { transactions: fetchedTransactions, pagination, isLoading, mutate } = useTransactions(
+    groupBy !== 'none' ? 1 : currentPage,
+    groupBy !== 'none' ? 10000 : pageSize,
+    apiFilters
+  )
 
   // Debounce API refreshes to prevent storms when deleting rapidly
   const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -124,8 +135,18 @@ export default function RegularTransactionList({
   }, [mutate, onTransactionDeleted])
 
   const filteredTransactions = useMemo(() => {
-    return (fetchedTransactions || []).filter(t => !pendingDeleteIds.has(t.id))
-  }, [fetchedTransactions, pendingDeleteIds])
+    let sorted = (fetchedTransactions || []).filter(t => !pendingDeleteIds.has(t.id))
+    
+    sorted = sorted.sort((a, b) => {
+      if (sortOption === 'date-desc') return new Date(b.date).getTime() - new Date(a.date).getTime()
+      if (sortOption === 'date-asc') return new Date(a.date).getTime() - new Date(b.date).getTime()
+      if (sortOption === 'amount-desc') return b.amount - a.amount
+      if (sortOption === 'amount-asc') return a.amount - b.amount
+      return 0
+    })
+
+    return sorted
+  }, [fetchedTransactions, pendingDeleteIds, sortOption])
 
 
   const totalIncome = filteredTransactions
@@ -438,7 +459,19 @@ export default function RegularTransactionList({
     setShowDateRangePicker(false)
   }
 
-  const totalPages = pagination?.totalPages || 1
+  const totalItems = useMemo(() => {
+    return groupBy !== 'none'
+      ? Object.keys(groupedTransactions).length
+      : (pagination?.totalCount || 0)
+  }, [groupBy, groupedTransactions, pagination])
+
+  const totalPages = useMemo(() => {
+    if (groupBy !== 'none') {
+      return Math.max(1, Math.ceil(Object.keys(groupedTransactions).length / pageSize))
+    }
+    return pagination?.totalPages || 1
+  }, [groupBy, groupedTransactions, pageSize, pagination])
+
   const safePage = Math.min(currentPage, totalPages)
   
   useEffect(() => {
@@ -448,18 +481,18 @@ export default function RegularTransactionList({
     filterType,
     filterCategory,
     filterPaymentMethod,
-        filterSource,
+    filterSource,
     filterRecurring,
     groupBy
   ])
 
   const paginationLabel = useMemo(() => {
-    const totalItems = pagination?.totalCount || 0
     if (totalItems === 0) return '0 items'
     const start = (safePage - 1) * pageSize + 1
     const end = Math.min(safePage * pageSize, totalItems)
-    return `${start}-${end} of ${totalItems} entries`
-  }, [safePage, pageSize, pagination])
+    const suffix = groupBy !== 'none' ? 'groups' : 'entries'
+    return `${start}-${end} of ${totalItems} ${suffix}`
+  }, [safePage, pageSize, totalItems, groupBy])
 
   const paginatedTransactions = useMemo(() => {
     if (groupBy !== 'none') return []
@@ -468,8 +501,11 @@ export default function RegularTransactionList({
 
   const paginatedGroups = useMemo(() => {
     if (groupBy === 'none') return []
-    return Object.entries(groupedTransactions)
-  }, [groupedTransactions])
+    const entries = Object.entries(groupedTransactions)
+    const start = (safePage - 1) * pageSize
+    const end = start + pageSize
+    return entries.slice(start, end)
+  }, [groupedTransactions, groupBy, safePage, pageSize])
 
   const resetFilters = () => {
     setSearchTerm('')
@@ -479,11 +515,14 @@ export default function RegularTransactionList({
     setFilterSource('all')
     setFilterRecurring('all')
     setGroupBy('none')
+    setSortOption('date-desc')
     setCurrentPage(1)
+    onYearChange?.(undefined)
+    onMonthChange?.(undefined)
   }
 
   return (
-    <div className="space-y-4 px-3 pb-6 sm:px-4" ref={listContainerRef}>
+    <div className="space-y-4 px-0 sm:px-4 pb-6" ref={listContainerRef}>
       <TransactionFilters
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
@@ -499,6 +538,8 @@ export default function RegularTransactionList({
         setFilterRecurring={setFilterRecurring}
         groupBy={groupBy}
         setGroupBy={setGroupBy}
+        sortOption={sortOption}
+        setSortOption={setSortOption}
         showAdvancedFilters={showAdvancedFilters}
         setShowAdvancedFilters={setShowAdvancedFilters}
         hasActiveAdvancedFilters={hasActiveAdvancedFilters}
@@ -510,6 +551,11 @@ export default function RegularTransactionList({
         paymentOptions={paymentOptions}
         sourceOptions={sourceOptions}
         setCurrentPage={setCurrentPage}
+        selectedYear={selectedYear}
+        selectedMonth={selectedMonth}
+        onYearChange={onYearChange}
+        onMonthChange={onMonthChange}
+        availableYears={availableYears}
       />
 
       <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden">
@@ -893,7 +939,7 @@ export default function RegularTransactionList({
         )}
       </div>
 
-      {filteredTransactions.length > 0 && (
+      {(filteredTransactions.length > 0 || paginatedGroups.length > 0) && (
         <TransactionPagination
           pageSize={pageSize}
           setPageSize={setPageSize}
