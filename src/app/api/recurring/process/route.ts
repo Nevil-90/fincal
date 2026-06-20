@@ -4,7 +4,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { collectOccurrencesUpTo } from '@/lib/recurring-date-utils'
+import { collectOccurrencesUpTo, localToUtcMidnight } from '@/lib/recurring-date-utils'
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,10 +37,15 @@ export async function POST(request: NextRequest) {
     let totalProcessed = 0
 
     for (const rt of dueRecurring) {
+      const nextDueNormalised = localToUtcMidnight(new Date(rt.nextDue))
+      const startDateNormalised = localToUtcMidnight(new Date(rt.startDate))
+      const originalDay = startDateNormalised.getUTCDate()
+
       const { occurrences, nextDue } = collectOccurrencesUpTo(
-        new Date(rt.nextDue),
+        nextDueNormalised,
         now,
-        rt.frequency
+        rt.frequency,
+        originalDay
       )
 
       for (const date of occurrences) {

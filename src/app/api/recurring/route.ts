@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { calculateNextDue, collectOccurrencesUpTo } from '@/lib/recurring-date-utils'
+import { calculateNextDue, collectOccurrencesUpTo, localToUtcMidnight } from '@/lib/recurring-date-utils'
 
 export async function GET(request: NextRequest) {
   try {
@@ -45,8 +45,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    const start = new Date(startDate)
-    start.setUTCHours(0, 0, 0, 0)
+    const start = localToUtcMidnight(new Date(startDate))
     const now = new Date()
     now.setUTCHours(23, 59, 59, 999)
 
@@ -163,7 +162,8 @@ export async function PUT(request: NextRequest) {
         const today = new Date()
         today.setUTCHours(23, 59, 59, 999)
 
-        const nextDue = calculateNextDue(new Date(existing.startDate), today, existing.frequency)
+        const startDateNormalised = localToUtcMidnight(new Date(existing.startDate))
+        const nextDue = calculateNextDue(startDateNormalised, today, existing.frequency)
 
         const updatedRecurring = await prisma.recurringTransaction.update({
           where: { id },

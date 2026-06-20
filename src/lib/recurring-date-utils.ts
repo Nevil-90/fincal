@@ -45,12 +45,12 @@ export function advanceByFrequency(
  * Returns the first nextDue date that falls strictly after `now`,
  * walking forward from startDate by the given frequency.
  */
-export function calculateNextDue(startDate: Date, now: Date, frequency: string): Date {
-  const originalDay = startDate.getUTCDate()
+export function calculateNextDue(startDate: Date, now: Date, frequency: string, originalDay?: number): Date {
+  const day = originalDay ?? startDate.getUTCDate()
   let cur = utcTriple(startDate)
 
   while (toUtcDate(cur) <= now) {
-    cur = advanceByFrequency(cur.year, cur.month, cur.day, originalDay, frequency)
+    cur = advanceByFrequency(cur.year, cur.month, cur.day, day, frequency)
   }
 
   return toUtcDate(cur)
@@ -63,15 +63,16 @@ export function calculateNextDue(startDate: Date, now: Date, frequency: string):
 export function collectOccurrencesUpTo(
   startDate: Date,
   now: Date,
-  frequency: string
+  frequency: string,
+  originalDay?: number
 ): { occurrences: Date[]; nextDue: Date } {
-  const originalDay = startDate.getUTCDate()
+  const day = originalDay ?? startDate.getUTCDate()
   let cur = utcTriple(startDate)
   const occurrences: Date[] = []
 
   while (toUtcDate(cur) <= now) {
     occurrences.push(toUtcDate(cur))
-    cur = advanceByFrequency(cur.year, cur.month, cur.day, originalDay, frequency)
+    cur = advanceByFrequency(cur.year, cur.month, cur.day, day, frequency)
   }
 
   return { occurrences, nextDue: toUtcDate(cur) }
@@ -92,4 +93,9 @@ function utcTriple(d: Date) {
 
 function toUtcDate({ year, month, day }: { year: number; month: number; day: number }): Date {
   return new Date(Date.UTC(year, month, day))
+}
+
+export function localToUtcMidnight(date: Date): Date {
+  const adjusted = new Date(date.getTime() + 12 * 60 * 60 * 1000)
+  return new Date(Date.UTC(adjusted.getUTCFullYear(), adjusted.getUTCMonth(), adjusted.getUTCDate()))
 }

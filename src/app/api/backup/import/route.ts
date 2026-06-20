@@ -1,5 +1,6 @@
 import { NextResponse, NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { localToUtcMidnight } from '@/lib/recurring-date-utils'
 
 export async function POST(request: NextRequest) {
   try {
@@ -52,14 +53,46 @@ export async function POST(request: NextRequest) {
       if (data.monthlyBudgets?.length) await chunkInsert(tx.monthlyBudget, insertWithUserId(data.monthlyBudgets))
       if (data.travelEntries?.length) await chunkInsert(tx.travelEntry, insertWithUserId(data.travelEntries))
       
-      if (data.savingsGoals?.length) await chunkInsert(tx.savingsGoal, insertWithUserId(data.savingsGoals))
-      if (data.recurringTransactions?.length) await chunkInsert(tx.recurringTransaction, insertWithUserId(data.recurringTransactions))
-      
-      if (data.recurringPriceChanges?.length) await chunkInsert(tx.recurringTransactionPriceChange, data.recurringPriceChanges)
-      
-      
-      if (data.transactions?.length) await chunkInsert(tx.transaction, insertWithUserId(data.transactions))
-      
+      if (data.savingsGoals?.length) {
+        const savingsGoalsToInsert = data.savingsGoals.map(({ id, ...rest }: any) => ({
+          id,
+          ...rest,
+          category: rest.category || 'General',
+          userId: user.id
+        }))
+        await chunkInsert(tx.savingsGoal, savingsGoalsToInsert)
+      }
+
+      if (data.recurringTransactions?.length) {
+        const recurringToInsert = data.recurringTransactions.map(({ id, ...rest }: any) => ({
+          id,
+          ...rest,
+          startDate: rest.startDate ? localToUtcMidnight(new Date(rest.startDate)) : undefined,
+          nextDue: rest.nextDue ? localToUtcMidnight(new Date(rest.nextDue)) : undefined,
+          userId: user.id
+        }))
+        await chunkInsert(tx.recurringTransaction, recurringToInsert)
+      }
+
+      if (data.recurringPriceChanges?.length) {
+        const priceChangesToInsert = data.recurringPriceChanges.map(({ id, ...rest }: any) => ({
+          id,
+          ...rest,
+          effectiveDate: rest.effectiveDate ? localToUtcMidnight(new Date(rest.effectiveDate)) : undefined,
+        }))
+        await chunkInsert(tx.recurringTransactionPriceChange, priceChangesToInsert)
+      }
+
+      if (data.transactions?.length) {
+        const transactionsToInsert = data.transactions.map(({ id, ...rest }: any) => ({
+          id,
+          ...rest,
+          date: rest.date ? localToUtcMidnight(new Date(rest.date)) : undefined,
+          userId: user.id
+        }))
+        await chunkInsert(tx.transaction, transactionsToInsert)
+      }
+
       if (data.goalContributions?.length) await chunkInsert(tx.goalContribution, data.goalContributions)
 
       const allTransactions = [...(data.transactions || []), ...(data.recurringTransactions || [])]
