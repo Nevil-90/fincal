@@ -2,6 +2,7 @@
 // taking into account its full price change history stored in the database.
 
 import { prisma } from '@/lib/prisma'
+import { collectOccurrencesUpTo } from '@/lib/recurring-date-utils'
 
 export interface PriceHistoryItem {
   id: string
@@ -89,40 +90,11 @@ export async function calculateAmountsForDates(
 }
 
 /**
- * Generates all occurrence dates for a recurring transaction between two dates,
- * based on the given frequency.
+ * Generates all occurrence dates for a recurring transaction between two dates.
  */
-export function generateRecurringDates(
-  startDate: Date,
-  endDate: Date,
-  frequency: string
-): Date[] {
-  const dates: Date[] = []
-  const currentDate = new Date(startDate)
-
-  while (currentDate <= endDate) {
-    dates.push(new Date(currentDate))
-
-    switch (frequency) {
-      case 'daily':
-        currentDate.setDate(currentDate.getDate() + 1)
-        break
-      case 'weekly':
-        currentDate.setDate(currentDate.getDate() + 7)
-        break
-      case 'monthly':
-        currentDate.setMonth(currentDate.getMonth() + 1)
-        break
-      case 'quarterly':
-        currentDate.setMonth(currentDate.getMonth() + 3)
-        break
-      case 'yearly':
-        currentDate.setFullYear(currentDate.getFullYear() + 1)
-        break
-      default:
-        currentDate.setMonth(currentDate.getMonth() + 1)
-    }
-  }
-
-  return dates
+export function generateRecurringDates(startDate: Date, endDate: Date, frequency: string): Date[] {
+  const end = new Date(endDate)
+  end.setUTCHours(23, 59, 59, 999)
+  const { occurrences } = collectOccurrencesUpTo(startDate, end, frequency)
+  return occurrences
 }

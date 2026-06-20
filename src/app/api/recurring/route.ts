@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { calculateNextDue, collectOccurrencesUpTo } from '@/lib/recurring-date-utils'
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
         nextDue: 'asc'
       }
     })
-    
+
     return NextResponse.json(recurringTransactions)
   } catch (error) {
     console.error('Error fetching recurring transactions:', error)
@@ -45,44 +46,12 @@ export async function POST(request: NextRequest) {
     }
 
     const start = new Date(startDate)
-    start.setHours(0, 0, 0, 0)
+    start.setUTCHours(0, 0, 0, 0)
     const now = new Date()
-    now.setHours(0, 0, 0, 0)
-    let nextDue = new Date(start)
+    now.setUTCHours(23, 59, 59, 999)
 
-    if (start <= now) {
-      nextDue = new Date(start)
-      
-      while (nextDue <= now) {
-        switch (frequency.toLowerCase()) {
-          case 'daily':
-            nextDue.setDate(nextDue.getDate() + 1)
-            break
-          case 'weekly':
-            nextDue.setDate(nextDue.getDate() + 7)
-            break
-          case 'monthly':
-            const originalDayOfMonth = start.getDate()
-            nextDue.setMonth(nextDue.getMonth() + 1)
-            nextDue.setDate(originalDayOfMonth)
-            
-            if (nextDue.getDate() !== originalDayOfMonth) {
-              nextDue.setDate(0)
-            }
-            break
-          case 'quarterly':
-            nextDue.setMonth(nextDue.getMonth() + 3)
-            break
-          case 'yearly':
-            nextDue.setFullYear(nextDue.getFullYear() + 1)
-            break
-          default:
-            nextDue.setMonth(nextDue.getMonth() + 1)
-        }
-      }
-    } else {
-      nextDue = new Date(start)
-    }
+    // Calculate nextDue using UTC-safe utility
+    const nextDue = calculateNextDue(start, now, frequency)
 
     const recurringTransaction = await prisma.recurringTransaction.create({
       data: {
@@ -101,47 +70,19 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    const transactionsToCreate = []
-    const currentDate = new Date(start)
-    
-    while (currentDate <= now) {
-      const finalDate = new Date(Date.UTC(
-        currentDate.getFullYear(),
-        currentDate.getMonth(),
-        currentDate.getDate(),
-        0, 0, 0, 0
-      ))
-
-      
-      transactionsToCreate.push({
-        type,
-        amount: parseFloat(amount),
-        category,
-        description: description,
-        paymentMethod,
-        source,
-        recurringTransactionId: recurringTransaction.id,
-        date: finalDate,
-        userId: currentUserId
-      })
-
-      switch (frequency) {
-        case 'daily':
-          currentDate.setDate(currentDate.getDate() + 1)
-          break
-        case 'weekly':
-          currentDate.setDate(currentDate.getDate() + 7)
-          break
-        case 'monthly':
-          currentDate.setMonth(currentDate.getMonth() + 1)
-          break
-        case 'yearly':
-          currentDate.setFullYear(currentDate.getFullYear() + 1)
-          break
-        default:
-          currentDate.setMonth(currentDate.getMonth() + 1)
-      }
-    }
+    // Backfill all past occurrences using UTC-safe utility
+    const { occurrences } = collectOccurrencesUpTo(start, now, frequency)
+    const transactionsToCreate = occurrences.map(date => ({
+      type,
+      amount: parseFloat(amount),
+      category,
+      description,
+      paymentMethod,
+      source,
+      recurringTransactionId: recurringTransaction.id,
+      date,
+      userId: currentUserId
+    }))
 
     if (transactionsToCreate.length > 0) {
       await prisma.transaction.createMany({
@@ -152,15 +93,10 @@ export async function POST(request: NextRequest) {
     let sharedSubscription = null
     if (splitType === 'split') {
       try {
-        let billingDate = nextDue.getDate()
-        
-        if (frequency === 'monthly') {
-          billingDate = nextDue.getDate()
-        } else if (frequency === 'yearly') {
-          billingDate = nextDue.getDate()
-        } else {
-          billingDate = 1
-        }
+        // Use UTC day to avoid timezone shifting the billing date
+        const billingDate = (frequency === 'monthly' || frequency === 'yearly')
+          ? nextDue.getUTCDate()
+          : 1
 
         sharedSubscription = await prisma.sharedSubscription.create({
           data: {
@@ -216,7 +152,7 @@ export async function PUT(request: NextRequest) {
       if (isPaused) {
         const updatedRecurring = await prisma.recurringTransaction.update({
           where: { id },
-          data: { 
+          data: {
             isPaused: true,
             pauseDate: new Date(),
             updatedAt: new Date()
@@ -225,82 +161,13 @@ export async function PUT(request: NextRequest) {
         return NextResponse.json(updatedRecurring)
       } else {
         const today = new Date()
-        today.setHours(0, 0, 0, 0)
-        
-        const originalStartDate = new Date(existing.startDate)
-        const nextDue = new Date(today)
-        
-        switch (existing.frequency) {
-          case 'daily':
-            nextDue.setDate(nextDue.getDate() + 1)
-            break
-            
-          case 'weekly':
-            const originalDayOfWeek = originalStartDate.getDay()
-            const currentDayOfWeek = nextDue.getDay()
-            let daysToAdd = (originalDayOfWeek - currentDayOfWeek + 7) % 7
-            if (daysToAdd === 0) daysToAdd = 7
-            nextDue.setDate(nextDue.getDate() + daysToAdd)
-            break
-            
-          case 'monthly':
-            const originalDayOfMonth = originalStartDate.getDate()
-            nextDue.setDate(originalDayOfMonth)
-            
-            if (nextDue <= today) {
-              nextDue.setMonth(nextDue.getMonth() + 1)
-              nextDue.setDate(originalDayOfMonth)
-            }
-            
-            if (nextDue.getDate() !== originalDayOfMonth) {
-              nextDue.setDate(0)
-            }
-            break
-            
-          case 'quarterly':
-            const originalDayOfMonthQ = originalStartDate.getDate()
-            nextDue.setDate(originalDayOfMonthQ)
-            
-            if (nextDue <= today) {
-              nextDue.setMonth(nextDue.getMonth() + 3)
-              nextDue.setDate(originalDayOfMonthQ)
-            }
-            
-            if (nextDue.getDate() !== originalDayOfMonthQ) {
-              nextDue.setDate(0)
-            }
-            break
-            
-          case 'yearly':
-            nextDue.setMonth(originalStartDate.getMonth())
-            nextDue.setDate(originalStartDate.getDate())
-            
-            if (nextDue <= today) {
-              nextDue.setFullYear(nextDue.getFullYear() + 1)
-              nextDue.setMonth(originalStartDate.getMonth())
-              nextDue.setDate(originalStartDate.getDate())
-            }
-            
-            if (nextDue.getDate() !== originalStartDate.getDate()) {
-              nextDue.setDate(0)
-            }
-            break
-            
-          default:
-            const defaultDayOfMonth = originalStartDate.getDate()
-            nextDue.setDate(defaultDayOfMonth)
-            if (nextDue <= today) {
-              nextDue.setMonth(nextDue.getMonth() + 1)
-              nextDue.setDate(defaultDayOfMonth)
-            }
-            if (nextDue.getDate() !== defaultDayOfMonth) {
-              nextDue.setDate(0)
-            }
-        }
+        today.setUTCHours(23, 59, 59, 999)
+
+        const nextDue = calculateNextDue(new Date(existing.startDate), today, existing.frequency)
 
         const updatedRecurring = await prisma.recurringTransaction.update({
           where: { id },
-          data: { 
+          data: {
             isPaused: false,
             pauseDate: null,
             nextDue: nextDue,
@@ -314,7 +181,7 @@ export async function PUT(request: NextRequest) {
     if (isActive !== undefined) {
       const updatedRecurring = await prisma.recurringTransaction.update({
         where: { id },
-        data: { 
+        data: {
           isPaused: !Boolean(isActive),
           pauseDate: !Boolean(isActive) ? new Date() : null,
           updatedAt: new Date()

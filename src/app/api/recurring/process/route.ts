@@ -4,6 +4,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { collectOccurrencesUpTo } from '@/lib/recurring-date-utils'
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,7 +14,7 @@ export async function POST(request: NextRequest) {
     }
 
     const now = new Date()
-    now.setHours(23, 59, 59, 999)
+    now.setUTCHours(23, 59, 59, 999)
 
     const dueRecurring = await prisma.recurringTransaction.findMany({
       where: {
@@ -36,16 +37,13 @@ export async function POST(request: NextRequest) {
     let totalProcessed = 0
 
     for (const rt of dueRecurring) {
-      let currentDate = new Date(rt.nextDue)
-      
-      while (currentDate <= now) {
-        const finalDate = new Date(Date.UTC(
-          currentDate.getFullYear(),
-          currentDate.getMonth(),
-          currentDate.getDate(),
-          0, 0, 0, 0
-        ))
-        
+      const { occurrences, nextDue } = collectOccurrencesUpTo(
+        new Date(rt.nextDue),
+        now,
+        rt.frequency
+      )
+
+      for (const date of occurrences) {
         transactionsToCreate.push({
           type: rt.type,
           amount: Number(rt.amount),
@@ -54,70 +52,36 @@ export async function POST(request: NextRequest) {
           paymentMethod: rt.paymentMethod,
           source: rt.source,
           recurringTransactionId: rt.id,
-          date: finalDate,
+          date,
           userId: currentUserId
         })
-
         totalProcessed++
-
-        switch (rt.frequency.toLowerCase()) {
-          case 'daily':
-            currentDate.setDate(currentDate.getDate() + 1)
-            break
-          case 'weekly':
-            currentDate.setDate(currentDate.getDate() + 7)
-            break
-          case 'monthly':
-            const originalDayOfMonth = new Date(rt.startDate).getDate()
-            currentDate.setMonth(currentDate.getMonth() + 1)
-            currentDate.setDate(originalDayOfMonth)
-            if (currentDate.getDate() !== originalDayOfMonth) {
-              currentDate.setDate(0)
-            }
-            break
-          case 'quarterly':
-            const originalDayOfMonthQ = new Date(rt.startDate).getDate()
-            currentDate.setMonth(currentDate.getMonth() + 3)
-            currentDate.setDate(originalDayOfMonthQ)
-            if (currentDate.getDate() !== originalDayOfMonthQ) {
-              currentDate.setDate(0)
-            }
-            break
-          case 'yearly':
-            currentDate.setFullYear(currentDate.getFullYear() + 1)
-            break
-          default:
-            currentDate.setMonth(currentDate.getMonth() + 1)
-        }
       }
 
-      updatePayloads.push({
-        id: rt.id,
-        nextDue: currentDate
-      })
+      updatePayloads.push({ id: rt.id, nextDue })
     }
 
     if (transactionsToCreate.length > 0) {
-      const TX_CHUNK_SIZE = 1000;
+      const TX_CHUNK_SIZE = 1000
       for (let i = 0; i < transactionsToCreate.length; i += TX_CHUNK_SIZE) {
         await prisma.transaction.createMany({
           data: transactionsToCreate.slice(i, i + TX_CHUNK_SIZE)
-        });
+        })
       }
     }
 
     if (updatePayloads.length > 0) {
-      const CHUNK_SIZE = 50;
+      const CHUNK_SIZE = 50
       for (let i = 0; i < updatePayloads.length; i += CHUNK_SIZE) {
-        const chunk = updatePayloads.slice(i, i + CHUNK_SIZE);
+        const chunk = updatePayloads.slice(i, i + CHUNK_SIZE)
         await Promise.all(
-          chunk.map(update => 
+          chunk.map(update =>
             prisma.recurringTransaction.update({
               where: { id: update.id },
               data: { nextDue: update.nextDue }
             })
           )
-        );
+        )
       }
     }
 
