@@ -2,11 +2,11 @@
 
 import React from 'react'
 import {
-  BarChart3, CreditCard, Target, RefreshCw, Plus, PieChart, Calendar, Car, Settings, Shield
+  BarChart3, CreditCard, Target, RefreshCw, Plus, PieChart, Calendar, Car, Settings, Shield, SplitSquareHorizontal
 } from 'lucide-react'
 import { useNavPreferences } from '@/hooks/useNavPreferences'
 
-type DashboardTab = 'overview' | 'analytics' | 'transactions' | 'goals' | 'recurring' | 'calendar' | 'traveling' | 'admin'
+type DashboardTab = 'overview' | 'analytics' | 'transactions' | 'goals' | 'recurring' | 'calendar' | 'traveling' | 'split' | 'admin'
 
 interface BottomNavProps {
   activeTab: DashboardTab
@@ -22,6 +22,7 @@ const TAB_MAPPING: Record<string, { icon: any, label: string }> = {
   'analytics': { icon: PieChart, label: 'Analytics' },
   'calendar': { icon: Calendar, label: 'Calendar' },
   'traveling': { icon: Car, label: 'Traveling' },
+  'split': { icon: SplitSquareHorizontal, label: 'Split' },
   'admin': { icon: Shield, label: 'Admin' }
 }
 
@@ -42,13 +43,15 @@ export default React.memo(function BottomNav({
   return (
     <>
       {/* Floating Add Button */}
-      <button
-        data-tour="add-transaction"
-        onClick={onAddTransaction}
-        className="fixed bottom-20 right-4 z-50 md:hidden w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30 active:scale-95 transition-transform"
-      >
-        <Plus className="h-6 w-6 text-white" />
-      </button>
+      {activeTab !== 'split' && (
+        <button
+          data-tour="add-transaction"
+          onClick={onAddTransaction}
+          className="fixed bottom-20 right-4 z-50 md:hidden w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30 active:scale-95 transition-transform"
+        >
+          <Plus className="h-6 w-6 text-white" />
+        </button>
+      )}
 
       {/* Bottom Navigation Bar */}
       <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden">

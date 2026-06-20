@@ -25,6 +25,7 @@ model Transaction {
   deletedAt              DateTime?
   goalContribution       GoalContribution?
   recurringTransaction   RecurringTransaction? @relation(fields: [recurringTransactionId], references: [id], onDelete: Cascade)
+  splitExpenses          SplitExpense[]
 
   @@index([userId])
   @@index([userId, deletedAt])
@@ -150,6 +151,7 @@ model Participant {
   deletedAt                DateTime?
   payments                 SplitPayment[]
   subscriptionParticipants SubscriptionParticipant[]
+  splitGroupMembers        SplitGroupMember[]
 
   @@index([userId])
   @@index([userId, deletedAt])
@@ -310,6 +312,7 @@ model User {
   adminLogs             AdminAuditLog[]
   autoCategorizeRules   AutoCategorizeRule[]
   userSettings          UserSetting[]
+  splitGroups           SplitGroup[]
 
   @@index([email])
   @@map("users")
@@ -384,4 +387,126 @@ model AdminAuditLog {
   admin        User     @relation(fields: [adminId], references: [id], onDelete: Cascade)
 
   @@map("admin_audit_logs")
+}
+
+// ─────────────────────────────────────────────
+// Bill Split Feature Models
+// ─────────────────────────────────────────────
+
+model SplitGroup {
+  id              String    @id @default(cuid())
+  userId          String
+  name            String
+  description     String?
+  defaultCurrency String    @default("INR")
+  status          String    @default("active") // "active" | "closed"
+  closedAt        DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  members     SplitGroupMember[]
+  expenses    SplitExpense[]
+  settlements SplitSettlement[]
+
+  @@index([userId])
+  @@index([userId, deletedAt])
+  @@index([userId, status])
+  @@map("split_groups")
+}
+
+model SplitGroupMember {
+  id            String    @id @default(cuid())
+  groupId       String
+  participantId String?
+  isOwner       Boolean   @default(false)
+  nickname      String?
+  joinedAt      DateTime  @default(now())
+  leftAt        DateTime?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+
+  group           SplitGroup          @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  participant     Participant?        @relation(fields: [participantId], references: [id], onDelete: SetNull)
+  splits          SplitExpenseSplit[]
+  paidExpenses    SplitExpense[]      @relation("PaidBy")
+  settlementsFrom SplitSettlement[]   @relation("SettlementFrom")
+  settlementsTo   SplitSettlement[]   @relation("SettlementTo")
+
+  @@unique([groupId, participantId])
+  @@index([groupId])
+  @@index([participantId])
+  @@map("split_group_members")
+}
+
+model SplitExpense {
+  id             String    @id @default(cuid())
+  groupId        String
+  description    String
+  totalAmount    Decimal
+  currency       String    @default("INR")
+  paidByMemberId String
+  splitType      String    @default("equal") // "equal" | "custom" | "percentage"
+  date           DateTime
+  category       String?
+  notes          String?
+  transactionId  String?
+  isSettlement   Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  group       SplitGroup          @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  paidBy      SplitGroupMember    @relation("PaidBy", fields: [paidByMemberId], references: [id])
+  transaction Transaction?        @relation(fields: [transactionId], references: [id], onDelete: SetNull)
+  splits      SplitExpenseSplit[]
+
+  @@index([groupId])
+  @@index([groupId, deletedAt])
+  @@index([groupId, date])
+  @@index([paidByMemberId])
+  @@index([transactionId])
+  @@map("split_expenses")
+}
+
+model SplitExpenseSplit {
+  id         String   @id @default(cuid())
+  expenseId  String
+  memberId   String
+  amount     Decimal
+  percentage Decimal?
+  createdAt  DateTime @default(now())
+
+  expense SplitExpense     @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  member  SplitGroupMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([expenseId, memberId])
+  @@index([expenseId])
+  @@index([memberId])
+  @@map("split_expense_splits")
+}
+
+model SplitSettlement {
+  id           String    @id @default(cuid())
+  groupId      String
+  fromMemberId String
+  toMemberId   String
+  amount       Decimal
+  currency     String    @default("INR")
+  date         DateTime
+  notes        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  group      SplitGroup       @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  fromMember SplitGroupMember @relation("SettlementFrom", fields: [fromMemberId], references: [id])
+  toMember   SplitGroupMember @relation("SettlementTo", fields: [toMemberId], references: [id])
+
+  @@index([groupId])
+  @@index([groupId, deletedAt])
+  @@index([fromMemberId])
+  @@index([toMemberId])
+  @@map("split_settlements")
 }

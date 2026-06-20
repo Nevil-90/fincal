@@ -57,7 +57,7 @@ data.json
 
 # Personal / Private
 /scripts/
-/features.md
+PROJECT
 /prisma/backup.json
 /prisma/*.live_backup
 
@@ -69,4 +69,3 @@ playwright.config.ts
 playwright-report/
 test-results/
 qa_test_plan.md
-

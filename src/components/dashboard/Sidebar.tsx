@@ -2,14 +2,14 @@
 
 import React, { useEffect } from 'react'
 import { useTheme } from 'next-themes'
-import { DollarSign, BarChart3, Activity, CreditCard, Target, RefreshCw, Calendar, Car, Settings, PieChart, LogOut, Shield, Sun, Moon } from 'lucide-react'
+import { DollarSign, BarChart3, Activity, CreditCard, Target, RefreshCw, Calendar, Car, Settings, PieChart, LogOut, Shield, Sun, Moon, SplitSquareHorizontal } from 'lucide-react'
 import { formatCurrency } from '@/lib/financial-utils'
 
 interface SidebarProps {
   sidebarOpen: boolean
-  activeTab: 'overview' | 'analytics' | 'transactions' | 'goals' | 'recurring' | 'calendar' | 'traveling' | 'admin'
+  activeTab: 'overview' | 'analytics' | 'transactions' | 'goals' | 'recurring' | 'calendar' | 'traveling' | 'split' | 'admin'
   availableBalance: number
-  onTabChange: (tab: 'overview' | 'analytics' | 'transactions' | 'goals' | 'recurring' | 'calendar' | 'traveling' | 'admin') => void
+  onTabChange: (tab: 'overview' | 'analytics' | 'transactions' | 'goals' | 'recurring' | 'calendar' | 'traveling' | 'split' | 'admin') => void
   onClose?: () => void
   user?: { firstName: string; lastName: string; email: string; role?: string } | null
   onLogout?: () => void
@@ -91,7 +91,8 @@ export default React.memo(function Sidebar({ sidebarOpen, activeTab, availableBa
               { id: 'goals', icon: Target, label: 'Goals', activeColor: 'from-purple-500 to-purple-600' },
               { id: 'recurring', icon: RefreshCw, label: 'Recurring', activeColor: 'from-indigo-500 to-indigo-600' },
               { id: 'calendar', icon: Calendar, label: 'Calendar', activeColor: 'from-sky-500 to-sky-600' },
-              { id: 'traveling', icon: Car, label: 'Traveling', activeColor: 'from-orange-500 to-orange-600' }
+              { id: 'traveling', icon: Car, label: 'Traveling', activeColor: 'from-orange-500 to-orange-600' },
+              { id: 'split', icon: SplitSquareHorizontal, label: 'Split', activeColor: 'from-blue-600 to-indigo-600' },
             ].map((tab) => {
               const Icon = tab.icon;
               return (

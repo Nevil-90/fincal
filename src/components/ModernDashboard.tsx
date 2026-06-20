@@ -19,6 +19,7 @@ const TravelingTab = dynamic(() => import('./TravelingTab'), { ssr: false })
 const SettingsPanel = dynamic(() => import('./SettingsPanel').then(mod => mod.SettingsPanel), { ssr: false })
 const CalendarTab = dynamic(() => import('./CalendarTab'), { ssr: false })
 const AdminTab = dynamic(() => import('./dashboard/AdminTab'), { ssr: false })
+const SplitTab = dynamic(() => import('./split/SplitTab'), { ssr: false, loading: () => <div className="animate-pulse bg-slate-100 dark:bg-neutral-800 rounded-2xl h-[400px] w-full" /> })
 
 import BottomNav from './dashboard/BottomNav'
 
@@ -79,6 +80,7 @@ type DashboardTab =
   | 'recurring'
   | 'calendar'
   | 'traveling'
+  | 'split'
   | 'admin'
 
 const DASHBOARD_TABS: DashboardTab[] = [
@@ -89,6 +91,7 @@ const DASHBOARD_TABS: DashboardTab[] = [
   'recurring',
   'calendar',
   'traveling',
+  'split',
   'admin'
 ]
 
@@ -723,6 +726,19 @@ function ModernDashboardContent() {
                 className="space-y-6"
               >
                 <AdminTab />
+              </motion.div>
+            )}
+
+            {activeTab === 'split' && (
+              <motion.div
+                key="split"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-6"
+              >
+                <SplitTab />
               </motion.div>
             )}
           </AnimatePresence>

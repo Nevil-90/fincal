@@ -3,12 +3,12 @@
 import React, { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTheme } from 'next-themes'
-import { Plus, Menu, User, Settings, Shield, LogOut, Car, Calendar, PieChart, BarChart3, CreditCard, Target, RefreshCw, Sun, Moon, Search } from 'lucide-react'
+import { Plus, Menu, User, Settings, Shield, LogOut, Car, Calendar, PieChart, BarChart3, CreditCard, Target, RefreshCw, Sun, Moon, Search, SplitSquareHorizontal } from 'lucide-react'
 import { useScrollLock } from '@/hooks/useScrollLock'
 import { useNavPreferences } from '@/hooks/useNavPreferences'
 import ProfileModal from '@/components/ProfileModal'
 
-type DashboardTab = 'overview' | 'analytics' | 'insights' | 'transactions' | 'goals' | 'recurring' | 'calendar' | 'traveling' | 'settings' | 'admin'
+type DashboardTab = 'overview' | 'analytics' | 'insights' | 'transactions' | 'goals' | 'recurring' | 'calendar' | 'traveling' | 'split' | 'settings' | 'admin'
 
 const ALL_TABS: Array<{ id: DashboardTab, icon: any, label: string, adminOnly?: boolean, color?: string }> = [
   { id: 'overview', icon: BarChart3, label: 'Overview' },
@@ -18,6 +18,7 @@ const ALL_TABS: Array<{ id: DashboardTab, icon: any, label: string, adminOnly?: 
   { id: 'analytics', icon: PieChart, label: 'Analytics' },
   { id: 'calendar', icon: Calendar, label: 'Calendar' },
   { id: 'traveling', icon: Car, label: 'Traveling' },
+  { id: 'split', icon: SplitSquareHorizontal, label: 'Split' },
   { id: 'admin', icon: Shield, label: 'Admin', adminOnly: true, color: 'red' }
 ]
 
