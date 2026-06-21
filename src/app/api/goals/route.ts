@@ -151,7 +151,9 @@ export async function DELETE(request: NextRequest) {
 
       // 2. Soft delete related transactions if requested
       if (deleteTransactions && existingGoal.contributions.length > 0) {
-        const transactionIds = existingGoal.contributions.map(c => c.transactionId)
+        const transactionIds = existingGoal.contributions
+          .map(c => c.transactionId)
+          .filter((id): id is string => id !== null)
         
         await tx.transaction.updateMany({
           where: { id: { in: transactionIds } },

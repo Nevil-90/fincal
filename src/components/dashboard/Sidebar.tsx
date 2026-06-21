@@ -62,20 +62,20 @@ export default React.memo(function Sidebar({ sidebarOpen, activeTab, availableBa
         />
       )}
 
-      <div className={`fixed inset-y-0 left-0 z-[110] bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border-r border-slate-200/50 dark:border-neutral-800/50 transition-all duration-300 flex flex-col shadow-[10px_0_40px_-15px_rgba(0,0,0,0.05)] md:shadow-none md:sticky md:top-0 md:h-screen md:translate-x-0 ${
+      <div className={`fixed inset-y-0 left-0 z-[110] bg-white dark:bg-[#0f0f12] border-r border-slate-200/50 dark:border-neutral-800/30 transition-all duration-300 flex flex-col shadow-[10px_0_40px_-15px_rgba(0,0,0,0.05)] md:shadow-none md:sticky md:top-0 md:h-screen md:translate-x-0 ${
         sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full w-64 md:translate-x-0 md:w-16'
       }`}>
         {/* Logo */}
-        <div className="px-6 border-b border-slate-200 dark:border-neutral-800 h-[60px] sm:h-[68px] flex flex-col justify-center shrink-0">
+        <div className="px-6 border-b border-slate-200 dark:border-neutral-800/40 h-[60px] sm:h-[68px] flex flex-col justify-center shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg flex items-center justify-center shadow-sm shrink-0">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-sm shrink-0">
               <DollarSign className="h-5 w-5 text-white" />
             </div>
             {(!sidebarOpen ? (
               <span className="md:hidden font-bold text-slate-900 dark:text-white">FinTracker</span>
             ) : (
               <div>
-                <h1 className="text-xl font-bold text-slate-900 dark:text-white">FinTracker</h1>
+                <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">FinTracker</h1>
               </div>
             ))}
           </div>
@@ -85,13 +85,13 @@ export default React.memo(function Sidebar({ sidebarOpen, activeTab, availableBa
         <nav className="flex-1 p-4 overflow-y-auto">
           <div className="space-y-2">
             {[
-              { id: 'overview', icon: BarChart3, label: 'Overview', activeColor: 'from-blue-500 to-blue-600' },
-              { id: 'analytics', icon: PieChart, label: 'Analytics', activeColor: 'from-violet-500 to-violet-600' },
-              { id: 'transactions', icon: CreditCard, label: 'Transactions', activeColor: 'from-emerald-500 to-emerald-600' },
-              { id: 'goals', icon: Target, label: 'Goals', activeColor: 'from-purple-500 to-purple-600' },
-              { id: 'recurring', icon: RefreshCw, label: 'Recurring', activeColor: 'from-indigo-500 to-indigo-600' },
-              { id: 'calendar', icon: Calendar, label: 'Calendar', activeColor: 'from-sky-500 to-sky-600' },
-              { id: 'traveling', icon: Car, label: 'Traveling', activeColor: 'from-orange-500 to-orange-600' }
+              { id: 'overview', icon: BarChart3, label: 'Overview' },
+              { id: 'analytics', icon: PieChart, label: 'Analytics' },
+              { id: 'transactions', icon: CreditCard, label: 'Transactions' },
+              { id: 'goals', icon: Target, label: 'Goals' },
+              { id: 'recurring', icon: RefreshCw, label: 'Recurring' },
+              { id: 'calendar', icon: Calendar, label: 'Calendar' },
+              { id: 'traveling', icon: Car, label: 'Traveling' }
             ].map((tab) => {
               const Icon = tab.icon;
               return (
@@ -99,15 +99,15 @@ export default React.memo(function Sidebar({ sidebarOpen, activeTab, availableBa
                   key={tab.id}
                   data-tour={`sidebar-${tab.id}`}
                   onClick={() => handleTabClick(tab.id)}
-                  className={`w-full flex items-center ${sidebarOpen ? 'gap-3 px-3 justify-start' : 'justify-center px-0'} py-2.5 rounded-xl text-left transition-colors ${
+                  className={`w-full flex items-center ${sidebarOpen ? 'gap-3 px-3 justify-start' : 'justify-center px-0'} py-2.5 rounded-xl text-left transition-all ${
                     activeTab === tab.id
-                      ? `bg-gradient-to-r ${tab.activeColor} text-white shadow-sm`
-                      : 'text-slate-700 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-800 hover:text-slate-900 dark:hover:text-white'
+                      ? 'bg-blue-600 text-white shadow-sm font-semibold'
+                      : 'text-slate-500 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-800/60 hover:text-slate-900 dark:hover:text-white font-medium'
                   }`}
                   title={!sidebarOpen ? tab.label : undefined}
                 >
                   <Icon className={`${sidebarOpen ? 'h-5 w-5' : 'h-[22px] w-[22px]'} shrink-0`} />
-                  <span className={`${!sidebarOpen ? 'md:hidden' : ''} font-medium`}>{tab.label}</span>
+                  <span className={`${!sidebarOpen ? 'md:hidden' : ''}`}>{tab.label}</span>
                 </button>
               );
             })}
@@ -115,22 +115,22 @@ export default React.memo(function Sidebar({ sidebarOpen, activeTab, availableBa
             {user?.role === 'ADMIN' && (
               <button
                 onClick={() => handleTabClick('admin')}
-                className={`w-full flex items-center ${sidebarOpen ? 'gap-3 px-3 justify-start' : 'justify-center px-0'} py-2.5 rounded-xl text-left transition-colors ${
+                className={`w-full flex items-center ${sidebarOpen ? 'gap-3 px-3 justify-start' : 'justify-center px-0'} py-2.5 rounded-xl text-left transition-all ${
                   activeTab === 'admin'
-                    ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-sm font-semibold'
-                    : 'text-slate-700 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-800 hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-blue-600 text-white shadow-sm font-semibold'
+                    : 'text-slate-500 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-800/60 hover:text-slate-900 dark:hover:text-white font-medium'
                 }`}
                 title={!sidebarOpen ? 'Admin Panel' : undefined}
               >
                 <Shield className={`${sidebarOpen ? 'h-5 w-5' : 'h-[22px] w-[22px]'} shrink-0`} />
-                <span className={`${!sidebarOpen ? 'md:hidden' : ''} font-medium`}>Admin Panel</span>
+                <span className={`${!sidebarOpen ? 'md:hidden' : ''}`}>Admin Panel</span>
               </button>
             )}
           </div>
         </nav>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-200 dark:border-neutral-800 flex flex-col gap-2">
+        <div className="p-4 pb-9 border-t border-slate-200 dark:border-neutral-800/40 flex flex-col gap-2 shrink-0">
           {sidebarOpen ? (
             <div className="flex items-center justify-between gap-2 min-w-0 w-full">
               {user ? (

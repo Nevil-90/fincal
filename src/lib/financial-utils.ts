@@ -76,21 +76,27 @@ export function calculateMultipleGoals(
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
-    currency: 'INR'
+    currency: 'INR',
+    minimumFractionDigits: amount % 1 === 0 ? 0 : 2,
+    maximumFractionDigits: 2
   }).format(amount)
 }
 
 export function formatCompactCurrency(amount: number): string {
-  if (Math.abs(amount) >= 1000000) {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      notation: 'compact',
-      compactDisplay: 'short',
-      maximumFractionDigits: 2
-    }).format(amount)
+  const absAmount = Math.abs(amount)
+  
+  let formatted = ''
+  if (absAmount >= 10000000) { // 1 Crore
+    formatted = `${(absAmount / 10000000).toFixed(2).replace(/\.?0+$/, '')}Cr`
+  } else if (absAmount >= 100000) { // 1 Lakh
+    formatted = `${(absAmount / 100000).toFixed(2).replace(/\.?0+$/, '')}L`
+  } else if (absAmount >= 1000) { // 1 Thousand
+    formatted = `${(absAmount / 1000).toFixed(1).replace(/\.?0+$/, '')}k`
+  } else {
+    formatted = absAmount % 1 === 0 ? absAmount.toFixed(0) : absAmount.toFixed(2)
   }
-  return formatCurrency(amount)
+  
+  return (amount < 0 ? '-' : '') + '₹' + formatted
 }
 
 export function formatCompactNumber(amount: number): string {

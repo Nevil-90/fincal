@@ -57,6 +57,7 @@ data.json
 
 # Personal / Private
 /scripts/
+PROJECT
 /features.md
 /prisma/backup.json
 /prisma/*.live_backup

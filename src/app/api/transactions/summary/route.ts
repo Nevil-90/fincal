@@ -86,17 +86,30 @@ export async function GET(request: NextRequest) {
     let periodInfo = null
     const categorySpend: Record<string, number> = {}
 
-    if (monthParam && yearParam) {
-      const month = parseInt(monthParam, 10)
+    if (yearParam) {
       const year = parseInt(yearParam, 10)
+      const isAllYear = !monthParam
 
-      const startDate = new Date(year, month - 1, 1)
-      const endDate = new Date(year, month, 0, 23, 59, 59, 999)
+      const startDate = isAllYear ? new Date(year, 0, 1) : new Date(year, parseInt(monthParam, 10) - 1, 1)
+      const endDate = isAllYear ? new Date(year, 11, 31, 23, 59, 59, 999) : new Date(year, parseInt(monthParam, 10), 0, 23, 59, 59, 999)
 
-      const prevMonth = month === 1 ? 12 : month - 1
-      const prevYear = month === 1 ? year - 1 : year
-      const prevStartDate = new Date(prevYear, prevMonth - 1, 1)
-      const prevEndDate = new Date(prevYear, prevMonth, 0, 23, 59, 59, 999)
+      const prevStartDate = isAllYear 
+        ? new Date(year - 1, 0, 1) 
+        : (() => {
+            const m = parseInt(monthParam, 10)
+            const prevMonth = m === 1 ? 12 : m - 1
+            const prevYear = m === 1 ? year - 1 : year
+            return new Date(prevYear, prevMonth - 1, 1)
+          })()
+
+      const prevEndDate = isAllYear
+        ? new Date(year - 1, 11, 31, 23, 59, 59, 999)
+        : (() => {
+            const m = parseInt(monthParam, 10)
+            const prevMonth = m === 1 ? 12 : m - 1
+            const prevYear = m === 1 ? year - 1 : year
+            return new Date(prevYear, prevMonth, 0, 23, 59, 59, 999)
+          })()
 
       const [periodGrouped, prevExpenseAgg, categoryAgg] = await Promise.all([
         prisma.transaction.groupBy({
@@ -136,13 +149,11 @@ export async function GET(request: NextRequest) {
         if (g.type === 'expense') periodExpense = Number(g._sum.amount || 0)
       })
 
-      const prevExpense = Number(prevExpenseAgg._sum.amount || 0)
-
       periodInfo = {
         income: periodIncome,
         expense: periodExpense,
         balance: periodIncome - periodExpense,
-        prevExpense
+        prevExpense: Number(prevExpenseAgg._sum.amount || 0)
       }
 
       categoryAgg.forEach(item => {

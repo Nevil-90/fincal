@@ -55,6 +55,7 @@ export default function CommandPalette({ onNavigate, onAddTransaction, onTransac
     setMounted(true)
     const down = (e: KeyboardEvent) => {
       if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+        if (window.innerWidth < 640) return
         e.preventDefault()
         setOpen((open) => !open)
       }

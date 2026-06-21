@@ -4,7 +4,7 @@
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { Plus, BarChart2, BarChart3, Calendar, Target, AlertCircle, TrendingUp, TrendingDown, DollarSign, Wallet, CreditCard, ArrowRight, ArrowUpRight, ArrowDownRight, ArrowDownLeft, Activity, PieChart, ShieldAlert, Zap, AlertTriangle, CheckCircle, ClipboardList, Banknote, Clock, Sparkles, X } from 'lucide-react'
+import { Plus, BarChart2, BarChart3, Calendar, Target, AlertCircle, TrendingUp, TrendingDown, DollarSign, Wallet, CreditCard, ArrowRight, ArrowUpRight, ArrowDownRight, ArrowDownLeft, Activity, PieChart, ShieldAlert, Zap, AlertTriangle, CheckCircle, ClipboardList, Banknote, Clock, Sparkles, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { formatCurrency, formatCompactCurrency, formatCompactNumber } from '@/lib/financial-utils'
 import { useEnhancedStaticData } from '@/lib/enhanced-static-data-manager'
 import { useUser } from '@/hooks/useApi'
@@ -95,12 +95,17 @@ export default React.memo(function OverviewTab({
 
   const categorySpend = (summary?.categorySpend || {}) as Record<string, number>
 
+  const isAllYear = overviewPeriod.month === undefined
+
   const budgetRows = useMemo(() => {
     return staticData.budgetAmounts
       .filter(b => b.isActive && !['travelSettings', 'global'].includes(b.category))
       .map(b => {
         const spent = categorySpend[b.category] || 0
-        const limit = b.period === 'yearly' ? b.amount / 12 : b.amount
+        // All Year view: use full yearly amount; monthly view: monthly amount
+        const limit = isAllYear
+          ? (b.period === 'yearly' ? b.amount : b.amount * 12)
+          : (b.period === 'yearly' ? b.amount / 12 : b.amount)
         const pct = limit > 0 ? (spent / limit) * 100 : 0
         const remaining = limit - spent
         const status: 'over' | 'warn' | 'ok' | 'safe' =
@@ -108,7 +113,7 @@ export default React.memo(function OverviewTab({
         return { ...b, spent, limit, pct, remaining, status }
       })
       .sort((a, b) => b.pct - a.pct)
-  }, [staticData.budgetAmounts, categorySpend])
+  }, [staticData.budgetAmounts, categorySpend, isAllYear])
 
   const totalBudgeted = budgetRows.reduce((s, r) => s + r.limit, 0)
   const totalSpentOnBudgeted = budgetRows.reduce((s, r) => s + r.spent, 0)
@@ -231,29 +236,88 @@ export default React.memo(function OverviewTab({
   return (
     <div className="space-y-4 sm:space-y-5 pb-24 md:pb-6">
 
-      <div className="flex flex-wrap items-center justify-between gap-3" data-tour="overview-stats">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white ">Budget Overview</h1>
           <p className="text-xs text-slate-500 dark:text-neutral-400  mt-0.5">Track real spending against your budget limits in real time.</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <select
-            value={activeYear}
-            onChange={e => onPeriodChange({ year: Number(e.target.value), month: overviewPeriod.month })}
-            className="bg-white dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700  text-slate-800 dark:text-neutral-200  text-xs font-bold rounded-xl px-2.5 py-2 outline-none cursor-pointer shadow-sm"
+
+          {/* ── Month navigator with arrow buttons ── */}
+          <div className="flex items-center bg-white dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded-xl shadow-sm h-9">
+            <button
+              onClick={() => {
+                const prev = activeMonth === 1 ? 12 : activeMonth - 1
+                const prevYear = activeMonth === 1 ? activeYear - 1 : activeYear
+                onPeriodChange({ year: prevYear, month: prev })
+              }}
+              className="px-2 h-full flex items-center text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors cursor-pointer"
+              title="Previous month"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+
+            {/* Clickable label backed by hidden <select> */}
+            <div className="relative flex items-center px-1">
+              <span className="text-xs font-bold text-slate-800 dark:text-neutral-200 min-w-[60px] text-center select-none pointer-events-none">
+                {MONTH_NAMES[activeMonth - 1]}
+              </span>
+              <select
+                value={activeMonth}
+                onChange={e => onPeriodChange({ year: activeYear, month: Number(e.target.value) })}
+                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                title="Pick month"
+              >
+                {MONTH_NAMES.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
+              </select>
+            </div>
+
+            <button
+              onClick={() => {
+                const next = activeMonth === 12 ? 1 : activeMonth + 1
+                const nextYear = activeMonth === 12 ? activeYear + 1 : activeYear
+                onPeriodChange({ year: nextYear, month: next })
+              }}
+              className="px-2 h-full flex items-center text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors cursor-pointer"
+              title="Next month"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* ── Year pill with hidden select ── */}
+          <div className="relative flex items-center h-9 bg-white dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded-xl shadow-sm px-3">
+            <span className="text-xs font-bold text-slate-800 dark:text-neutral-200 select-none pointer-events-none">
+              {activeYear}
+            </span>
+            <select
+              value={activeYear}
+              onChange={e => onPeriodChange({ year: Number(e.target.value), month: overviewPeriod.month })}
+              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+              title="Pick year"
+            >
+              {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
+          </div>
+
+          {/* ── All Year toggle ── */}
+          <button
+            onClick={() => onPeriodChange(
+              overviewPeriod.month === undefined
+                ? { year: activeYear, month: now.getMonth() + 1 }
+                : { year: activeYear, month: undefined }
+            )}
+            className={`h-9 px-3.5 text-xs font-bold rounded-xl border transition-colors cursor-pointer shadow-sm ${overviewPeriod.month === undefined
+              ? 'bg-slate-900 dark:bg-blue-600 text-white border-transparent'
+              : 'bg-white dark:bg-neutral-800 text-slate-700 dark:text-neutral-300 border-slate-200 dark:border-neutral-700 hover:bg-slate-50 dark:hover:bg-neutral-700'
+              }`}
           >
-            {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
-          </select>
-          <select
-            value={activeMonth}
-            onChange={e => onPeriodChange({ year: activeYear, month: Number(e.target.value) })}
-            className="bg-white dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700  text-slate-800 dark:text-neutral-200  text-xs font-bold rounded-xl px-2.5 py-2 outline-none cursor-pointer shadow-sm"
-          >
-            {MONTH_NAMES.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
-          </select>
+            All Year
+          </button>
+
           <button
             onClick={onShowAddTransaction}
-            className="flex items-center gap-1.5 bg-slate-900 dark:bg-neutral-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl cursor-pointer hover:bg-slate-800 dark:hover:bg-neutral-600 transition-colors shadow-sm"
+            className="flex items-center gap-1.5 bg-slate-900 dark:bg-neutral-700 text-white text-xs font-bold px-3.5 h-9 rounded-xl cursor-pointer hover:bg-slate-800 dark:hover:bg-neutral-600 transition-colors shadow-sm"
           >
             <Plus className="h-3.5 w-3.5" /> Add
           </button>
@@ -261,19 +325,20 @@ export default React.memo(function OverviewTab({
       </div>
 
       {/* Dynamic Actionable Insight */}
-      <div className={`flex items-start gap-3 p-3.5 rounded-2xl border ${insight.bg} transition-colors animate-fade-in`}>
+      {/* <div className={`flex items-start gap-3 p-3.5 rounded-2xl border ${insight.bg} transition-colors animate-fade-in`}>
         <InsightIcon className={`h-5 w-5 shrink-0 ${insight.color} mt-0.5`} />
         <div>
           <h4 className={`text-xs font-bold ${insight.color}`}>Smart Insight</h4>
           <p className="text-sm font-medium text-slate-700 dark:text-neutral-300 mt-0.5">{insight.text}</p>
         </div>
-      </div>
+      </div> */}
 
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-4 sm:gap-5">
 
         <div className="space-y-4 sm:space-y-5 min-w-0">
 
-          <div className="rounded-2xl border border-slate-200 dark:border-neutral-700/80  bg-white dark:bg-neutral-800 p-4 sm:p-5 shadow-sm">
+          <div className="rounded-2xl border border-slate-200 dark:border-neutral-700/80  bg-white dark:bg-neutral-800 p-4 sm:p-5 shadow-sm" data-tour="overview-stats">
+
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
               <div className="flex flex-col items-center gap-2 shrink-0 w-full sm:w-auto">
                 <SpendGauge pct={overallBudgetPct} />
@@ -364,8 +429,8 @@ export default React.memo(function OverviewTab({
                 <div className="text-right shrink-0 min-w-0 max-w-[40%]">
                   <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-neutral-400 font-bold">Remaining</p>
                   <p className={`text-sm font-bold mt-1 truncate ${monthlySpendingGoalStatus === 'over' ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`} title={monthlySpendingGoalStatus === 'over'
-                      ? `-${formatCurrency(balanceInfo.periodExpenses - monthlySpendingGoal)}`
-                      : formatCurrency(monthlySpendingGoal - balanceInfo.periodExpenses)}>
+                    ? `-${formatCurrency(balanceInfo.periodExpenses - monthlySpendingGoal)}`
+                    : formatCurrency(monthlySpendingGoal - balanceInfo.periodExpenses)}>
                     {monthlySpendingGoalStatus === 'over'
                       ? `-${formatCompactCurrency(balanceInfo.periodExpenses - monthlySpendingGoal)}`
                       : formatCompactCurrency(monthlySpendingGoal - balanceInfo.periodExpenses)}
@@ -452,7 +517,7 @@ export default React.memo(function OverviewTab({
           )}
         </div>
 
-        <div className="space-y-4 sm:space-y-5 min-w-0">
+        <div className="space-y-3 sm:space-y-3 min-w-0">
 
           <div className="rounded-2xl border border-slate-200 dark:border-neutral-700/80  bg-white dark:bg-neutral-800 p-4 sm:p-5 shadow-sm space-y-4">
             <div>
@@ -500,33 +565,8 @@ export default React.memo(function OverviewTab({
             </div>
           </div>
 
-          {unbudgetedSpend.length > 0 && (
-            <div className="rounded-2xl border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-900/20   p-4 shadow-sm">
-              <div className="flex items-start gap-2 mb-3">
-                <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400  dark:text-amber-500   shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-xs font-black text-amber-800 dark:text-amber-400">Unbudgeted Categories</p>
-                  <p className="text-[10px] text-amber-600 dark:text-amber-400  dark:text-amber-500   font-medium mt-0.5">Spending without budget limits set</p>
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                {unbudgetedSpend.map(([cat, amount]) => (
-                  <div key={cat} className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-amber-900 dark:text-amber-300 truncate">{cat}</span>
-                    <span className="text-xs font-black text-amber-800 dark:text-amber-400 tabular-nums ml-2 shrink-0">{formatCurrency(amount)}</span>
-                  </div>
-                ))}
-              </div>
-              <button
-                onClick={onOpenSettings}
-                className="mt-3 w-full text-[10px] font-bold text-amber-700 dark:text-amber-400   bg-amber-100 dark:bg-amber-900/40   hover:bg-amber-200 dark:hover:bg-amber-900/60 border border-amber-200 dark:border-amber-800 px-3 py-2 rounded-xl cursor-pointer transition-colors"
-              >
-                Set Budget Limits →
-              </button>
-            </div>
-          )}
+          <div className="rounded-2xl border border-slate-200 dark:border-neutral-700/80 bg-white dark:bg-neutral-800 shadow-sm overflow-hidden">
 
-          <div className="rounded-2xl border border-slate-200 dark:border-neutral-700/80  bg-white dark:bg-neutral-800 shadow-sm overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3.5 border-b border-slate-100 dark:border-neutral-800 dark:border-neutral-700">
               <p className="text-xs font-black text-slate-900 dark:text-white ">Recent Activity</p>
               <button
@@ -579,11 +619,11 @@ export default React.memo(function OverviewTab({
 
       {mounted && showInsights && createPortal(
         <div className="fixed inset-0 z-[500] flex justify-end">
-          <div 
-            className="absolute inset-0 bg-slate-950/45 dark:bg-neutral-950/80 backdrop-blur-sm transition-opacity animate-fade-in" 
-            onClick={() => setShowInsights(false)} 
+          <div
+            className="absolute inset-0 bg-slate-950/45 dark:bg-neutral-950/80 backdrop-blur-sm transition-opacity animate-fade-in"
+            onClick={() => setShowInsights(false)}
           />
-          <div 
+          <div
             className="relative w-full max-w-md bg-slate-50 dark:bg-neutral-900 shadow-2xl h-full flex flex-col animate-slide-left sm:rounded-l-2xl overflow-hidden"
             onClick={e => e.stopPropagation()}
           >
@@ -592,7 +632,7 @@ export default React.memo(function OverviewTab({
                 <BarChart3 className="h-5 w-5 text-blue-500 dark:text-blue-400" />
                 <h2 className="text-lg font-bold text-slate-900 dark:text-white">{MONTH_NAMES[activeMonth - 1]} {activeYear} Insights</h2>
               </div>
-              <button 
+              <button
                 onClick={() => setShowInsights(false)}
                 className="rounded-lg p-1.5 text-slate-400 dark:text-neutral-500 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors"
               >

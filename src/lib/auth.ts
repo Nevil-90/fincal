@@ -74,13 +74,40 @@ export async function sendOtpEmail(email: string, otp: string): Promise<boolean>
       subject: 'Verification Code',
       text: `Verification code: ${otp}`,
       html: `
-        <div style="font-family: sans-serif; padding: 20px; color: #333; max-width: 500px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px;">
-          <h2>FinTracker</h2>
-          <p>Verification code:</p>
-          <div style="background-color: #f8fafc; padding: 15px; font-size: 28px; font-weight: 900; text-align: center; letter-spacing: 6px; border-radius: 8px; margin: 24px 0; border: 1px solid #cbd5e1; color: #0f172a;">
-            ${otp}
-          </div>
-        </div>
+<!DOCTYPE html>
+<html>
+<body style="margin: 0; padding: 0; background-color: #0b0f19; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; width: 100% !important;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #0b0f19; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 500px; background-color: #111827; border: 1px solid #1f2937; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+          <tr>
+            <td style="background: linear-gradient(135deg, #1e40af, #3b82f6); padding: 32px 40px; text-align: center;">
+              <h1 style="margin: 0; font-size: 26px; font-weight: 900; color: #ffffff; letter-spacing: -0.025em;">FinTracker</h1>
+              <p style="margin: 4px 0 0 0; font-size: 13px; color: #93c5fd; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase;">Secure Personal Finance</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 40px 40px 30px 40px;">
+              <h2 style="margin: 0 0 16px 0; font-size: 20px; font-weight: 700; color: #ffffff; text-align: center;">Verification Required</h2>
+              <p style="margin: 0 0 24px 0; font-size: 14px; line-height: 1.6; color: #9ca3af; text-align: center;">Please use the following verification code to secure your FinTracker account. This code will expire in 15 minutes.</p>
+              <div style="background-color: #0f172a; border: 1px solid #334155; border-radius: 16px; padding: 20px; text-align: center; margin: 30px 0;">
+                <span style="font-family: 'Courier New', Courier, monospace; font-size: 36px; font-weight: 900; color: #3b82f6; letter-spacing: 12px; padding-left: 12px; display: inline-block;">${otp}</span>
+              </div>
+              <p style="margin: 24px 0 0 0; font-size: 12px; line-height: 1.5; color: #6b7280; text-align: center;">If you did not request this verification code, please ignore this email or contact support if you have security concerns.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 0 40px 40px 40px; text-align: center; border-top: 1px solid #1f2937;">
+              <p style="margin: 24px 0 0 0; font-size: 11px; color: #4b5563;">&copy; 2026 FinTracker Inc. All rights reserved.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
       `
     })
     return true
@@ -115,15 +142,46 @@ export async function sendPasswordResetEmail(email: string, resetUrl: string): P
       subject: 'Password Reset',
       text: `Reset link: ${resetUrl}`,
       html: `
-        <div style="font-family: sans-serif; padding: 20px; color: #333; max-width: 500px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px;">
-          <h2>FinTracker</h2>
-          <p>Password reset link:</p>
-          <div style="text-align: center; margin: 28px 0;">
-            <a href="${resetUrl}" style="background-color: #2563eb; color: #ffffff; padding: 12px 28px; font-size: 14px; font-weight: bold; text-decoration: none; border-radius: 8px; display: inline-block;">
-              Reset Password
-            </a>
-          </div>
-        </div>
+<!DOCTYPE html>
+<html>
+<body style="margin: 0; padding: 0; background-color: #0b0f19; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; width: 100% !important;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #0b0f19; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 500px; background-color: #111827; border: 1px solid #1f2937; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+          <tr>
+            <td style="background: linear-gradient(135deg, #1e40af, #3b82f6); padding: 32px 40px; text-align: center;">
+              <h1 style="margin: 0; font-size: 26px; font-weight: 900; color: #ffffff; letter-spacing: -0.025em;">FinTracker</h1>
+              <p style="margin: 4px 0 0 0; font-size: 13px; color: #93c5fd; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase;">Secure Personal Finance</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 40px 40px 30px 40px;">
+              <h2 style="margin: 0 0 16px 0; font-size: 20px; font-weight: 700; color: #ffffff; text-align: center;">Reset Your Password</h2>
+              <p style="margin: 0 0 24px 0; font-size: 14px; line-height: 1.6; color: #9ca3af; text-align: center;">We received a request to reset your password. Click the button below to configure a new secure password for your account.</p>
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 30px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="${resetUrl}" style="background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #ffffff; padding: 14px 32px; font-size: 14px; font-weight: bold; text-decoration: none; border-radius: 14px; display: inline-block; box-shadow: 0 4px 12px rgba(37,99,235,0.35); border: 1px solid #3b82f6;">
+                      Reset Password
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin: 24px 0 0 0; font-size: 12px; line-height: 1.5; color: #6b7280; text-align: center;">If you did not request a password reset, please ignore this email. This link will expire shortly.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 0 40px 40px 40px; text-align: center; border-top: 1px solid #1f2937;">
+              <p style="margin: 24px 0 0 0; font-size: 11px; color: #4b5563;">&copy; 2026 FinTracker Inc. All rights reserved.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
       `
     })
     return true

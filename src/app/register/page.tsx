@@ -5,6 +5,7 @@ import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { User, Mail, ShieldAlert, ArrowRight, ArrowLeft, MessageSquare, Lock, Eye, EyeOff } from 'lucide-react'
+import OtpInput from '@/components/ui/OtpInput'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -278,20 +279,10 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label htmlFor="otp" className="block text-sm font-semibold text-slate-300">
+                <label className="block text-sm font-semibold text-slate-300 mb-2">
                   6-Digit Verification Code
                 </label>
-                <input
-                  id="otp"
-                  type="text"
-                  required
-                  value={otpCode}
-                  onChange={(e) => setOtpCode(e.target.value)}
-                  className="block w-full rounded-2xl border border-slate-800 bg-slate-950 px-4 py-3 text-white placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-center text-lg font-bold tracking-[1em] transition-colors mt-2"
-                  placeholder="000000"
-                  maxLength={6}
-                  autoFocus
-                />
+                <OtpInput value={otpCode} onChange={setOtpCode} />
               </div>
 
               <button

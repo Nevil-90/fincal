@@ -68,9 +68,13 @@ export default React.memo(function DashboardHeader({
     setShowMobileMenu(false)
   }
 
+  const getHeaderSubtitle = () => {
+    return `Here's your financial overview for ${new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`
+  }
+
   return (
     <>
-      <header className="bg-white dark:bg-neutral-900 border-b border-slate-200 dark:border-neutral-800 px-4 sm:px-6 h-[60px] sm:h-[68px] flex flex-col justify-center shadow-sm transition-colors duration-200 shrink-0">
+      <header className="bg-white dark:bg-[#09090b] border-b border-slate-200 dark:border-neutral-800/40 px-4 sm:px-6 h-[60px] sm:h-[68px] flex flex-col justify-center transition-colors duration-200 shrink-0">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <button
@@ -81,9 +85,14 @@ export default React.memo(function DashboardHeader({
               <Menu className="h-5 w-5 text-slate-600 dark:text-neutral-400" />
             </button>
             <div className="min-w-0">
-              <h1 className="text-base sm:text-xl font-bold text-slate-800 dark:text-slate-100 truncate">
+              <h1 className="text-base sm:text-xl font-black text-slate-800 dark:text-slate-100 truncate">
                 {getGreeting()}
               </h1>
+              {activeTab === 'overview' && (
+                <p className="text-xs text-slate-500 dark:text-neutral-400 mt-0.5 hidden sm:block">
+                  {getHeaderSubtitle()}
+                </p>
+              )}
             </div>
           </div>
 
@@ -91,7 +100,7 @@ export default React.memo(function DashboardHeader({
             {/* Command Palette Trigger */}
             <button
               onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}
-              className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 dark:bg-neutral-800 text-slate-500 dark:text-neutral-400 hover:bg-slate-200 dark:hover:bg-neutral-700 transition-colors text-sm"
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-neutral-800/80 bg-slate-150 dark:bg-[#131316] text-slate-500 dark:text-neutral-400 hover:bg-slate-200 dark:hover:bg-[#18181c] transition-colors text-sm"
             >
               <Search className="h-4 w-4" />
               <span>Search...</span>
@@ -99,18 +108,13 @@ export default React.memo(function DashboardHeader({
                 <span className="text-xs">⌘</span>K
               </kbd>
             </button>
-            <button
-              onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}
-              className="sm:hidden p-2 rounded-lg text-slate-500 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors"
-            >
-              <Search className="h-5 w-5" />
-            </button>
+
 
             {/* Desktop Add Transaction Button */}
             <button
               data-tour="add-transaction"
               onClick={onShowAddTransaction}
-              className="hidden md:flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-sm text-sm font-semibold whitespace-nowrap"
+              className="hidden md:flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-sm text-sm font-bold whitespace-nowrap"
             >
               <Plus className="h-4 w-4" />
               Add Transaction
@@ -119,7 +123,7 @@ export default React.memo(function DashboardHeader({
             {/* Desktop Profile Icon */}
             <button
               onClick={() => setShowProfileModal(true)}
-              className="hidden md:flex items-center justify-center w-9 h-9 rounded-full bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-400 border border-slate-200 dark:border-neutral-700 shadow-sm hover:bg-slate-200 dark:hover:bg-neutral-700 transition-all"
+              className="hidden md:flex items-center justify-center w-9 h-9 rounded-xl bg-slate-100 dark:bg-neutral-850 dark:bg-neutral-800 text-slate-600 dark:text-neutral-300 border border-slate-200 dark:border-neutral-800 shadow-sm hover:bg-slate-200 dark:hover:bg-neutral-700 transition-all"
               title="Edit Profile"
             >
               {user?.firstName ? (
@@ -132,7 +136,7 @@ export default React.memo(function DashboardHeader({
             {/* Desktop Settings Icon */}
             <button
               onClick={onOpenSettings}
-              className="hidden md:flex items-center justify-center w-9 h-9 rounded-full bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-400 border border-slate-200 dark:border-neutral-700 shadow-sm hover:bg-slate-200 dark:hover:bg-neutral-700 transition-all"
+              className="hidden md:flex items-center justify-center w-9 h-9 rounded-xl bg-slate-100 dark:bg-neutral-850 dark:bg-neutral-800 text-slate-600 dark:text-neutral-300 border border-slate-200 dark:border-neutral-800 shadow-sm hover:bg-slate-200 dark:hover:bg-neutral-700 transition-all"
               title="Settings"
             >
               <Settings className="h-4 w-4" />
@@ -141,7 +145,7 @@ export default React.memo(function DashboardHeader({
             {/* Mobile Settings Icon */}
             <button
               onClick={onOpenSettings}
-              className="md:hidden flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-400 border border-slate-200 dark:border-neutral-700 shadow-sm hover:bg-slate-200 dark:hover:bg-neutral-700 transition-all"
+              className="md:hidden flex items-center justify-center w-8 h-8 rounded-xl bg-slate-100 dark:bg-neutral-850 dark:bg-neutral-800 text-slate-600 dark:text-neutral-300 border border-slate-200 dark:border-neutral-800 shadow-sm hover:bg-slate-200 dark:hover:bg-neutral-700 transition-all"
               title="Settings"
             >
               <Settings className="h-4 w-4" />
@@ -151,7 +155,7 @@ export default React.memo(function DashboardHeader({
             <button
               data-tour="mobile-more-menu"
               onClick={() => setShowMobileMenu(true)}
-              className="md:hidden flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-400 border border-slate-200 dark:border-neutral-700 shadow-sm hover:bg-slate-200 dark:hover:bg-neutral-700 transition-all"
+              className="md:hidden flex items-center justify-center w-8 h-8 rounded-xl bg-slate-100 dark:bg-neutral-850 dark:bg-neutral-800 text-slate-600 dark:text-neutral-300 border border-slate-200 dark:border-neutral-800 shadow-sm hover:bg-slate-200 dark:hover:bg-neutral-700 transition-all"
             >
               {user?.firstName ? (
                 <span className="text-xs font-black uppercase">{user.firstName[0]}</span>

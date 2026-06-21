@@ -190,7 +190,14 @@ function ModernDashboardContent() {
   }, [summary])
 
   const availableBalance = summary?.global?.balance || 0
-  const availableYears = (summary?.availableYears || [new Date().getFullYear()]) as number[]
+  const availableYears = useMemo(() => {
+    const currentYear = new Date().getFullYear()
+    const yearsSet = new Set<number>([currentYear - 2, currentYear - 1, currentYear, currentYear + 1])
+    if (summary?.availableYears) {
+      summary.availableYears.forEach((y: number) => yearsSet.add(y))
+    }
+    return Array.from(yearsSet).sort((a, b) => b - a)
+  }, [summary?.availableYears])
 
   const getFilteredTourSteps = useCallback(() => {
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
@@ -425,7 +432,10 @@ function ModernDashboardContent() {
   }
 
   return (
-    <div className="flex min-h-screen w-full bg-white dark:bg-neutral-950 text-slate-900 dark:text-neutral-100 transition-colors duration-200">
+    <div className={`flex w-full bg-white dark:bg-neutral-950 text-slate-900 dark:text-neutral-100 transition-colors duration-200 ${
+      activeTab === 'overview' ? 'h-screen overflow-hidden' : 'min-h-screen'
+    }`}>
+
       <Sidebar
         sidebarOpen={sidebarOpen}
         activeTab={activeTab}
@@ -436,7 +446,10 @@ function ModernDashboardContent() {
         onClose={handleCloseSidebar}
       />
 
-      <div className="flex min-w-0 flex-1 flex-col min-h-screen relative">
+      <div className={`flex min-w-0 flex-1 flex-col relative ${
+        activeTab === 'overview' ? 'h-screen overflow-hidden' : 'min-h-screen'
+      }`}>
+
         <div className="sticky top-0 z-[60] bg-white/80 dark:bg-neutral-950/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-neutral-800/50 transition-colors duration-200">
           <DashboardHeader
             activeTab={activeTab as any}
@@ -450,7 +463,14 @@ function ModernDashboardContent() {
           />
         </div>
 
-        <main className="flex-1 bg-transparent px-4 py-6 sm:px-6 lg:px-8 pb-24 md:pb-6 relative overflow-hidden">
+        <main
+          className={`flex-1 bg-transparent relative ${
+            activeTab === 'overview'
+              ? 'px-4 py-4 overflow-y-auto no-scrollbar'
+              : 'px-4 py-6 sm:px-6 lg:px-8 pb-24 md:pb-6 overflow-y-auto'
+          }`}
+        >
+
           <AnimatePresence mode="wait">
             {activeTab === 'overview' && (
               <motion.div
@@ -459,7 +479,7 @@ function ModernDashboardContent() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
-                className="space-y-6"
+                className="flex-1 flex flex-col min-h-0"
               >
                 <OverviewTab
                   periodTxns={periodTxns}
@@ -510,7 +530,7 @@ function ModernDashboardContent() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
-                className="space-y-0 sm:space-y-6"
+                className="flex flex-col gap-4 sm:gap-6"
               >
                 <div className="rounded-2xl md:rounded-[28px] border border-slate-200/70 dark:border-neutral-800/70 bg-white/90 dark:bg-neutral-900/90 p-3 sm:p-6 shadow-[0_20px_50px_-35px_rgba(15,23,42,0.5)] dark:shadow-none sm:mb-0">
                   <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4">
@@ -544,12 +564,12 @@ function ModernDashboardContent() {
                     <div className="flex items-center justify-between gap-2 w-full lg:w-auto">
                       {/* Mobile Active Date Range Label */}
                       <div className="sm:hidden flex items-center font-bold text-slate-800 dark:text-neutral-200 text-sm">
-                        {!advancedFilters.year ? 'All Years' : 
-                         (advancedFilters.month !== undefined 
-                            ? `${new Date(2024, advancedFilters.month, 1).toLocaleDateString('en-US', { month: 'short' })} ${advancedFilters.year}` 
+                        {!advancedFilters.year ? 'All Years' :
+                          (advancedFilters.month !== undefined
+                            ? `${new Date(2024, advancedFilters.month, 1).toLocaleDateString('en-US', { month: 'short' })} ${advancedFilters.year}`
                             : `Year: ${advancedFilters.year}`)}
                       </div>
-                      
+
                       <div className="hidden sm:flex items-center gap-1.5 sm:gap-2 flex-1 justify-end">
                         <select
                           value={advancedFilters.year || 'all'}

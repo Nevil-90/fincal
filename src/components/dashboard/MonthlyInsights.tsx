@@ -19,11 +19,12 @@ interface MonthlyInsightsProps {
   prevExpense: number
   month: number
   year: number
+  isAllYear?: boolean
 }
 
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
-export default function MonthlyInsights({ periodTxns, categorySpend, prevExpense, month, year }: MonthlyInsightsProps) {
+export default function MonthlyInsights({ periodTxns, categorySpend, prevExpense, month, year, isAllYear = false }: MonthlyInsightsProps) {
   const currentIncome = periodTxns.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0)
   const currentExpense = periodTxns.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0)
   const savings = currentIncome - currentExpense
@@ -70,7 +71,7 @@ export default function MonthlyInsights({ periodTxns, categorySpend, prevExpense
     return (
       <div className="bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700/70 rounded-3xl p-6 text-center text-slate-400 dark:text-neutral-500">
         <Calendar className="h-10 w-10 mx-auto mb-3 opacity-40" />
-        <p className="font-semibold">No transactions for {MONTH_NAMES[month - 1]} {year}</p>
+        <p className="font-semibold">No transactions for {isAllYear ? `the year ${year}` : `${MONTH_NAMES[month - 1]} ${year}`}</p>
       </div>
     )
   }
@@ -122,7 +123,7 @@ export default function MonthlyInsights({ periodTxns, categorySpend, prevExpense
         </div>
       </div>
 
-      {/* vs Last Month */}
+      {/* vs Last Month/Year */}
       {prevExpense > 0 && (
         <div className={`flex items-center gap-3 rounded-2xl p-3.5 border ${
           expenseChange < 0 ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-900/50' : 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-900/50'
@@ -134,7 +135,7 @@ export default function MonthlyInsights({ periodTxns, categorySpend, prevExpense
           )}
           <div className="flex-1 min-w-0">
             <p className={`text-sm font-semibold ${expenseChange < 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'}`}>
-              You spent <strong>{Math.abs(expenseChange)}%</strong> {expenseChange < 0 ? 'less' : 'more'} than last month.
+              You spent <strong>{Math.abs(expenseChange)}%</strong> {expenseChange < 0 ? 'less' : 'more'} than last {isAllYear ? 'year' : 'month'}.
               {expenseChange < 0 && <span className="flex items-center gap-1 mt-1"><PartyPopper className="h-3 w-3 text-emerald-500 dark:text-emerald-400 shrink-0" /> Great job!</span>}
             </p>
           </div>
@@ -207,7 +208,7 @@ export default function MonthlyInsights({ periodTxns, categorySpend, prevExpense
       <div className="flex items-center gap-2 p-3 bg-slate-50 dark:bg-neutral-800/50 border border-slate-200 dark:border-neutral-700 rounded-2xl">
         <Award className="h-4 w-4 text-blue-500 dark:text-blue-400 shrink-0" />
         <p className="text-xs text-slate-500 dark:text-neutral-400">
-          <strong>{periodTxns.length} transactions</strong> logged this month across <strong>{new Set(periodTxns.map(t => t.category)).size} categories</strong>.
+          <strong>{periodTxns.length} transactions</strong> logged this {isAllYear ? 'year' : 'month'} across <strong>{new Set(periodTxns.map(t => t.category)).size} categories</strong>.
         </p>
       </div>
     </div>

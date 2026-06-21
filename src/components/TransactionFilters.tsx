@@ -86,7 +86,7 @@ export function TransactionFilters({
           />
         </div>
 
-        <div className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto overflow-hidden sm:overflow-visible sm:flex-wrap">
+        <div className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto overflow-x-auto sm:overflow-visible flex-nowrap sm:flex-wrap [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden pb-1 sm:pb-0">
           <div className="flex rounded-xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-1 shrink-0">
             <button
               onClick={() => setFilterType('all')}

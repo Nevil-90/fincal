@@ -109,10 +109,10 @@ export default function RegularTransactionList({
     if (filterRecurring !== 'all') filters.recurring = filterRecurring
 
     if (viewMode === 'month') {
-      filters.month = selectedMonth + 1
-      filters.year = selectedYear
+      if (selectedMonth !== undefined) filters.month = selectedMonth + 1
+      if (selectedYear !== undefined) filters.year = selectedYear
     } else if (viewMode === 'year') {
-      filters.year = selectedYear
+      if (selectedYear !== undefined) filters.year = selectedYear
     }
 
     return filters
@@ -136,7 +136,7 @@ export default function RegularTransactionList({
 
   const filteredTransactions = useMemo(() => {
     let sorted = (fetchedTransactions || []).filter(t => !pendingDeleteIds.has(t.id))
-    
+
     sorted = sorted.sort((a, b) => {
       if (sortOption === 'date-desc') return new Date(b.date).getTime() - new Date(a.date).getTime()
       if (sortOption === 'date-asc') return new Date(a.date).getTime() - new Date(b.date).getTime()
@@ -234,7 +234,7 @@ export default function RegularTransactionList({
       }
 
       triggerRefresh()
-      
+
       toast.success('Transaction deleted', {
         action: t ? {
           label: 'Undo',
@@ -244,8 +244,8 @@ export default function RegularTransactionList({
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                  type: t.type, amount: t.amount, category: t.category, 
-                  description: t.description, paymentMethod: t.paymentMethod, 
+                  type: t.type, amount: t.amount, category: t.category,
+                  description: t.description, paymentMethod: t.paymentMethod,
                   source: t.source, date: t.date, recurringTransactionId: t.recurringTransactionId
                 })
               })
@@ -298,10 +298,10 @@ export default function RegularTransactionList({
   const handleMultiDelete = async () => {
     if (selectedTransactions.size === 0) return
     const ids = Array.from(selectedTransactions)
-    
+
     // Capture transactions for Undo
     const deletedTxns = (fetchedTransactions || []).filter(tx => ids.includes(tx.id))
-    
+
     setSelectedTransactions(new Set())
     setPendingDeleteIds(prev => {
       const next = new Set(prev)
@@ -319,7 +319,7 @@ export default function RegularTransactionList({
       }))
 
       triggerRefresh()
-      
+
       toast.success(`${ids.length} transactions deleted`, {
         action: deletedTxns.length > 0 ? {
           label: 'Undo',
@@ -329,17 +329,17 @@ export default function RegularTransactionList({
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                  type: t.type, amount: t.amount, category: t.category, 
-                  description: t.description, paymentMethod: t.paymentMethod, 
+                  type: t.type, amount: t.amount, category: t.category,
+                  description: t.description, paymentMethod: t.paymentMethod,
                   source: t.source, date: t.date, recurringTransactionId: t.recurringTransactionId
                 })
               })))
               triggerRefresh()
               toast.success(`${deletedTxns.length} transactions restored`)
-              setPendingDeleteIds(prev => { 
+              setPendingDeleteIds(prev => {
                 const next = new Set(prev)
                 ids.forEach(id => next.delete(id))
-                return next 
+                return next
               })
             } catch {
               toast.error('Failed to restore transactions')
@@ -392,10 +392,10 @@ export default function RegularTransactionList({
         // Export grouped by category with current view mode settings
         params.append('groupBy', 'category')
         if (viewMode === 'month') {
-          params.append('month', (selectedMonth + 1).toString())
-          params.append('year', selectedYear.toString())
+          if (selectedMonth !== undefined) params.append('month', (selectedMonth + 1).toString())
+          if (selectedYear !== undefined) params.append('year', selectedYear.toString())
         } else if (viewMode === 'year') {
-          params.append('year', selectedYear.toString())
+          if (selectedYear !== undefined) params.append('year', selectedYear.toString())
         }
         break
       case 'category-month':
@@ -473,7 +473,7 @@ export default function RegularTransactionList({
   }, [groupBy, groupedTransactions, pageSize, pagination])
 
   const safePage = Math.min(currentPage, totalPages)
-  
+
   useEffect(() => {
     setCurrentPage(1)
   }, [
@@ -522,7 +522,7 @@ export default function RegularTransactionList({
   }
 
   return (
-    <div className="space-y-4 px-0 sm:px-4 pb-6" ref={listContainerRef}>
+    <div className="space-y-4 pb-6" ref={listContainerRef}>
       <TransactionFilters
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
@@ -673,8 +673,8 @@ export default function RegularTransactionList({
                         </div>
 
                         <div className={`h-10 w-10 flex items-center justify-center rounded-xl text-lg shrink-0 shadow-sm border ${isIncome
-                            ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/50'
-                            : 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 border-rose-100 dark:border-rose-900/50'
+                          ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/50'
+                          : 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 border-rose-100 dark:border-rose-900/50'
                           }`}>
                           {isIncome ? <ArrowDownLeft className="h-4 w-4 text-emerald-600 dark:text-emerald-400" /> : <ArrowUpRight className="h-4 w-4 text-rose-600 dark:text-rose-400" />}
                         </div>
@@ -876,8 +876,8 @@ export default function RegularTransactionList({
 
                                 {/* Icon */}
                                 <div className={`h-10 w-10 flex items-center justify-center rounded-xl text-lg shrink-0 shadow-sm border ${isIncome
-                                    ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/50'
-                                    : 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 border-rose-100 dark:border-rose-900/50'
+                                  ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/50'
+                                  : 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 border-rose-100 dark:border-rose-900/50'
                                   }`}>
                                   {isIncome ? <ArrowDownLeft className="h-4 w-4 text-emerald-600 dark:text-emerald-400" /> : <ArrowUpRight className="h-4 w-4 text-rose-600 dark:text-rose-400" />}
                                 </div>
@@ -950,231 +950,231 @@ export default function RegularTransactionList({
         />
       )}
 
-            {showDateRangePicker && typeof document !== 'undefined' && createPortal(
-              <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/45 dark:bg-neutral-950/80 p-4 backdrop-blur-sm">
-                <div className="w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-2xl">
-                  <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-neutral-800 shrink-0">
+      {showDateRangePicker && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/45 dark:bg-neutral-950/80 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-2xl">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-neutral-800 shrink-0">
+              <div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">Download Data as CSV</h3>
+                <p className="text-xs text-slate-500 dark:text-neutral-500">Statement Export</p>
+              </div>
+              <button
+                onClick={() => setShowDateRangePicker(false)}
+                className="rounded-lg p-1.5 text-slate-400 dark:text-neutral-500 transition-all duration-200 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-500 dark:hover:text-rose-400 hover:shadow-[0_0_12px_rgba(244,63,94,0.4)]"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="px-6 py-5 space-y-5">
+              <div className="rounded-2xl border border-slate-200 dark:border-neutral-700 bg-slate-50/70 dark:bg-neutral-800/50 p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-neutral-400">Statement Range</p>
+                <p className="mt-1 text-sm text-slate-600 dark:text-neutral-400">Choose the time window and grouping.</p>
+
+                <div className="mt-4 grid grid-cols-2 gap-2 [&>*:last-child:nth-child(odd)]:col-span-2">
+                  <button
+                    onClick={() => setPdfExportType('category-current')}
+                    className={`rounded-lg border px-3 py-2 text-sm font-semibold ${pdfExportType === 'category-current'
+                      ? 'border-blue-400 dark:border-blue-500/50 bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
+                      : 'border-slate-200 dark:border-neutral-700 text-slate-600 dark:text-neutral-400 hover:bg-white dark:hover:bg-neutral-800'
+                      }`}
+                  >
+                    Current View (Category)
+                  </button>
+                  <button
+                    onClick={() => setPdfExportType('category-month')}
+                    className={`rounded-lg border px-3 py-2 text-sm font-semibold ${pdfExportType === 'category-month'
+                      ? 'border-blue-400 dark:border-blue-500/50 bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
+                      : 'border-slate-200 dark:border-neutral-700 text-slate-600 dark:text-neutral-400 hover:bg-white dark:hover:bg-neutral-800'
+                      }`}
+                  >
+                    Category by Month
+                  </button>
+                  <button
+                    onClick={() => setPdfExportType('category-year')}
+                    className={`rounded-lg border px-3 py-2 text-sm font-semibold ${pdfExportType === 'category-year'
+                      ? 'border-blue-400 dark:border-blue-500/50 bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
+                      : 'border-slate-200 dark:border-neutral-700 text-slate-600 dark:text-neutral-400 hover:bg-white dark:hover:bg-neutral-800'
+                      }`}
+                  >
+                    Category by Year
+                  </button>
+                  <button
+                    onClick={() => setPdfExportType('category-custom')}
+                    className={`rounded-lg border px-3 py-2 text-sm font-semibold ${pdfExportType === 'category-custom'
+                      ? 'border-blue-400 dark:border-blue-500/50 bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
+                      : 'border-slate-200 dark:border-neutral-700 text-slate-600 dark:text-neutral-400 hover:bg-white dark:hover:bg-neutral-800'
+                      }`}
+                  >
+                    Category (Custom Range)
+                  </button>
+                  <button
+                    onClick={() => setPdfExportType('month')}
+                    className={`rounded-lg border px-3 py-2 text-sm font-semibold ${pdfExportType === 'month'
+                      ? 'border-slate-400 dark:border-neutral-500 bg-white dark:bg-neutral-800 text-slate-800 dark:text-neutral-200'
+                      : 'border-slate-200 dark:border-neutral-700 text-slate-600 dark:text-neutral-400 hover:bg-white dark:hover:bg-neutral-800'
+                      }`}
+                  >
+                    Statement Month
+                  </button>
+                  <button
+                    onClick={() => setPdfExportType('year')}
+                    className={`rounded-lg border px-3 py-2 text-sm font-semibold ${pdfExportType === 'year'
+                      ? 'border-slate-400 dark:border-neutral-500 bg-white dark:bg-neutral-800 text-slate-800 dark:text-neutral-200'
+                      : 'border-slate-200 dark:border-neutral-700 text-slate-600 dark:text-neutral-400 hover:bg-white dark:hover:bg-neutral-800'
+                      }`}
+                  >
+                    Statement Year
+                  </button>
+                  <button
+                    onClick={() => setPdfExportType('custom')}
+                    className={`col-span-2 rounded-lg border px-3 py-2 text-sm font-semibold ${pdfExportType === 'custom'
+                      ? 'border-slate-400 dark:border-neutral-500 bg-white dark:bg-neutral-800 text-slate-800 dark:text-neutral-200'
+                      : 'border-slate-200 dark:border-neutral-700 text-slate-600 dark:text-neutral-400 hover:bg-white dark:hover:bg-neutral-800'
+                      }`}
+                  >
+                    Statement Custom Range
+                  </button>
+                </div>
+              </div>
+
+              {(pdfExportType === 'month' || pdfExportType === 'year' ||
+                pdfExportType === 'category-current' || pdfExportType === 'category-month' ||
+                pdfExportType === 'category-year') && (
+                  <div className="grid grid-cols-2 gap-3 [&>*:last-child:nth-child(odd)]:col-span-2">
                     <div>
-                      <h3 className="text-base font-bold text-slate-900 dark:text-white">Download Data as CSV</h3>
-                      <p className="text-xs text-slate-500 dark:text-neutral-500">Statement Export</p>
+                      <label className="block text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-neutral-400">Year</label>
+                      <select
+                        value={pdfSelectedYear}
+                        onChange={(e) => setPdfSelectedYear(parseInt(e.target.value))}
+                        className="mt-2 w-full rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-3 py-2 text-sm text-slate-900 dark:text-neutral-200 shadow-sm"
+                      >
+                        {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map(year => (
+                          <option key={year} value={year}>{year}</option>
+                        ))}
+                      </select>
                     </div>
-                    <button
-                      onClick={() => setShowDateRangePicker(false)}
-                      className="rounded-lg p-1.5 text-slate-400 dark:text-neutral-500 transition-all duration-200 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-500 dark:hover:text-rose-400 hover:shadow-[0_0_12px_rgba(244,63,94,0.4)]"
-                    >
-                      <X className="h-5 w-5" />
-                    </button>
-                  </div>
-
-                  <div className="px-6 py-5 space-y-5">
-                    <div className="rounded-2xl border border-slate-200 dark:border-neutral-700 bg-slate-50/70 dark:bg-neutral-800/50 p-4">
-                      <p className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-neutral-400">Statement Range</p>
-                      <p className="mt-1 text-sm text-slate-600 dark:text-neutral-400">Choose the time window and grouping.</p>
-
-                      <div className="mt-4 grid grid-cols-2 gap-2 [&>*:last-child:nth-child(odd)]:col-span-2">
-                        <button
-                          onClick={() => setPdfExportType('category-current')}
-                          className={`rounded-lg border px-3 py-2 text-sm font-semibold ${pdfExportType === 'category-current'
-                              ? 'border-blue-400 dark:border-blue-500/50 bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
-                              : 'border-slate-200 dark:border-neutral-700 text-slate-600 dark:text-neutral-400 hover:bg-white dark:hover:bg-neutral-800'
-                            }`}
+                    {(pdfExportType === 'month' || pdfExportType === 'category-month') && (
+                      <div>
+                        <label className="block text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-neutral-400">Month</label>
+                        <select
+                          value={pdfSelectedMonth}
+                          onChange={(e) => setPdfSelectedMonth(parseInt(e.target.value))}
+                          className="mt-2 w-full rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-3 py-2 text-sm text-slate-900 dark:text-neutral-200 shadow-sm"
                         >
-                          Current View (Category)
-                        </button>
-                        <button
-                          onClick={() => setPdfExportType('category-month')}
-                          className={`rounded-lg border px-3 py-2 text-sm font-semibold ${pdfExportType === 'category-month'
-                              ? 'border-blue-400 dark:border-blue-500/50 bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
-                              : 'border-slate-200 dark:border-neutral-700 text-slate-600 dark:text-neutral-400 hover:bg-white dark:hover:bg-neutral-800'
-                            }`}
-                        >
-                          Category by Month
-                        </button>
-                        <button
-                          onClick={() => setPdfExportType('category-year')}
-                          className={`rounded-lg border px-3 py-2 text-sm font-semibold ${pdfExportType === 'category-year'
-                              ? 'border-blue-400 dark:border-blue-500/50 bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
-                              : 'border-slate-200 dark:border-neutral-700 text-slate-600 dark:text-neutral-400 hover:bg-white dark:hover:bg-neutral-800'
-                            }`}
-                        >
-                          Category by Year
-                        </button>
-                        <button
-                          onClick={() => setPdfExportType('category-custom')}
-                          className={`rounded-lg border px-3 py-2 text-sm font-semibold ${pdfExportType === 'category-custom'
-                              ? 'border-blue-400 dark:border-blue-500/50 bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
-                              : 'border-slate-200 dark:border-neutral-700 text-slate-600 dark:text-neutral-400 hover:bg-white dark:hover:bg-neutral-800'
-                            }`}
-                        >
-                          Category (Custom Range)
-                        </button>
-                        <button
-                          onClick={() => setPdfExportType('month')}
-                          className={`rounded-lg border px-3 py-2 text-sm font-semibold ${pdfExportType === 'month'
-                              ? 'border-slate-400 dark:border-neutral-500 bg-white dark:bg-neutral-800 text-slate-800 dark:text-neutral-200'
-                              : 'border-slate-200 dark:border-neutral-700 text-slate-600 dark:text-neutral-400 hover:bg-white dark:hover:bg-neutral-800'
-                            }`}
-                        >
-                          Statement Month
-                        </button>
-                        <button
-                          onClick={() => setPdfExportType('year')}
-                          className={`rounded-lg border px-3 py-2 text-sm font-semibold ${pdfExportType === 'year'
-                              ? 'border-slate-400 dark:border-neutral-500 bg-white dark:bg-neutral-800 text-slate-800 dark:text-neutral-200'
-                              : 'border-slate-200 dark:border-neutral-700 text-slate-600 dark:text-neutral-400 hover:bg-white dark:hover:bg-neutral-800'
-                            }`}
-                        >
-                          Statement Year
-                        </button>
-                        <button
-                          onClick={() => setPdfExportType('custom')}
-                          className={`col-span-2 rounded-lg border px-3 py-2 text-sm font-semibold ${pdfExportType === 'custom'
-                              ? 'border-slate-400 dark:border-neutral-500 bg-white dark:bg-neutral-800 text-slate-800 dark:text-neutral-200'
-                              : 'border-slate-200 dark:border-neutral-700 text-slate-600 dark:text-neutral-400 hover:bg-white dark:hover:bg-neutral-800'
-                            }`}
-                        >
-                          Statement Custom Range
-                        </button>
-                      </div>
-                    </div>
-
-                    {(pdfExportType === 'month' || pdfExportType === 'year' ||
-                      pdfExportType === 'category-current' || pdfExportType === 'category-month' ||
-                      pdfExportType === 'category-year') && (
-                        <div className="grid grid-cols-2 gap-3 [&>*:last-child:nth-child(odd)]:col-span-2">
-                          <div>
-                            <label className="block text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-neutral-400">Year</label>
-                            <select
-                              value={pdfSelectedYear}
-                              onChange={(e) => setPdfSelectedYear(parseInt(e.target.value))}
-                              className="mt-2 w-full rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-3 py-2 text-sm text-slate-900 dark:text-neutral-200 shadow-sm"
-                            >
-                              {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map(year => (
-                                <option key={year} value={year}>{year}</option>
-                              ))}
-                            </select>
-                          </div>
-                          {(pdfExportType === 'month' || pdfExportType === 'category-month') && (
-                            <div>
-                              <label className="block text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-neutral-400">Month</label>
-                              <select
-                                value={pdfSelectedMonth}
-                                onChange={(e) => setPdfSelectedMonth(parseInt(e.target.value))}
-                                className="mt-2 w-full rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-3 py-2 text-sm text-slate-900 dark:text-neutral-200 shadow-sm"
-                              >
-                                {Array.from({ length: 12 }, (_, i) => (
-                                  <option key={i} value={i}>
-                                    {new Date(2025, i, 1).toLocaleString('default', { month: 'long' })}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                    {(pdfExportType === 'custom' || pdfExportType === 'category-custom') && (
-                      <div className="grid grid-cols-2 gap-3 [&>*:last-child:nth-child(odd)]:col-span-2">
-                        <div>
-                          <label className="block text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-neutral-400 mb-2">Start Date</label>
-                          <div className="relative w-full">
-                            <div className="w-full rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-3 py-2 text-sm text-slate-900 dark:text-neutral-200 shadow-sm flex items-center justify-between pointer-events-none transition-colors">
-                              <span className={pdfStartDate ? 'text-slate-900 dark:text-neutral-200' : 'text-slate-400 dark:text-neutral-500'}>
-                                {pdfStartDate
-                                  ? new Date(pdfStartDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-                                  : 'Select Date'}
-                              </span>
-                              <CalendarIcon className="h-4 w-4 text-slate-400 dark:text-neutral-500" />
-                            </div>
-                            <input
-                              type="date"
-                              value={pdfStartDate}
-                              onChange={(e) => setPdfStartDate(e.target.value)}
-                              onClick={(e) => {
-                                try {
-                                  if ('showPicker' in HTMLInputElement.prototype) {
-                                    (e.target as HTMLInputElement).showPicker();
-                                  }
-                                } catch (err) {}
-                              }}
-                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <label className="block text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-neutral-400 mb-2">End Date</label>
-                          <div className="relative w-full">
-                            <div className="w-full rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-3 py-2 text-sm text-slate-900 dark:text-neutral-200 shadow-sm flex items-center justify-between pointer-events-none transition-colors">
-                              <span className={pdfEndDate ? 'text-slate-900 dark:text-neutral-200' : 'text-slate-400 dark:text-neutral-500'}>
-                                {pdfEndDate
-                                  ? new Date(pdfEndDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-                                  : 'Select Date'}
-                              </span>
-                              <CalendarIcon className="h-4 w-4 text-slate-400 dark:text-neutral-500" />
-                            </div>
-                            <input
-                              type="date"
-                              value={pdfEndDate}
-                              onChange={(e) => setPdfEndDate(e.target.value)}
-                              onClick={(e) => {
-                                try {
-                                  if ('showPicker' in HTMLInputElement.prototype) {
-                                    (e.target as HTMLInputElement).showPicker();
-                                  }
-                                } catch (err) {}
-                              }}
-                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                            />
-                          </div>
-                        </div>
+                          {Array.from({ length: 12 }, (_, i) => (
+                            <option key={i} value={i}>
+                              {new Date(2025, i, 1).toLocaleString('default', { month: 'long' })}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                     )}
+                  </div>
+                )}
 
-                    <div className="flex gap-3 pt-2">
-                      <button
-                        onClick={() => setShowDateRangePicker(false)}
-                        className="flex-1 rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-4 py-2 text-sm font-semibold text-slate-600 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-700"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={exportToPDF}
-                        className="flex-1 rounded-xl bg-emerald-600 dark:bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 dark:hover:bg-emerald-600"
-                      >
-                        Download CSV
-                      </button>
+              {(pdfExportType === 'custom' || pdfExportType === 'category-custom') && (
+                <div className="grid grid-cols-2 gap-3 [&>*:last-child:nth-child(odd)]:col-span-2">
+                  <div>
+                    <label className="block text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-neutral-400 mb-2">Start Date</label>
+                    <div className="relative w-full">
+                      <div className="w-full rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-3 py-2 text-sm text-slate-900 dark:text-neutral-200 shadow-sm flex items-center justify-between pointer-events-none transition-colors">
+                        <span className={pdfStartDate ? 'text-slate-900 dark:text-neutral-200' : 'text-slate-400 dark:text-neutral-500'}>
+                          {pdfStartDate
+                            ? new Date(pdfStartDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+                            : 'Select Date'}
+                        </span>
+                        <CalendarIcon className="h-4 w-4 text-slate-400 dark:text-neutral-500" />
+                      </div>
+                      <input
+                        type="date"
+                        value={pdfStartDate}
+                        onChange={(e) => setPdfStartDate(e.target.value)}
+                        onClick={(e) => {
+                          try {
+                            if ('showPicker' in HTMLInputElement.prototype) {
+                              (e.target as HTMLInputElement).showPicker();
+                            }
+                          } catch (err) { }
+                        }}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-neutral-400 mb-2">End Date</label>
+                    <div className="relative w-full">
+                      <div className="w-full rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-3 py-2 text-sm text-slate-900 dark:text-neutral-200 shadow-sm flex items-center justify-between pointer-events-none transition-colors">
+                        <span className={pdfEndDate ? 'text-slate-900 dark:text-neutral-200' : 'text-slate-400 dark:text-neutral-500'}>
+                          {pdfEndDate
+                            ? new Date(pdfEndDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+                            : 'Select Date'}
+                        </span>
+                        <CalendarIcon className="h-4 w-4 text-slate-400 dark:text-neutral-500" />
+                      </div>
+                      <input
+                        type="date"
+                        value={pdfEndDate}
+                        onChange={(e) => setPdfEndDate(e.target.value)}
+                        onClick={(e) => {
+                          try {
+                            if ('showPicker' in HTMLInputElement.prototype) {
+                              (e.target as HTMLInputElement).showPicker();
+                            }
+                          } catch (err) { }
+                        }}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      />
                     </div>
                   </div>
                 </div>
-              </div>,
-              document.body
-            )}
+              )}
 
-            {/* Edit Transaction Modal */}
-            {editingTransaction && typeof document !== 'undefined' && createPortal(
-              <div className="fixed inset-0 bg-slate-950/45 dark:bg-neutral-950/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4" onClick={() => setEditingTransaction(null)}>
-                <div className="bg-white dark:bg-neutral-900 rounded-3xl shadow-2xl w-full max-w-md flex flex-col max-h-[90vh] sm:max-h-[85vh] overflow-hidden border border-slate-200 dark:border-neutral-800" onClick={(e) => e.stopPropagation()}>
-                  <AddTransactionForm
-                    initialData={{
-                      id: editingTransaction.id,
-                      type: editingTransaction.type,
-                      amount: editingTransaction.amount,
-                      category: editingTransaction.category,
-                      description: editingTransaction.description,
-                      paymentMethod: editingTransaction.paymentMethod,
-                      source: editingTransaction.source,
-                      date: editingTransaction.date
-                    }}
-                    onClose={() => setEditingTransaction(null)}
-                    onTransactionAdded={() => {
-                      setEditingTransaction(null)
-                      onTransactionDeleted() // Triggers a re-fetch of transactions
-                    }}
-                  />
-                </div>
-              </div>,
-              document.body
-            )}
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => setShowDateRangePicker(false)}
+                  className="flex-1 rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-4 py-2 text-sm font-semibold text-slate-600 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={exportToPDF}
+                  className="flex-1 rounded-xl bg-emerald-600 dark:bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 dark:hover:bg-emerald-600"
+                >
+                  Download CSV
+                </button>
+              </div>
+            </div>
           </div>
-          )
+        </div>,
+        document.body
+      )}
+
+      {/* Edit Transaction Modal */}
+      {editingTransaction && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 bg-slate-950/45 dark:bg-neutral-950/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4" onClick={() => setEditingTransaction(null)}>
+          <div className="bg-white dark:bg-neutral-900 rounded-3xl shadow-2xl w-full max-w-md flex flex-col max-h-[90vh] sm:max-h-[85vh] overflow-hidden border border-slate-200 dark:border-neutral-800" onClick={(e) => e.stopPropagation()}>
+            <AddTransactionForm
+              initialData={{
+                id: editingTransaction.id,
+                type: editingTransaction.type,
+                amount: editingTransaction.amount,
+                category: editingTransaction.category,
+                description: editingTransaction.description,
+                paymentMethod: editingTransaction.paymentMethod,
+                source: editingTransaction.source,
+                date: editingTransaction.date
+              }}
+              onClose={() => setEditingTransaction(null)}
+              onTransactionAdded={() => {
+                setEditingTransaction(null)
+                onTransactionDeleted() // Triggers a re-fetch of transactions
+              }}
+            />
+          </div>
+        </div>,
+        document.body
+      )}
+    </div>
+  )
 }
