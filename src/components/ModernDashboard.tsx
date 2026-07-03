@@ -9,6 +9,7 @@ import { useNavPreferences } from '@/hooks/useNavPreferences'
 
 import { formatCurrency } from '@/lib/financial-utils'
 import { useUser, useTransactionSummary, useTransactions, useGoals } from '@/hooks/useApi'
+import { mutate } from 'swr'
 import dynamic from 'next/dynamic'
 import { motion, AnimatePresence } from 'framer-motion'
 import AddTransactionForm from './AddTransactionForm'
@@ -376,6 +377,7 @@ function ModernDashboardContent() {
       mutateSummary(undefined, { revalidate: true }),
       mutatePeriodTxns(undefined, { revalidate: true }),
       mutateGoals(undefined, { revalidate: true }),
+      mutate((key: any) => typeof key === 'string' && key.startsWith('/api/transactions'), undefined, { revalidate: true }),
     ])
   }
 
