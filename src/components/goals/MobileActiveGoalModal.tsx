@@ -1,9 +1,9 @@
 // Mobile modal for viewing and managing an active savings goal.
-import { Calendar, Plus, History, TrendingUp, Trash2, Lightbulb, X, Target } from 'lucide-react'
+import { Calendar, Plus, History, TrendingUp, Trash2, Lightbulb, X, Target, ChevronLeft, ChevronRight } from 'lucide-react'
 import { formatCurrency } from '@/lib/financial-utils'
 import { SavingsGoal, GoalContribution } from './types'
 import { useEnhancedStaticData } from '@/lib/enhanced-static-data-manager'
-import { useEffect } from 'react'
+import { useEffect, useState, useRef } from 'react'
 
 interface QuickContribution {
   amount: string
@@ -46,30 +46,30 @@ export function MobileActiveGoalModal({
   handleDeleteGoal
 }: MobileActiveGoalModalProps) {
   const { data: staticData } = useEnhancedStaticData()
+  const [historyPage, setHistoryPage] = useState(1)
+  const HISTORY_PAGE_SIZE = 5
 
-  // Prevent background scrolling strictly
+  // Reset page when goal changes
+  useEffect(() => {
+    setHistoryPage(1)
+  }, [selectedGoal])
+
+  // Touch tracking refs to prevent accidental closes on swipe
+  const touchStartY = useRef<number | null>(null)
+  const touchStartX = useRef<number | null>(null)
+
+  // Prevent background scrolling — but only block scrolls that originate OUTSIDE the modal panel
   useEffect(() => {
     if (!selectedGoal || window.innerWidth >= 1024) return
 
-    // Save original styles
     const bodyOverflow = document.body.style.overflow
     const htmlOverflow = document.documentElement.style.overflow
-
-    // Apply strict hidden
     document.body.style.overflow = 'hidden'
     document.documentElement.style.overflow = 'hidden'
 
-    // Prevent touch movement globally to freeze the background UI (since modal is 100% static)
-    const preventScroll = (e: TouchEvent) => {
-      e.preventDefault()
-    }
-
-    document.addEventListener('touchmove', preventScroll, { passive: false })
-
-    return () => { 
+    return () => {
       document.body.style.overflow = bodyOverflow
       document.documentElement.style.overflow = htmlOverflow
-      document.removeEventListener('touchmove', preventScroll)
     }
   }, [selectedGoal])
 
@@ -84,12 +84,36 @@ export function MobileActiveGoalModal({
       ? 'from-violet-500 to-indigo-500'
       : 'from-amber-500 to-orange-500'
 
+  // Pagination helpers for history
+  const goalContributions = contributions[selectedGoal] || []
+  const totalPages = Math.ceil(goalContributions.length / HISTORY_PAGE_SIZE)
+  const paginatedContribs = goalContributions.slice(
+    (historyPage - 1) * HISTORY_PAGE_SIZE,
+    historyPage * HISTORY_PAGE_SIZE
+  )
+
+  // Backdrop click — only close if it was a real tap (not a swipe)
+  const handleBackdropTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY
+    touchStartX.current = e.touches[0].clientX
+  }
+  const handleBackdropClick = () => {
+    // If touch moved more than 10px, treat as a swipe — don't close
+    setSelectedGoal(null)
+  }
+
   return (
     <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-0 sm:p-4 touch-none overscroll-none lg:sticky lg:top-6 lg:inset-auto lg:z-auto lg:p-0 lg:block lg:w-[420px] xl:w-[450px] lg:shrink-0 lg:flex-none">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-slate-950/50 dark:bg-neutral-950/80 backdrop-blur-sm transition-opacity"
-        onClick={() => setSelectedGoal(null)}
+        onTouchStart={handleBackdropTouchStart}
+        onTouchEnd={(e) => {
+          const dy = touchStartY.current !== null ? Math.abs(e.changedTouches[0].clientY - touchStartY.current) : 0
+          const dx = touchStartX.current !== null ? Math.abs(e.changedTouches[0].clientX - touchStartX.current) : 0
+          if (dy < 10 && dx < 10) handleBackdropClick()
+        }}
+        onClick={handleBackdropClick}
       />
 
       {/* Sheet */}
@@ -313,7 +337,7 @@ export function MobileActiveGoalModal({
               <div className="bg-white dark:bg-neutral-900 border border-slate-200/70 dark:border-neutral-800 rounded-2xl shadow-sm flex flex-col">
                 <div className="px-5 py-3.5 border-b border-slate-100 dark:border-neutral-800 flex items-center gap-2 shrink-0">
                   <History className="h-4 w-4 text-violet-500" />
-                  <h5 className="font-bold text-slate-900 dark:text-white text-sm">Recent Activity</h5>
+                  <h5 className="font-bold text-slate-900 dark:text-white text-sm">Contribution History</h5>
                 </div>
                 <div className="p-3">
                   {loadingContributions === selectedGoal ? (
@@ -331,9 +355,9 @@ export function MobileActiveGoalModal({
                         </div>
                       ))}
                     </div>
-                  ) : contributions[selectedGoal]?.length > 0 ? (
+                  ) : goalContributions.length > 0 ? (
                     <div className="space-y-2">
-                      {contributions[selectedGoal].slice(0, 5).map((c) => (
+                      {paginatedContribs.map((c) => (
                         <div key={c.id} className="flex justify-between items-center group p-3 -mx-1 rounded-xl hover:bg-slate-50 dark:hover:bg-neutral-800/50 transition-colors">
                           <div className="flex items-center gap-3">
                             <div className="h-9 w-9 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
@@ -342,7 +366,7 @@ export function MobileActiveGoalModal({
                             <div>
                               <p className="font-bold text-slate-900 dark:text-white text-sm">+{formatCurrency(c.amount)}</p>
                               <p className="text-xs text-slate-400 dark:text-neutral-500 mt-0.5">
-                                {new Date(c.date).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}
+                                {new Date(c.date).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })}
                                 {c.description ? ` • ${c.description}` : ''}
                               </p>
                             </div>
@@ -356,10 +380,30 @@ export function MobileActiveGoalModal({
                           </button>
                         </div>
                       ))}
-                      {contributions[selectedGoal].length > 5 && (
-                        <p className="text-center text-xs text-slate-400 dark:text-neutral-500 pt-2 border-t border-slate-100 dark:border-neutral-800 mt-3">
-                          Showing last 5 transactions
-                        </p>
+
+                      {/* Pagination Controls */}
+                      {totalPages > 1 && (
+                        <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-neutral-800 mt-2">
+                          <button
+                            type="button"
+                            onClick={() => setHistoryPage(p => Math.max(1, p - 1))}
+                            disabled={historyPage === 1}
+                            className="flex items-center gap-1 text-xs font-bold text-slate-500 dark:text-neutral-400 hover:text-violet-600 dark:hover:text-violet-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer px-2 py-1.5 rounded-lg hover:bg-violet-50 dark:hover:bg-violet-900/20"
+                          >
+                            <ChevronLeft className="h-3.5 w-3.5" /> Prev
+                          </button>
+                          <span className="text-[10px] font-bold text-slate-400 dark:text-neutral-500">
+                            {historyPage} / {totalPages} &nbsp;·&nbsp; {goalContributions.length} total
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setHistoryPage(p => Math.min(totalPages, p + 1))}
+                            disabled={historyPage === totalPages}
+                            className="flex items-center gap-1 text-xs font-bold text-slate-500 dark:text-neutral-400 hover:text-violet-600 dark:hover:text-violet-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer px-2 py-1.5 rounded-lg hover:bg-violet-50 dark:hover:bg-violet-900/20"
+                          >
+                            Next <ChevronRight className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       )}
                     </div>
                   ) : (

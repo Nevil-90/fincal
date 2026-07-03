@@ -86,26 +86,26 @@ export function TransactionFilters({
           />
         </div>
 
-        <div className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto overflow-x-auto sm:overflow-visible flex-nowrap sm:flex-wrap [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden pb-1 sm:pb-0">
-          <div className="flex rounded-xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-1 shrink-0">
+        <div className="flex items-center gap-2 w-full sm:w-auto pb-1 sm:pb-0 justify-between sm:justify-start">
+          <div className="flex flex-1 sm:flex-initial rounded-xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-1">
             <button
               onClick={() => setFilterType('all')}
               title="All Transactions"
-              className={`px-2.5 sm:px-3 py-1.5 sm:py-1 rounded-lg text-xs sm:text-sm font-semibold transition-colors flex items-center justify-center ${filterType === 'all' ? 'bg-slate-100 dark:bg-neutral-800 text-slate-900 dark:text-white' : 'text-slate-500 dark:text-neutral-400 hover:text-slate-800 dark:hover:text-neutral-200'}`}
+              className={`flex-1 sm:flex-initial px-2.5 sm:px-3 py-1.5 sm:py-1 rounded-lg text-xs sm:text-sm font-semibold transition-colors flex items-center justify-center ${filterType === 'all' ? 'bg-slate-100 dark:bg-neutral-800 text-slate-900 dark:text-white' : 'text-slate-500 dark:text-neutral-400 hover:text-slate-800 dark:hover:text-neutral-200'}`}
             >
               All
             </button>
             <button
               onClick={() => setFilterType('income')}
               title="Income"
-              className={`px-2.5 sm:px-3 py-1.5 sm:py-1 rounded-lg text-xs sm:text-sm font-semibold transition-colors flex items-center justify-center ${filterType === 'income' ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'text-slate-500 dark:text-neutral-400 hover:text-slate-800 dark:hover:text-neutral-200'}`}
+              className={`flex-1 sm:flex-initial px-2.5 sm:px-3 py-1.5 sm:py-1 rounded-lg text-xs sm:text-sm font-semibold transition-colors flex items-center justify-center ${filterType === 'income' ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'text-slate-500 dark:text-neutral-400 hover:text-slate-800 dark:hover:text-neutral-200'}`}
             >
               Income
             </button>
             <button
               onClick={() => setFilterType('expense')}
               title="Expenses"
-              className={`px-2.5 sm:px-3 py-1.5 sm:py-1 rounded-lg text-xs sm:text-sm font-semibold transition-colors flex items-center justify-center ${filterType === 'expense' ? 'bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400' : 'text-slate-500 dark:text-neutral-400 hover:text-slate-800 dark:hover:text-neutral-200'}`}
+              className={`flex-1 sm:flex-initial px-2.5 sm:px-3 py-1.5 sm:py-1 rounded-lg text-xs sm:text-sm font-semibold transition-colors flex items-center justify-center ${filterType === 'expense' ? 'bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400' : 'text-slate-500 dark:text-neutral-400 hover:text-slate-800 dark:hover:text-neutral-200'}`}
             >
               Expenses
             </button>
@@ -114,7 +114,7 @@ export function TransactionFilters({
           <button
             onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
             title="Filters"
-            className={`relative flex items-center justify-center gap-1.5 rounded-xl border px-2.5 sm:px-3.5 py-2 sm:py-1.5 h-8 sm:h-auto text-sm font-semibold shadow-sm transition-all shrink-0 ${showAdvancedFilters
+            className={`relative flex items-center justify-center gap-1.5 rounded-xl border transition-all shrink-0 w-9 h-9 sm:w-auto sm:h-auto px-0 sm:px-3.5 sm:py-1.5 text-sm font-semibold shadow-sm ${showAdvancedFilters
               ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400'
               : 'bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-800 text-slate-600 dark:text-neutral-400 hover:bg-slate-50 dark:hover:bg-neutral-800'
               }`}
@@ -122,23 +122,23 @@ export function TransactionFilters({
             <Filter className="h-4 w-4" />
             <span className="hidden sm:inline">Filters</span>
             {hasActiveAdvancedFilters && (
-              <span className="absolute top-1 right-1 sm:static sm:h-2 sm:w-2 h-2 w-2 rounded-full bg-blue-600 ring-2 ring-white dark:ring-neutral-900 sm:ml-0.5" />
+              <span className="absolute top-1.5 right-1.5 sm:static sm:h-2 sm:w-2 h-2 w-2 rounded-full bg-blue-600 ring-2 ring-white dark:ring-neutral-900 sm:ml-0.5" />
             )}
           </button>
 
           <button
             onClick={resetFilters}
             title="Reset Filters"
-            className="flex items-center justify-center rounded-xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 px-2.5 sm:px-3 py-2 sm:py-1.5 h-8 sm:h-auto text-sm font-semibold text-slate-600 dark:text-neutral-400 shadow-sm transition-all hover:bg-slate-50 dark:hover:bg-neutral-800 shrink-0"
+            className="flex items-center justify-center rounded-xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm transition-all hover:bg-slate-50 dark:hover:bg-neutral-800 shrink-0 w-9 h-9 sm:w-auto sm:h-auto px-0 sm:px-3 sm:py-1.5 text-sm font-semibold text-slate-600 dark:text-neutral-400"
           >
-            <RotateCcw className="h-4 w-4 sm:hidden" />
-            <span className="hidden sm:inline">Reset</span>
+            <RotateCcw className="h-4 w-4" />
+            <span className="hidden sm:inline ml-1.5">Reset</span>
           </button>
 
           {selectedTransactionsSize > 0 && (
             <button
               onClick={handleMultiDelete}
-              className="flex items-center justify-center gap-2 rounded-xl bg-rose-600 px-2.5 sm:px-4 py-2 sm:py-1.5 h-8 sm:h-auto text-sm font-semibold text-white transition-colors hover:bg-rose-700 shrink-0"
+              className="flex items-center justify-center gap-2 rounded-xl bg-rose-600 text-sm font-semibold text-white transition-colors hover:bg-rose-700 shrink-0 w-9 h-9 sm:w-auto sm:h-auto px-0 sm:px-4 sm:py-1.5"
               title={`Delete ${selectedTransactionsSize} selected transactions`}
             >
               <Trash2 className="h-4 w-4" />
@@ -149,7 +149,7 @@ export function TransactionFilters({
           <button
             onClick={() => setShowDateRangePicker(true)}
             title="Export CSV"
-            className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-2.5 sm:px-4 py-2 sm:py-1.5 h-8 sm:h-auto text-sm font-semibold text-white transition-colors hover:bg-emerald-700 shrink-0"
+            className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 shrink-0 w-9 h-9 sm:w-auto sm:h-auto px-0 sm:px-4 sm:py-1.5"
           >
             <Download className="h-4 w-4" />
             <span className="hidden sm:inline">Export CSV</span>

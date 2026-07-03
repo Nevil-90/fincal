@@ -3,8 +3,34 @@
 
 import useSWR from 'swr'
 
+let isRefreshing = false
+let refreshPromise: Promise<boolean> | null = null
+
+async function tryRefreshToken(): Promise<boolean> {
+  if (isRefreshing && refreshPromise) return refreshPromise
+  isRefreshing = true
+  refreshPromise = fetch('/api/auth/refresh', { method: 'POST' })
+    .then(r => r.ok)
+    .catch(() => false)
+    .finally(() => {
+      isRefreshing = false
+      refreshPromise = null
+    })
+  return refreshPromise
+}
+
 export const fetcher = async (url: string) => {
-  const res = await fetch(url)
+  let res = await fetch(url)
+  if (res.status === 401) {
+    // Attempt silent token refresh before giving up
+    if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+      const refreshed = await tryRefreshToken()
+      if (refreshed) {
+        // Retry the original request with the new token
+        res = await fetch(url)
+      }
+    }
+  }
   if (!res.ok) {
     if (res.status === 401 || res.status === 404) {
       if (typeof window !== 'undefined' && !window.location.pathname.includes('/login') && url === '/api/auth/me') {
@@ -40,11 +66,11 @@ export function useTransactions(page: number = 1, limit: number = 50, filters: R
       url += `&${key}=${value}`
     }
   }
-  const { data, error, isLoading, mutate } = useSWR(isTourActive ? null : url, fetcher, { 
+  const { data, error, isLoading, mutate } = useSWR(isTourActive ? null : url, fetcher, {
     keepPreviousData: true,
-    shouldRetryOnError: false 
+    shouldRetryOnError: false
   })
-  
+
   return {
     transactions: (data?.transactions || []) as any[],
     pagination: data?.pagination,
@@ -63,19 +89,19 @@ export function useTransactionSummary(month?: number | null, year?: number | nul
 
   const url = shouldFetch
     ? (() => {
-        const u = '/api/transactions/summary'
-        const params: string[] = []
-        if (year)  params.push(`year=${year}`)
-        if (month) params.push(`month=${month}`)
-        return params.length > 0 ? `${u}?${params.join('&')}` : u
-      })()
+      const u = '/api/transactions/summary'
+      const params: string[] = []
+      if (year) params.push(`year=${year}`)
+      if (month) params.push(`month=${month}`)
+      return params.length > 0 ? `${u}?${params.join('&')}` : u
+    })()
     : null
 
   const { data, error, isLoading, mutate } = useSWR(url, fetcher, {
     shouldRetryOnError: false,
     keepPreviousData,
   })
-  
+
   return {
     summary: data,
     isLoading,
@@ -137,11 +163,11 @@ export function useAnalytics(dateFilter: string = 'this_month', compareYear?: nu
   let url = `/api/analytics?dateFilter=${dateFilter}`
   if (compareYear) url += `&compareYear=${compareYear}`
   if (compareMonth) url += `&compareMonth=${compareMonth}`
-  
+
   const { data, error, isLoading, mutate } = useSWR(isTourActive ? null : url, fetcher, {
     shouldRetryOnError: false
   })
-  
+
   return {
     analyticsData: data,
     isLoading,

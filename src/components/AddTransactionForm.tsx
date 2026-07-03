@@ -217,16 +217,33 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
           <label htmlFor="amount" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400 mb-1">
             Amount
           </label>
-          <div className="relative">
+        <div className="relative">
             <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 dark:text-neutral-500 font-bold">₹</span>
             <input
-              type="number"
+              type="text"
+              inputMode="decimal"
               id="amount"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onFocus={(e) => {
+                if (e.target.value === '0' || e.target.value === '') {
+                  setAmount('')
+                }
+              }}
+              onChange={(e) => {
+                let val = e.target.value
+                // Allow only valid numeric input
+                val = val.replace(/[^0-9.]/g, '')
+                // Strip leading zeros unless it's "0." (decimal)
+                if (val.length > 1 && val.startsWith('0') && !val.startsWith('0.')) {
+                  val = val.replace(/^0+/, '')
+                }
+                // Allow only one decimal point
+                const parts = val.split('.')
+                if (parts.length > 2) val = parts[0] + '.' + parts.slice(1).join('')
+                setAmount(val)
+              }}
               className="w-full pl-8 pr-3 py-2 border border-slate-200 dark:border-neutral-700 rounded-xl focus:border-blue-500 focus:bg-white dark:focus:bg-neutral-900 focus:outline-none focus:ring-4 focus:ring-blue-50/50 dark:focus:ring-blue-500/20 text-slate-900 dark:text-white bg-slate-50/70 dark:bg-neutral-950 text-sm font-semibold transition-all"
               placeholder="0.00"
-              step="0.01"
               required
             />
           </div>

@@ -372,9 +372,11 @@ function ModernDashboardContent() {
   }, [])
 
   const refreshAll = async () => {
-    mutateSummary()
-    mutatePeriodTxns()
-    mutateGoals()
+    await Promise.all([
+      mutateSummary(undefined, { revalidate: true }),
+      mutatePeriodTxns(undefined, { revalidate: true }),
+      mutateGoals(undefined, { revalidate: true }),
+    ])
   }
 
   const onTransactionAdded = () => {
