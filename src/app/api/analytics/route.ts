@@ -2,10 +2,10 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import {
   format, subDays, subMonths, startOfMonth, endOfMonth,
-  startOfYear, differenceInDays, addDays, eachDayOfInterval
+  startOfYear, differenceInDays, addDays, eachDayOfInterval,
+  startOfDay, endOfDay
 } from 'date-fns'
 
-// ─── Raw-query result types ────────────────────────────────────────────────
 type MonthlyRow  = { month: string; type: string; total: number; sort_key: Date }
 type DailyRow    = { day: string;   income: number; expense: number }
 type CategoryRow = { category: string; total: number }
@@ -26,8 +26,9 @@ export async function GET(request: Request) {
     const dateFilter    = searchParams.get('dateFilter') || 'this_month'
     const compareYear   = parseInt(searchParams.get('compareYear')  || String(new Date().getFullYear()))
     const compareMonth  = parseInt(searchParams.get('compareMonth') || String(new Date().getMonth() + 1))
+    const heatmapYearParam = searchParams.get('heatmapYear')
+    const heatmapYear   = heatmapYearParam ? parseInt(heatmapYearParam) : new Date().getFullYear()
 
-    // ─── Date window calculation ───────────────────────────────────────────
     const now = new Date()
     let startDate: Date
     let endDate: Date = now
@@ -41,32 +42,49 @@ export async function GET(request: Request) {
       default:               startDate = new Date(0); break
     }
 
-    const heatmapStart   = subDays(now, 364)
-    const pivotStart     = startOfMonth(subMonths(now, 5))
+    let heatmapStartDate: Date
+    let heatmapEndDate: Date
+    if (dateFilter === 'all_time') {
+      heatmapStartDate = new Date(heatmapYear, 0, 1)
+      heatmapEndDate = endOfDay(new Date(heatmapYear, 11, 31))
+    } else {
+      heatmapStartDate = startOfDay(subDays(now, 364))
+      heatmapEndDate = endOfDay(now)
+    }
+
     const prevMonth      = compareMonth === 1 ? 12 : compareMonth - 1
     const prevYear       = compareMonth === 1 ? compareYear - 1 : compareYear
+    const sameYearStart = new Date(compareYear - 1, compareMonth - 1, 1)
+    const prevMonthStart = new Date(prevYear, prevMonth - 1, 1)
+    const recentStart = subMonths(now, 3)
 
-    // ═══════════════════════════════════════════════════════════════════════
-    // Phase 1 — 12 parallel SQL aggregations (tiny result sets, no row dumps)
-    //   Before: 1 query returning ALL rows → JS computed everything
-    //   After:  SQL does the grouping → Node only receives aggregated numbers
-    // ═══════════════════════════════════════════════════════════════════════
-    // ═══════════════════════════════════════════════════════════════════════
-    // Phase 1 — Massive Latency Optimization
-    //   Instead of 12 sequential database roundtrips (which took 2 seconds),
-    //   we fetch the raw data once (~150ms) and aggregate in memory (<10ms).
-    // ═══════════════════════════════════════════════════════════════════════
-    const [allTransactions, goals] = await Promise.all([
+    const queryStartDate = new Date(Math.min(
+      startDate.getTime(),
+      heatmapStartDate.getTime(),
+      sameYearStart.getTime(),
+      prevMonthStart.getTime(),
+      recentStart.getTime()
+    ))
+
+    const [allTransactions, goals, dateBounds] = await Promise.all([
       prisma.transaction.findMany({
-        where: { userId, deletedAt: null },
+        where: { 
+          userId, 
+          deletedAt: null,
+          date: { gte: queryStartDate }
+        },
         select: { id: true, type: true, amount: true, category: true, description: true, date: true, paymentMethod: true },
         orderBy: { date: 'asc' }
       }),
-      prisma.savingsGoal.findMany({ where: { userId, deletedAt: null } })
+      prisma.savingsGoal.findMany({ where: { userId, deletedAt: null } }),
+      prisma.transaction.aggregate({
+        where: { userId, deletedAt: null },
+        _min: { date: true },
+        _max: { date: true }
+      })
     ])
 
-    const trendStart = startOfMonth(subMonths(now, 11))
-    const recentStart = subMonths(now, 3)
+
 
     const monthlyTrendMap: Record<string, { month: string; type: string; total: number; sort_key: Date }> = {}
     const dailyMap: Record<string, DailyRow> = {}
@@ -87,9 +105,13 @@ export async function GET(request: Request) {
       const date = new Date(t.date)
       const type = t.type
       const cat = t.category || 'Unknown'
-      
+
+      // Period checks
+      const inPeriod = date >= startDate && date <= endDate
+      if (inPeriod) detailedTransactions.push(t)
+
       // 1. Monthly Trend
-      if (date >= trendStart) {
+      if (inPeriod) {
         const monthStr = format(date, 'MMM yyyy')
         const key = `${monthStr}-${type}`
         if (!monthlyTrendMap[key]) monthlyTrendMap[key] = { month: monthStr, type, total: 0, sort_key: startOfMonth(date) }
@@ -97,16 +119,12 @@ export async function GET(request: Request) {
       }
 
       // 2. Daily Heatmap
-      if (date >= heatmapStart) {
+      if (date >= heatmapStartDate && date <= heatmapEndDate) {
         const dayStr = format(date, 'yyyy-MM-dd')
         if (!dailyMap[dayStr]) dailyMap[dayStr] = { day: dayStr, income: 0, expense: 0 }
         if (type === 'income') dailyMap[dayStr].income += amt
         if (type === 'expense') dailyMap[dayStr].expense += amt
       }
-
-      // Period checks
-      const inPeriod = date >= startDate && date <= endDate
-      if (inPeriod) detailedTransactions.push(t)
       
       // 3. Category, 4. Payment, 5. Weekday
       if (inPeriod && type === 'expense') {
@@ -122,7 +140,7 @@ export async function GET(request: Request) {
       }
 
       // 6. Cat Month Pivot
-      if (type === 'expense' && date >= pivotStart) {
+      if (type === 'expense' && inPeriod) {
         const monthStr = format(date, 'MMM yyyy')
         const key = `${cat}|${monthStr}|${startOfMonth(date).getTime()}`
         catMonthMap[key] = (catMonthMap[key] || 0) + amt
@@ -183,7 +201,6 @@ export async function GET(request: Request) {
 
     const expenses = detailedTransactions.filter(t => t.type === 'expense')
 
-    // ─── KPIs ─────────────────────────────────────────────────────────────
     const incomeAgg  = kpiRows.find(r => r.type === 'income')
     const expenseAgg = kpiRows.find(r => r.type === 'expense')
     const income     = Number(incomeAgg?.total  ?? 0)
@@ -196,7 +213,6 @@ export async function GET(request: Request) {
     const burnRate   = expense / daysInPeriod
     const kpis       = { income, expense, netFlow, savingsRate, burnRate }
 
-    // ─── Monthly Trend (last 6) ────────────────────────────────────────────
     const monthMap: Record<string, { month: string; income: number; expense: number; sortKey: number }> = {}
     for (const row of monthlyRows) {
       if (!monthMap[row.month]) {
@@ -205,12 +221,9 @@ export async function GET(request: Request) {
       if (row.type === 'income') monthMap[row.month].income = Number(row.total)
       else                       monthMap[row.month].expense = Number(row.total)
     }
-    const monthlyTrendData = Object.values(monthMap).sort((a, b) => a.sortKey - b.sortKey).slice(-6)
+    const monthlyTrendData = Object.values(monthMap).sort((a, b) => a.sortKey - b.sortKey)
 
-    // ─── Heatmap (365-day grid from SQL daily aggregates) ─────────────────
-    const today          = new Date()
-    const heatmapStartDate = subDays(today, 364)
-    const days           = eachDayOfInterval({ start: heatmapStartDate, end: today })
+    const days = eachDayOfInterval({ start: heatmapStartDate, end: heatmapEndDate })
     const heatmapDailyMap: Record<string, { income: number; expense: number }> = {}
     for (const row of dailyRows) {
       heatmapDailyMap[row.day] = { income: Number(row.income), expense: Number(row.expense) }
@@ -241,7 +254,6 @@ export async function GET(request: Request) {
     const heatmapGrid     = { rows, months: heatmapMonths, totalWeeks }
     const heatmapMaxTotal = Math.max(...heatmapData.map(d => d.total), 1)
 
-    // ─── Cash Flow Timeline (from per-row data — needed for running balance) ─
     const timelineDailyMap: Record<string, { date: string; income: number; expense: number; balance: number }> = {}
     let runningBalance = 0
     for (const t of detailedTransactions) {
@@ -260,7 +272,6 @@ export async function GET(request: Request) {
     }
     const timelineData = Object.values(timelineDailyMap)
 
-    // ─── Sankey (from SQL category aggregates) ────────────────────────────
     let sankeyData: { nodes: { name: string }[]; links: { source: number; target: number; value: number }[] } | null = null
     if (income > 0 || expense > 0) {
       const savings = Math.max(0, income - expense)
@@ -286,12 +297,10 @@ export async function GET(request: Request) {
       sankeyData = { nodes, links }
     }
 
-    // ─── Treemap (from SQL category aggregates) ───────────────────────────
     const children   = categoryRows.map(r => ({ name: r.category, size: Number(r.total) }))
     const treemapData = children.length > 0 ? [{ name: 'Expenses', children }] : []
 
-    // ─── Pivot Table (from SQL catMonth aggregates) ───────────────────────
-    const pivotMonthKeys = [...new Set(catMonthRows.map(r => r.month))].slice(-6)
+    const pivotMonthKeys = [...new Set(catMonthRows.map(r => r.month))]
     const pivotCatMap: Record<string, Record<string, number>> = {}
     for (const row of catMonthRows) {
       if (!pivotCatMap[row.category]) pivotCatMap[row.category] = {}
@@ -306,10 +315,8 @@ export async function GET(request: Request) {
     }).sort((a, b) => Number(b.total) - Number(a.total))
     const pivotTableData = { columns: pivotMonthKeys, rows: pivotRows }
 
-    // ─── Payment Methods (from SQL) ───────────────────────────────────────
     const paymentMethodData = paymentRows.map(r => ({ name: r.method, value: Number(r.total) }))
 
-    // ─── Anomaly Detection (needs per-row amounts for stdDev) ────────────
     interface Anomaly {
       id: string; index: number; date: string; rawDate: number
       amount: number; category: string | null; description: string; isAnomaly: boolean
@@ -319,7 +326,7 @@ export async function GET(request: Request) {
       const amounts = expenses.map(t => Number(t.amount))
       const mean    = amounts.reduce((a, b) => a + b, 0) / amounts.length
       const stdDev  = Math.sqrt(amounts.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b, 0) / amounts.length)
-      anomalyData   = expenses.map((t, i) => {
+      const rawAnomalies = expenses.map((t, i) => {
         const amt = Number(t.amount)
         return {
           id: t.id, index: i,
@@ -330,9 +337,24 @@ export async function GET(request: Request) {
           isAnomaly: amt > mean + (stdDev * 1.5),
         }
       })
+      
+      const trueAnomalies = rawAnomalies.filter(a => a.isAnomaly)
+      const normalTxns = rawAnomalies.filter(a => !a.isAnomaly)
+      
+      // Keep all anomalies, but sample normal transactions (max 50) to prevent UI lag
+      const sampledNormal = []
+      if (normalTxns.length > 50) {
+        const step = normalTxns.length / 50
+        for (let i = 0; i < 50; i++) {
+          sampledNormal.push(normalTxns[Math.floor(i * step)])
+        }
+      } else {
+        sampledNormal.push(...normalTxns)
+      }
+      
+      anomalyData = [...trueAnomalies, ...sampledNormal].sort((a, b) => a.rawDate - b.rawDate)
     }
 
-    // ─── Radar (from SQL category aggregates) ────────────────────────────
     const avgExpensePerCat = expense / (categoryRows.length || 1)
     const radarData = categoryRows.slice(0, 6).map(r => ({
       subject:  r.category,
@@ -340,7 +362,6 @@ export async function GET(request: Request) {
       fullMark: Math.max(Number(r.total), avgExpensePerCat * 2),
     }))
 
-    // ─── Weekday Habits (from SQL) ────────────────────────────────────────
     const daysArr   = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
     const weekdayData = daysArr.map((day, i) => {
       const row = weekdayRows.find(r => Number(r.dow) === i)
@@ -352,7 +373,6 @@ export async function GET(request: Request) {
       }
     })
 
-    // ─── Goal Forecast (from SQL recent aggregate) ────────────────────────
     interface GoalForecast {
       goalName: string
       data: { date: string; amount: number; target: number }[]
@@ -383,7 +403,6 @@ export async function GET(request: Request) {
       }
     }
 
-    // ─── Compare Tab ──────────────────────────────────────────────────────
     const buildSummary = (agg: PeriodAgg[]) => {
       const inc = Number(agg.find(r => r.type === 'income')?.total   ?? 0)
       const exp = Number(agg.find(r => r.type === 'expense')?.total  ?? 0)
@@ -409,13 +428,14 @@ export async function GET(request: Request) {
       { label: 'Average Transaction',  current: currentSummary.avgValue, previous: previousSummary.avgValue, isCurrency: true },
     ].map(m => ({ ...m, delta: calcDelta(m.current, m.previous) }))
 
-    // Available years for dropdown (from monthly trend data)
-    const availableYears = [
-      ...new Set([
-        ...monthlyRows.map(r => new Date(r.sort_key).getFullYear()),
-        new Date().getFullYear(),
-      ]),
-    ].sort((a, b) => b - a)
+    // Available years for dropdown (from DB date bounds)
+    const minYear = dateBounds._min?.date ? new Date(dateBounds._min.date).getFullYear() : new Date().getFullYear()
+    const maxYear = dateBounds._max?.date ? new Date(dateBounds._max.date).getFullYear() : new Date().getFullYear()
+    
+    const availableYears: number[] = []
+    for (let y = maxYear; y >= minYear; y--) {
+      availableYears.push(y)
+    }
 
     return NextResponse.json({
       kpis,

@@ -156,16 +156,18 @@ export function useTravelAnalytics(year: number) {
   }
 }
 
-export function useAnalytics(dateFilter: string = 'this_month', compareYear?: number, compareMonth?: number) {
+export function useAnalytics(dateFilter: string = 'this_month', heatmapYear?: number, compareYear?: number, compareMonth?: number) {
   const { user } = useUser()
   const isTourActive = user && !user.hasCompletedOnboarding
 
   let url = `/api/analytics?dateFilter=${dateFilter}`
+  if (heatmapYear) url += `&heatmapYear=${heatmapYear}`
   if (compareYear) url += `&compareYear=${compareYear}`
   if (compareMonth) url += `&compareMonth=${compareMonth}`
 
   const { data, error, isLoading, mutate } = useSWR(isTourActive ? null : url, fetcher, {
-    shouldRetryOnError: false
+    shouldRetryOnError: false,
+    keepPreviousData: true
   })
 
   return {
