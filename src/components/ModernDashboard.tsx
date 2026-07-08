@@ -170,15 +170,20 @@ function ModernDashboardContent() {
       source = summary?.global
     }
 
+    const latestTx = periodTxns?.[0]
+    const latestDate = latestTx
+      ? new Date(latestTx.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+      : '—'
+
     return {
       income: source?.income || 0,
       expense: source?.expense || 0,
       net: source?.balance || 0,
       categories: 0,
-      latestDate: '—',
+      latestDate,
       count: source?.count || 0
     }
-  }, [txSummary, summary, advancedFilters])
+  }, [txSummary, summary, advancedFilters, periodTxns])
 
   const balanceInfo = useMemo(() => {
     return {

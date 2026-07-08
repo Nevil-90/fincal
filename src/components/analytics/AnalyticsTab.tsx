@@ -315,7 +315,6 @@ export default function AnalyticsTab({ goals }: AnalyticsTabProps) {
                 <Legend iconType="circle" iconSize={6} wrapperStyle={{ fontSize: 12, fontWeight: 500, paddingTop: 16 }} />
                 <Bar dataKey="income" name="Income" fill={C.income} radius={[4, 4, 0, 0]} barSize={20} />
                 <Bar dataKey="expense" name="Expenses" fill={C.expense} radius={[4, 4, 0, 0]} barSize={20} />
-                <Line type="monotone" dataKey="income" name="" stroke="transparent" dot={false} />
               </ComposedChart>
             </ResponsiveContainer>
           )}
