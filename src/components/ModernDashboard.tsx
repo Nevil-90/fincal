@@ -84,10 +84,10 @@ type DashboardTab =
 
 const DASHBOARD_TABS: DashboardTab[] = [
   'overview',
-  'analytics',
   'transactions',
-  'goals',
+  'analytics',
   'recurring',
+  'goals',
   'calendar',
   'traveling',
   'admin'

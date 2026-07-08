@@ -86,10 +86,10 @@ export default React.memo(function Sidebar({ sidebarOpen, activeTab, availableBa
           <div className="space-y-2">
             {[
               { id: 'overview', icon: BarChart3, label: 'Overview' },
-              { id: 'analytics', icon: PieChart, label: 'Analytics' },
               { id: 'transactions', icon: CreditCard, label: 'Transactions' },
-              { id: 'goals', icon: Target, label: 'Goals' },
+              { id: 'analytics', icon: PieChart, label: 'Analytics' },
               { id: 'recurring', icon: RefreshCw, label: 'Recurring' },
+              { id: 'goals', icon: Target, label: 'Goals' },
               { id: 'calendar', icon: Calendar, label: 'Calendar' },
               { id: 'traveling', icon: Car, label: 'Traveling' }
             ].map((tab) => {
