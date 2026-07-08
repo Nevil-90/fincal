@@ -328,6 +328,24 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Transaction not found or access denied' }, { status: 404 })
     }
 
+    const goalContribution = await prisma.goalContribution.findFirst({
+      where: { transactionId: id }
+    })
+
+    if (goalContribution && existingTransaction.amount.toNumber() !== numericAmount) {
+      const difference = numericAmount - existingTransaction.amount.toNumber()
+      
+      await prisma.goalContribution.update({
+        where: { id: goalContribution.id },
+        data: { amount: numericAmount }
+      })
+
+      await prisma.savingsGoal.update({
+        where: { id: goalContribution.goalId },
+        data: { currentAmount: { increment: difference } }
+      })
+    }
+
     const updatedTransaction = await prisma.transaction.update({
       where: { id },
       data: {
