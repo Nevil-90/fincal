@@ -24,42 +24,40 @@ export async function GET(request: NextRequest) {
     const frequency = searchParams.get('frequency')
     const search = searchParams.get('search')
 
-    const where: {
-      userId: string
-      isActive?: boolean
-      type?: string
-      category?: string
-      frequency?: string
-      OR?: Array<{
-        description?: { contains: string; mode: 'insensitive' }
-        category?: { contains: string; mode: 'insensitive' }
-      }>
-    } = {
-      userId: currentUserId
-    }
-    
+    const andConditions: any[] = [{ userId: currentUserId, deletedAt: null }]
+
     if (status && status !== 'all') {
-      where.isActive = status === 'active'
+      if (status === 'active') {
+        andConditions.push({ isActive: true, isPaused: false })
+      } else if (status === 'paused') {
+        andConditions.push({
+          OR: [{ isPaused: true }, { isActive: false }]
+        })
+      }
     }
-    
+
     if (type && type !== 'all') {
-      where.type = type
+      andConditions.push({ type })
     }
-    
+
     if (category) {
-      where.category = category
+      andConditions.push({ category })
     }
-    
+
     if (frequency) {
-      where.frequency = frequency
+      andConditions.push({ frequency })
     }
-    
+
     if (search) {
-      where.OR = [
-        { description: { contains: search, mode: 'insensitive' } },
-        { category: { contains: search, mode: 'insensitive' } }
-      ]
+      andConditions.push({
+        OR: [
+          { description: { contains: search, mode: 'insensitive' } },
+          { category: { contains: search, mode: 'insensitive' } }
+        ]
+      })
     }
+
+    const where = andConditions.length > 1 ? { AND: andConditions } : andConditions[0]
 
     const [totalCount, categories, frequencies, recurringTransactions] = await Promise.all([
       prisma.recurringTransaction.count({ where }),

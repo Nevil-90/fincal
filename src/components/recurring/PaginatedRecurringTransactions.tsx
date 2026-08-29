@@ -402,8 +402,8 @@ export default function PaginatedRecurringTransactions() {
     if (!recurringData || !recurringData.data.length) {
       return { activeSubscriptions: [], inactiveCount: 0, monthlyCost: 0, monthlyIncome: 0, totalSpent: 0 }
     }
-    const active = recurringData.data.filter(r => r.isActive)
-    const inactive = recurringData.data.filter(r => !r.isActive).length
+    const active = recurringData.data.filter(r => r.isActive && !r.isPaused)
+    const inactive = recurringData.data.filter(r => !r.isActive || r.isPaused).length
 
     let totalMonthlyCost = 0
     let totalMonthlyIncome = 0
