@@ -14,6 +14,8 @@ import { TransactionFilters } from './TransactionFilters'
 import { TransactionPagination } from './TransactionPagination'
 import { useTransactions } from '@/hooks/useApi'
 import { useEnhancedStaticData } from '@/lib/enhanced-static-data-manager'
+import CustomDateField from '@/components/ui/CustomDateField'
+import CustomSelect from '@/components/ui/CustomSelect'
 
 interface Transaction {
   id: string
@@ -1043,31 +1045,29 @@ export default function RegularTransactionList({
                 pdfExportType === 'category-year') && (
                   <div className="grid grid-cols-2 gap-3 [&>*:last-child:nth-child(odd)]:col-span-2">
                     <div>
-                      <label className="block text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-neutral-400">Year</label>
-                      <select
+                      <CustomSelect
+                        label="Year"
                         value={pdfSelectedYear}
                         onChange={(e) => setPdfSelectedYear(parseInt(e.target.value))}
-                        className="mt-2 w-full rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-3 py-2 text-sm text-slate-900 dark:text-neutral-200 shadow-sm"
                       >
                         {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map(year => (
                           <option key={year} value={year}>{year}</option>
                         ))}
-                      </select>
+                      </CustomSelect>
                     </div>
                     {(pdfExportType === 'month' || pdfExportType === 'category-month') && (
                       <div>
-                        <label className="block text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-neutral-400">Month</label>
-                        <select
+                        <CustomSelect
+                          label="Month"
                           value={pdfSelectedMonth}
                           onChange={(e) => setPdfSelectedMonth(parseInt(e.target.value))}
-                          className="mt-2 w-full rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-3 py-2 text-sm text-slate-900 dark:text-neutral-200 shadow-sm"
                         >
                           {Array.from({ length: 12 }, (_, i) => (
                             <option key={i} value={i}>
                               {new Date(2025, i, 1).toLocaleString('default', { month: 'long' })}
                             </option>
                           ))}
-                        </select>
+                        </CustomSelect>
                       </div>
                     )}
                   </div>
@@ -1076,56 +1076,18 @@ export default function RegularTransactionList({
               {(pdfExportType === 'custom' || pdfExportType === 'category-custom') && (
                 <div className="grid grid-cols-2 gap-3 [&>*:last-child:nth-child(odd)]:col-span-2">
                   <div>
-                    <label className="block text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-neutral-400 mb-2">Start Date</label>
-                    <div className="relative w-full">
-                      <div className="w-full rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-3 py-2 text-sm text-slate-900 dark:text-neutral-200 shadow-sm flex items-center justify-between pointer-events-none transition-colors">
-                        <span className={pdfStartDate ? 'text-slate-900 dark:text-neutral-200' : 'text-slate-400 dark:text-neutral-500'}>
-                          {pdfStartDate
-                            ? new Date(pdfStartDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-                            : 'Select Date'}
-                        </span>
-                        <CalendarIcon className="h-4 w-4 text-slate-400 dark:text-neutral-500" />
-                      </div>
-                      <input
-                        type="date"
-                        value={pdfStartDate}
-                        onChange={(e) => setPdfStartDate(e.target.value)}
-                        onClick={(e) => {
-                          try {
-                            if ('showPicker' in HTMLInputElement.prototype) {
-                              (e.target as HTMLInputElement).showPicker();
-                            }
-                          } catch (err) { }
-                        }}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                      />
-                    </div>
+                    <CustomDateField
+                      label="Start Date"
+                      value={pdfStartDate}
+                      onChange={setPdfStartDate}
+                    />
                   </div>
                   <div>
-                    <label className="block text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-neutral-400 mb-2">End Date</label>
-                    <div className="relative w-full">
-                      <div className="w-full rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 px-3 py-2 text-sm text-slate-900 dark:text-neutral-200 shadow-sm flex items-center justify-between pointer-events-none transition-colors">
-                        <span className={pdfEndDate ? 'text-slate-900 dark:text-neutral-200' : 'text-slate-400 dark:text-neutral-500'}>
-                          {pdfEndDate
-                            ? new Date(pdfEndDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-                            : 'Select Date'}
-                        </span>
-                        <CalendarIcon className="h-4 w-4 text-slate-400 dark:text-neutral-500" />
-                      </div>
-                      <input
-                        type="date"
-                        value={pdfEndDate}
-                        onChange={(e) => setPdfEndDate(e.target.value)}
-                        onClick={(e) => {
-                          try {
-                            if ('showPicker' in HTMLInputElement.prototype) {
-                              (e.target as HTMLInputElement).showPicker();
-                            }
-                          } catch (err) { }
-                        }}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                      />
-                    </div>
+                    <CustomDateField
+                      label="End Date"
+                      value={pdfEndDate}
+                      onChange={setPdfEndDate}
+                    />
                   </div>
                 </div>
               )}

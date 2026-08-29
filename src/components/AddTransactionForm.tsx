@@ -5,6 +5,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { X, Sparkles, Calendar } from 'lucide-react'
 import { useEnhancedStaticData } from '@/lib/enhanced-static-data-manager'
+import CustomDateField from '@/components/ui/CustomDateField'
+import CustomSelect from '@/components/ui/CustomSelect'
 
 interface AddTransactionFormProps {
   onClose: () => void
@@ -249,89 +251,53 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
           </div>
         </div>
 
-        <div>
-          <label htmlFor="category" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400 mb-1">
-            Category
-          </label>
-          <select
-            id="category"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="w-full px-3 py-2 border border-slate-200 dark:border-neutral-700 rounded-xl focus:border-blue-500 focus:bg-white dark:focus:bg-neutral-900 focus:outline-none focus:ring-4 focus:ring-blue-50/50 dark:focus:ring-blue-500/20 text-slate-900 dark:text-white bg-slate-50/70 dark:bg-neutral-950 text-sm font-semibold transition-all"
-            required
-          >
-            <option value="">Select a category</option>
-            {categories.map((cat) => (
-              <option key={cat} value={cat}>{cat}</option>
-            ))}
-          </select>
-        </div>
+        <CustomSelect
+          id="category"
+          label="Category"
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          required
+        >
+          <option value="">Select a category</option>
+          {categories.map((cat) => (
+            <option key={cat} value={cat}>{cat}</option>
+          ))}
+        </CustomSelect>
 
-        <div>
-          <label htmlFor="source" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400 mb-1 truncate" title={type === 'income' ? 'Source of Money (Optional)' : 'Purpose/Where it went (Optional)'}>
-            {type === 'income' ? 'Source' : 'Purpose'} (Optional)
-          </label>
-          <select
-            id="source"
-            value={source}
-            onChange={(e) => setSource(e.target.value)}
-            className="w-full px-3 py-2 border border-slate-200 dark:border-neutral-700 rounded-xl focus:border-blue-500 focus:bg-white dark:focus:bg-neutral-900 focus:outline-none focus:ring-4 focus:ring-blue-50/50 dark:focus:ring-blue-500/20 text-slate-900 dark:text-white bg-slate-50/70 dark:bg-neutral-950 text-sm font-semibold transition-all"
-          >
-            <option value="">{type === 'income' ? 'Select source' : 'Select purpose'}</option>
-            {sourcesOrPurposes.map((option) => (
-              <option key={option} value={option}>{option}</option>
-            ))}
-          </select>
-        </div>
+        <CustomSelect
+          id="source"
+          label={type === 'income' ? 'Source (Optional)' : 'Purpose (Optional)'}
+          value={source}
+          onChange={(e) => setSource(e.target.value)}
+        >
+          <option value="">{type === 'income' ? 'Select source' : 'Select purpose'}</option>
+          {sourcesOrPurposes.map((option) => (
+            <option key={option} value={option}>{option}</option>
+          ))}
+        </CustomSelect>
 
-        <div>
-          <label htmlFor="paymentMethod" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400 mb-1">
-            Payment Method
-          </label>
-          <select
-            id="paymentMethod"
-            required
-            value={paymentMethod}
-            onChange={(e) => setPaymentMethod(e.target.value)}
-            className="w-full px-3 py-2 border border-slate-200 dark:border-neutral-700 rounded-xl focus:border-blue-500 focus:bg-white dark:focus:bg-neutral-900 focus:outline-none focus:ring-4 focus:ring-blue-50/50 dark:focus:ring-blue-500/20 text-slate-900 dark:text-white bg-slate-50/70 dark:bg-neutral-950 text-sm font-semibold transition-all"
-          >
-            <option value="">Select payment method</option>
-            {paymentMethods.map((method) => (
-              <option key={method} value={method}>{method}</option>
-            ))}
-          </select>
-        </div>
+        <CustomSelect
+          id="paymentMethod"
+          label="Payment Method"
+          required
+          value={paymentMethod}
+          onChange={(e) => setPaymentMethod(e.target.value)}
+        >
+          <option value="">Select payment method</option>
+          {paymentMethods.map((method) => (
+            <option key={method} value={method}>{method}</option>
+          ))}
+        </CustomSelect>
 
         <div className="col-span-2">
-          <label htmlFor="date" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400 mb-1">
-            Date
-          </label>
-          <div className="relative w-full">
-            <div className="w-full px-3 py-2 border border-slate-200 dark:border-neutral-700 rounded-xl bg-slate-50/70 dark:bg-neutral-950 text-sm font-semibold flex items-center justify-between pointer-events-none transition-all">
-              <span className={date ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-neutral-500'}>
-                {date
-                  ? new Date(date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-                  : 'Select Date'}
-              </span>
-              <Calendar className="h-4 w-4 text-slate-400 dark:text-neutral-500" />
-            </div>
-            <input
-              type="date"
-              id="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              onClick={(e) => {
-                try {
-                  if ('showPicker' in HTMLInputElement.prototype) {
-                    (e.target as HTMLInputElement).showPicker();
-                  }
-                } catch (err) {}
-              }}
-              max={new Date().toISOString().split('T')[0]}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              required
-            />
-          </div>
+          <CustomDateField
+            id="date"
+            label="Date"
+            value={date}
+            onChange={setDate}
+            max={new Date().toISOString().split('T')[0]}
+            required
+          />
         </div>
 
           </div>

@@ -1,3 +1,6 @@
+import React from 'react'
+import CustomSelect from '@/components/ui/CustomSelect'
+
 // Pagination controls row: page size selector and prev/next buttons.
 export interface TransactionPaginationProps {
   pageSize: number
@@ -20,18 +23,20 @@ export function TransactionPagination({
     <div className="flex items-center justify-between gap-2 border-t border-slate-200 dark:border-neutral-800 px-3 sm:px-4 py-3 sm:py-4 bg-slate-50/50 dark:bg-neutral-900/50 rounded-b-2xl w-full overflow-x-auto no-scrollbar">
       <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
         <span className="hidden sm:inline text-sm text-slate-500 dark:text-neutral-400">Show</span>
-        <select
-          value={pageSize}
-          onChange={(e) => {
-            setPageSize(Number(e.target.value))
-            setCurrentPage(1)
-          }}
-          className="rounded-lg border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-1.5 sm:px-2 py-1 text-xs sm:text-sm text-slate-900 dark:text-white shadow-sm"
-        >
-          <option value="15">15</option>
-          <option value="50">50</option>
-          <option value="100">100</option>
-        </select>
+        <div className="w-18">
+          <CustomSelect
+            selectSize="xs"
+            value={pageSize}
+            onChange={(e) => {
+              setPageSize(Number(e.target.value))
+              setCurrentPage(1)
+            }}
+          >
+            <option value="15">15</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </CustomSelect>
+        </div>
         <span className="hidden sm:inline text-sm text-slate-500 dark:text-neutral-400">entries</span>
         <span className="ml-1 sm:ml-4 text-[10px] sm:text-sm font-medium text-slate-700 dark:text-neutral-300 whitespace-nowrap">
           {paginationLabel}

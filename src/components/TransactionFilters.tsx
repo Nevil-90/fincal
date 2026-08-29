@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Search, Filter, Trash2, Download, X, ArrowUpDown, Layers, SlidersHorizontal, CreditCard, Repeat, CalendarDays, Grid, TrendingUp, TrendingDown, RotateCcw } from 'lucide-react'
+import CustomSelect from '@/components/ui/CustomSelect'
 
 export interface TransactionFiltersProps {
   searchTerm: string
@@ -245,28 +246,32 @@ export function TransactionFilters({
               <div className="space-y-3 sm:hidden pb-5 border-b border-slate-100 dark:border-neutral-800">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Date Range</h3>
                 <div className="flex gap-2">
-                  <select
-                    value={selectedYear || 'all'}
-                    onChange={(e) => onYearChange?.(e.target.value === 'all' ? undefined : parseInt(e.target.value))}
-                    className="flex-1 rounded-xl border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-900/50 px-3 py-2.5 text-sm font-semibold text-slate-900 dark:text-white shadow-sm focus:border-slate-300 focus:outline-none appearance-none"
-                  >
-                    <option value="all">All Years</option>
-                    {availableYears.map(year => <option key={year} value={year}>{year}</option>)}
-                  </select>
+                  <div className="flex-1">
+                    <CustomSelect
+                      selectSize="sm"
+                      value={selectedYear || 'all'}
+                      onChange={(e) => onYearChange?.(e.target.value === 'all' ? undefined : parseInt(e.target.value))}
+                    >
+                      <option value="all">All Years</option>
+                      {availableYears.map(year => <option key={year} value={year}>{year}</option>)}
+                    </CustomSelect>
+                  </div>
 
                   {selectedYear && (
-                    <select
-                      value={selectedMonth !== undefined ? selectedMonth : 'all'}
-                      onChange={(e) => onMonthChange?.(e.target.value === 'all' ? undefined : parseInt(e.target.value))}
-                      className="flex-1 rounded-xl border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-900/50 px-3 py-2.5 text-sm font-semibold text-slate-900 dark:text-white shadow-sm focus:border-slate-300 focus:outline-none appearance-none"
-                    >
-                      <option value="all">All Months</option>
-                      {Array.from({ length: 12 }, (_, i) => (
-                        <option key={i} value={i}>
-                          {new Date(2024, i, 1).toLocaleDateString('en-US', { month: 'short' })}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="flex-1">
+                      <CustomSelect
+                        selectSize="sm"
+                        value={selectedMonth !== undefined ? selectedMonth : 'all'}
+                        onChange={(e) => onMonthChange?.(e.target.value === 'all' ? undefined : parseInt(e.target.value))}
+                      >
+                        <option value="all">All Months</option>
+                        {Array.from({ length: 12 }, (_, i) => (
+                          <option key={i} value={i}>
+                            {new Date(2024, i, 1).toLocaleDateString('en-US', { month: 'short' })}
+                          </option>
+                        ))}
+                      </CustomSelect>
+                    </div>
                   )}
                 </div>
               </div>
@@ -322,70 +327,70 @@ export function TransactionFilters({
                 <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-500 mb-2 block">Filters</label>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[10px] font-semibold text-slate-500 dark:text-neutral-400 mb-1 block">Category</label>
-                    <select
+                    <CustomSelect
+                      label="Category"
+                      selectSize="xs"
                       value={filterCategory}
                       onChange={(e) => {
                         setFilterCategory(e.target.value)
                         setCurrentPage(1)
                       }}
-                      className="w-full rounded-lg border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-950 px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                     >
                       <option value="all">All</option>
                       {Array.from(new Set(categoryOptions)).map(category => (
                         <option key={category} value={category}>{category}</option>
                       ))}
-                    </select>
+                    </CustomSelect>
                   </div>
 
                   <div>
-                    <label className="text-[10px] font-semibold text-slate-500 dark:text-neutral-400 mb-1 block">Payment Method</label>
-                    <select
+                    <CustomSelect
+                      label="Payment Method"
+                      selectSize="xs"
                       value={filterPaymentMethod}
                       onChange={(e) => {
                         setFilterPaymentMethod(e.target.value)
                         setCurrentPage(1)
                       }}
-                      className="w-full rounded-lg border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-950 px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                     >
                       <option value="all">All</option>
                       {Array.from(new Set(paymentOptions)).map(method => (
                         <option key={method} value={method}>{method}</option>
                       ))}
-                    </select>
+                    </CustomSelect>
                   </div>
 
                   <div>
-                    <label className="text-[10px] font-semibold text-slate-500 dark:text-neutral-400 mb-1 block">Source</label>
-                    <select
+                    <CustomSelect
+                      label="Source"
+                      selectSize="xs"
                       value={filterSource}
                       onChange={(e) => {
                         setFilterSource(e.target.value)
                         setCurrentPage(1)
                       }}
-                      className="w-full rounded-lg border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-950 px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                     >
                       <option value="all">All</option>
                       {Array.from(new Set(sourceOptions)).map(source => (
                         <option key={source} value={source}>{source}</option>
                       ))}
-                    </select>
+                    </CustomSelect>
                   </div>
 
                   <div>
-                    <label className="text-[10px] font-semibold text-slate-500 dark:text-neutral-400 mb-1 block">Type</label>
-                    <select
+                    <CustomSelect
+                      label="Type"
+                      selectSize="xs"
                       value={filterRecurring}
                       onChange={(e) => {
                         setFilterRecurring(e.target.value as 'all' | 'recurring' | 'one-time')
                         setCurrentPage(1)
                       }}
-                      className="w-full rounded-lg border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-950 px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                     >
                       <option value="all">All</option>
                       <option value="recurring">Recurring</option>
                       <option value="one-time">One-time</option>
-                    </select>
+                    </CustomSelect>
                   </div>
                 </div>
               </div>

@@ -13,6 +13,7 @@ import {
 import { ArrowUpRight, ArrowDownRight, Minus, AlertTriangle } from 'lucide-react'
 import { formatCurrency, formatCompactCurrency } from '@/lib/financial-utils'
 import { useAnalytics } from '@/hooks/useApi'
+import CustomSelect from '@/components/ui/CustomSelect'
 
 type DateFilter = 'this_month' | 'last_3_months' | 'last_6_months' | 'last_12_months' | 'ytd' | 'all_time'
 interface AnalyticsTabProps { goals: any[] }
@@ -415,15 +416,17 @@ export default function AnalyticsTab({ goals }: AnalyticsTabProps) {
       {/* ── 365-DAY ACTIVITY LOG — kept exactly ────────────────────────────── */}
       <Card title={period === 'all_time' ? "Activity Log" : "365-Day Activity Log"} headerRight={
         period === 'all_time' && compare.availableYears && compare.availableYears.length > 0 && (
-          <select
-            value={heatmapYear}
-            onChange={(e) => setHeatmapYear(Number(e.target.value))}
-            className="text-xs border-slate-200 dark:border-white/10 rounded-md bg-transparent dark:text-white"
-          >
-            {compare.availableYears.map((y: number) => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
+          <div className="min-w-[85px]">
+            <CustomSelect
+              selectSize="xs"
+              value={heatmapYear}
+              onChange={(e) => setHeatmapYear(Number(e.target.value))}
+            >
+              {compare.availableYears.map((y: number) => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </CustomSelect>
+          </div>
         )
       }>
         {isLoading ? <Sk h="h-32" /> : !heatmapGrid

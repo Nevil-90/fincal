@@ -6,6 +6,7 @@ import { useScrollLock } from '@/hooks/useScrollLock'
 import { PriceChange, RecurringTransaction } from './types'
 import { Calendar, Lightbulb } from 'lucide-react'
 import { toast } from 'sonner'
+import CustomDateField from '@/components/ui/CustomDateField'
 
 interface PriceHistoryModalProps {
   recurringTransaction: RecurringTransaction
@@ -189,7 +190,7 @@ export default function PriceHistoryModal({
                           ...newPriceChange,
                           newAmount: parseFloat(e.target.value) || 0
                         })}
-                        className="w-full pl-8 pr-3 py-3 border-2 border-gray-300 dark:border-neutral-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-neutral-500 bg-white dark:bg-neutral-950 transition-colors"
+                        className="w-full pl-8 pr-3 py-2.5 border border-slate-200 dark:border-neutral-700 rounded-xl focus:ring-4 focus:ring-blue-50/50 dark:focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-neutral-500 bg-slate-50/70 dark:bg-neutral-950 transition-all text-sm font-semibold outline-none"
                         step="0.01"
                         min="0"
                         required
@@ -197,38 +198,19 @@ export default function PriceHistoryModal({
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">Effective Date *</label>
-                    <div className="relative w-full">
-                      <div className="w-full px-3 py-3 border-2 border-gray-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-950 text-gray-900 dark:text-white flex items-center justify-between pointer-events-none transition-colors">
-                        <span className={newPriceChange.effectiveDate ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-neutral-500'}>
-                          {newPriceChange.effectiveDate
-                            ? new Date(newPriceChange.effectiveDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-                            : 'Select Date'}
-                        </span>
-                        <Calendar className="h-5 w-5 text-gray-400 dark:text-neutral-500" />
-                      </div>
-                      <input
-                        type="date"
-                        value={newPriceChange.effectiveDate}
-                        onChange={(e) => setNewPriceChange({
-                          ...newPriceChange,
-                          effectiveDate: e.target.value
-                        })}
-                        onClick={(e) => {
-                          try {
-                            if ('showPicker' in HTMLInputElement.prototype) {
-                              (e.target as HTMLInputElement).showPicker();
-                            }
-                          } catch (err) { }
-                        }}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        required
-                      />
-                    </div>
+                    <CustomDateField
+                      label="Effective Date"
+                      required
+                      value={newPriceChange.effectiveDate}
+                      onChange={(val) => setNewPriceChange({
+                        ...newPriceChange,
+                        effectiveDate: val
+                      })}
+                    />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">Reason (Optional)</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400 mb-1">Reason (Optional)</label>
                   <textarea
                     placeholder="e.g., Price increase due to plan upgrade"
                     value={newPriceChange.reason || ''}
@@ -236,7 +218,7 @@ export default function PriceHistoryModal({
                       ...newPriceChange,
                       reason: e.target.value
                     })}
-                    className="w-full px-3 py-3 border-2 border-gray-300 dark:border-neutral-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-neutral-500 bg-white dark:bg-neutral-950 resize-none transition-colors"
+                    className="w-full px-3.5 py-2.5 border border-slate-200 dark:border-neutral-700 rounded-xl focus:ring-4 focus:ring-blue-50/50 dark:focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-neutral-500 bg-slate-50/70 dark:bg-neutral-950 resize-none transition-all text-sm font-medium outline-none"
                     rows={2}
                   />
                 </div>

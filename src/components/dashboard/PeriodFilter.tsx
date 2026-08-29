@@ -1,5 +1,7 @@
 'use client'
 
+import CustomSelect from '@/components/ui/CustomSelect'
+
 interface OverviewPeriod {
   year: number
   month?: number
@@ -87,23 +89,22 @@ export default function PeriodFilter({ overviewPeriod, onPeriodChange }: PeriodF
       <div className="px-5 py-3.5">
         <div className="grid gap-3 lg:grid-cols-[160px_200px_auto] lg:items-end">
           <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-neutral-400">Year</label>
-            <select
+            <CustomSelect
+              label="Year"
               value={overviewPeriod.year}
               onChange={(e) => onPeriodChange({ ...overviewPeriod, year: parseInt(e.target.value) })}
-              className="w-full rounded-lg border border-slate-200 dark:border-neutral-800 bg-slate-50 dark:bg-neutral-900 px-3 py-2 text-sm font-semibold text-slate-900 dark:text-white outline-none transition focus:border-blue-500 focus:bg-white dark:bg-neutral-900 focus:ring-4 focus:ring-blue-100"
             >
               {Array.from({ length: 10 }, (_, i) => currentYear - i).map((year) => (
                 <option key={year} value={year}>
                   {year}
                 </option>
               ))}
-            </select>
+            </CustomSelect>
           </div>
 
           <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-neutral-400">Month</label>
-            <select
+            <CustomSelect
+              label="Month"
               value={overviewPeriod.month || ''}
               onChange={(e) =>
                 onPeriodChange({
@@ -111,7 +112,6 @@ export default function PeriodFilter({ overviewPeriod, onPeriodChange }: PeriodF
                   month: e.target.value ? parseInt(e.target.value) : undefined
                 })
               }
-              className="w-full rounded-lg border border-slate-200 dark:border-neutral-800 bg-slate-50 dark:bg-neutral-900 px-3 py-2 text-sm font-semibold text-slate-900 dark:text-white outline-none transition focus:border-blue-500 focus:bg-white dark:bg-neutral-900 focus:ring-4 focus:ring-blue-100"
             >
               <option value="">All Year</option>
               {monthOptions.map((month) => (
@@ -119,12 +119,12 @@ export default function PeriodFilter({ overviewPeriod, onPeriodChange }: PeriodF
                   {month.label}
                 </option>
               ))}
-            </select>
+            </CustomSelect>
           </div>
 
           <div className="sm:hidden">
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-neutral-400">Quick Filter</label>
-            <select
+            <CustomSelect
+              label="Quick Filter"
               value={
                 overviewPeriod.year === currentYear && overviewPeriod.month === currentMonth
                   ? 'current-month'
@@ -152,7 +152,6 @@ export default function PeriodFilter({ overviewPeriod, onPeriodChange }: PeriodF
                 if (value === 'this-year') onPeriodChange({ year: currentYear })
                 if (value === 'previous-year') onPeriodChange({ year: currentYear - 1 })
               }}
-              className="w-full rounded-lg border border-slate-200 dark:border-neutral-800 bg-slate-50 dark:bg-neutral-900 px-3 py-2 text-sm font-semibold text-slate-900 dark:text-white outline-none transition focus:border-blue-500 focus:bg-white dark:bg-neutral-900 focus:ring-4 focus:ring-blue-100"
             >
               <option value="full-year">Full Year</option>
               <option value="current-month">Current Month</option>
@@ -160,7 +159,7 @@ export default function PeriodFilter({ overviewPeriod, onPeriodChange }: PeriodF
               <option value="this-year">This Year</option>
               <option value="previous-year">Previous Year</option>
               <option value="custom">Custom (Year/Month)</option>
-            </select>
+            </CustomSelect>
           </div>
 
           <div className="hidden sm:flex sm:flex-wrap sm:gap-2">

@@ -10,6 +10,7 @@ import { formatCurrency, formatCompactCurrency } from '@/lib/financial-utils'
 import { useUser } from '@/hooks/useApi'
 import useSWR from 'swr'
 import type { RecurringTransaction, RecurringFormData } from './types'
+import CustomSelect from '@/components/ui/CustomSelect'
 
 interface PaginatedRecurringResponse {
   data: (RecurringTransaction & {
@@ -486,49 +487,49 @@ export default function PaginatedRecurringTransactions() {
       </div>
 
       {showFilters && (
-        <div className="bg-white dark:bg-neutral-900 p-4 rounded-xl shadow-sm ring-1 ring-gray-100 dark:ring-neutral-800">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:[&>*:last-child:nth-child(odd)]:col-span-2 lg:[&>*:last-child:nth-child(odd)]:col-span-1">
-            <select
+        <div className="bg-white dark:bg-neutral-900 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-neutral-800">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+            <CustomSelect
+              selectSize="sm"
               value={filters.status}
               onChange={(e) => handleFilterChange('status', e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-neutral-700 rounded-md text-sm text-gray-900 dark:text-gray-200 bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
-            </select>
+            </CustomSelect>
 
-            <select
+            <CustomSelect
+              selectSize="sm"
               value={filters.type}
               onChange={(e) => handleFilterChange('type', e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-neutral-700 rounded-md text-sm text-gray-900 dark:text-gray-200 bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
             >
               <option value="all">All Types</option>
               <option value="income">Income</option>
               <option value="expense">Expense</option>
-            </select>
+            </CustomSelect>
 
-            <select
+            <CustomSelect
+              selectSize="sm"
               value={filters.category}
               onChange={(e) => handleFilterChange('category', e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-neutral-700 rounded-md text-sm text-gray-900 dark:text-gray-200 bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
             >
               <option value="">All Categories</option>
               {recurringData?.filters.categories.map(category => (
                 <option key={category} value={category}>{category}</option>
               ))}
-            </select>
+            </CustomSelect>
 
-            <select
+            <CustomSelect
+              selectSize="sm"
               value={filters.frequency}
               onChange={(e) => handleFilterChange('frequency', e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-neutral-700 rounded-md text-sm text-gray-900 dark:text-gray-200 bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
             >
               <option value="">All Frequencies</option>
               {recurringData?.filters.frequencies.map(frequency => (
                 <option key={frequency} value={frequency}>{frequency}</option>
               ))}
-            </select>
+            </CustomSelect>
           </div>
 
           <div className="mt-4 flex justify-end">

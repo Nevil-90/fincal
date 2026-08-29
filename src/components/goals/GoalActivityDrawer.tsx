@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react'
 import { X, Plus, Trash2, CreditCard, ChevronLeft, ChevronRight, ChevronDown, History, RefreshCw } from 'lucide-react'
 import { formatCurrency } from '@/lib/financial-utils'
 import { useEnhancedStaticData } from '@/lib/enhanced-static-data-manager'
+import CustomDateField from '@/components/ui/CustomDateField'
+import CustomSelect from '@/components/ui/CustomSelect'
 import { SavingsGoal, GoalContribution } from './types'
 import { calculateMonthlyRequired, formatTimeRemaining, getGoalPace } from './goal-utils'
 
@@ -237,25 +239,31 @@ export default function GoalActivityDrawer({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 items-end">
                   <div>
                     <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400 mb-1">Amount (₹)</label>
-                    <input type="number" step="0.01" min="1" required placeholder="0.00" value={depositAmount} onChange={e => setDepositAmount(e.target.value)} className="w-full px-3 py-2.5 text-sm font-mono font-bold bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 rounded-xl focus:ring-1 focus:ring-slate-900 text-slate-900 dark:text-white" />
+                    <input type="number" step="0.01" min="1" required placeholder="0.00" value={depositAmount} onChange={e => setDepositAmount(e.target.value)} className="w-full px-3 py-2 text-sm font-mono font-bold bg-slate-50/70 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 rounded-xl focus:ring-2 focus:ring-slate-900 dark:focus:ring-white focus:outline-none text-slate-900 dark:text-white" />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400 mb-1">Payment Method</label>
-                    <div className="relative">
-                      <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)} className="w-full appearance-none [-webkit-appearance:none] pl-3 pr-7 py-2.5 text-xs font-medium bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 rounded-xl text-slate-900 dark:text-white cursor-pointer">
-                        {staticData.paymentMethods.map(pm => (
-                          <option key={pm.id} value={pm.name} className="bg-white dark:bg-neutral-900 text-slate-800 dark:text-white">{pm.name}</option>
-                        ))}
-                      </select>
-                      <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
-                    </div>
+                    <CustomSelect
+                      label="Payment Method"
+                      selectSize="xs"
+                      value={paymentMethod}
+                      onChange={e => setPaymentMethod(e.target.value)}
+                    >
+                      {staticData.paymentMethods.map(pm => (
+                        <option key={pm.id} value={pm.name} className="bg-white dark:bg-neutral-900 text-slate-800 dark:text-white">{pm.name}</option>
+                      ))}
+                    </CustomSelect>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400 mb-1">Date</label>
-                    <input type="date" required value={date} onChange={e => setDate(e.target.value)} className="w-full px-3 py-2.5 text-xs bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 rounded-xl text-slate-900 dark:text-white" />
+                    <CustomDateField
+                      label="Date"
+                      size="sm"
+                      required
+                      value={date}
+                      onChange={setDate}
+                    />
                   </div>
                 </div>
 

@@ -4,6 +4,8 @@
 import { RecurringFormData } from './types'
 import { useScrollLock } from '@/hooks/useScrollLock'
 import { Calendar, Lightbulb, X } from 'lucide-react'
+import CustomDateField from '@/components/ui/CustomDateField'
+import CustomSelect from '@/components/ui/CustomSelect'
 
 interface RecurringFormProps {
   formData: RecurringFormData
@@ -85,49 +87,46 @@ export default function RecurringForm({
               )}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category *</label>
-              <select
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className="w-full p-2 border border-gray-300 dark:border-neutral-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white bg-white dark:bg-neutral-950"
-                required
-              >
-                <option value="">Select category</option>
-                {formData.type === 'income' ? (
-                  <>
-                    <option value="Salary">Salary</option>
-                    <option value="Freelance">Freelance</option>
-                    <option value="Business">Business</option>
-                    <option value="Investment">Investment</option>
-                    <option value="Rental">Rental</option>
-                    <option value="Other Income">Other Income</option>
-                  </>
-                ) : (
-                  <>
-                    <option value="Food & Dining">Food & Dining</option>
-                    <option value="Transportation">Transportation</option>
-                    <option value="Shopping">Shopping</option>
-                    <option value="Entertainment">Entertainment</option>
-                    <option value="Bills & Utilities">Bills & Utilities</option>
-                    <option value="Healthcare">Healthcare</option>
-                    <option value="Education">Education</option>
-                    <option value="Travel">Travel</option>
-                    <option value="Insurance">Insurance</option>
-                    <option value="Investments">Investments</option>
-                    <option value="Subscriptions">Subscriptions</option>
-                    <option value="Rent">Rent</option>
-                    <option value="EMI">EMI</option>
-                    <option value="Other Expense">Other Expense</option>
-                  </>
-                )}
-              </select>
-            </div>
+            <CustomSelect
+              label="Category"
+              required
+              value={formData.category}
+              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+            >
+              <option value="">Select category</option>
+              {formData.type === 'income' ? (
+                <>
+                  <option value="Salary">Salary</option>
+                  <option value="Freelance">Freelance</option>
+                  <option value="Business">Business</option>
+                  <option value="Investment">Investment</option>
+                  <option value="Rental">Rental</option>
+                  <option value="Other Income">Other Income</option>
+                </>
+              ) : (
+                <>
+                  <option value="Food & Dining">Food & Dining</option>
+                  <option value="Transportation">Transportation</option>
+                  <option value="Shopping">Shopping</option>
+                  <option value="Entertainment">Entertainment</option>
+                  <option value="Bills & Utilities">Bills & Utilities</option>
+                  <option value="Healthcare">Healthcare</option>
+                  <option value="Education">Education</option>
+                  <option value="Travel">Travel</option>
+                  <option value="Insurance">Insurance</option>
+                  <option value="Investments">Investments</option>
+                  <option value="Subscriptions">Subscriptions</option>
+                  <option value="Rent">Rent</option>
+                  <option value="EMI">EMI</option>
+                  <option value="Other Expense">Other Expense</option>
+                </>
+              )}
+            </CustomSelect>
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400 mb-1">
               Description
             </label>
             <input
@@ -135,22 +134,19 @@ export default function RecurringForm({
               placeholder="e.g., Netflix subscription, Salary from ABC Corp"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full p-2 border border-gray-300 dark:border-neutral-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white bg-white dark:bg-neutral-950"
+              className="w-full px-3.5 py-2 border border-slate-200 dark:border-neutral-700 rounded-xl focus:ring-4 focus:ring-blue-50/50 dark:focus:ring-blue-500/20 focus:border-blue-500 text-slate-900 dark:text-white bg-slate-50/70 dark:bg-neutral-950 text-sm font-semibold outline-none transition-all"
             />
           </div>
 
           {/* Payment Method and Source */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {formData.type === 'income' ? 'Source' : 'Payment Method'}
-              </label>
               {formData.type === 'income' ? (
-                <select
+                <CustomSelect
+                  label="Source"
                   required
                   value={formData.source}
                   onChange={(e) => setFormData({ ...formData, source: e.target.value })}
-                  className="w-full p-2 border border-gray-300 dark:border-neutral-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white bg-white dark:bg-neutral-950"
                 >
                   <option value="">Select source</option>
                   <option value="Bank Transfer">Bank Transfer</option>
@@ -158,13 +154,13 @@ export default function RecurringForm({
                   <option value="Cheque">Cheque</option>
                   <option value="UPI">UPI</option>
                   <option value="Other">Other</option>
-                </select>
+                </CustomSelect>
               ) : (
-                <select
+                <CustomSelect
+                  label="Payment Method"
                   required
                   value={formData.paymentMethod}
                   onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
-                  className="w-full p-2 border border-gray-300 dark:border-neutral-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white bg-white dark:bg-neutral-950"
                 >
                   <option value="">Select payment method</option>
                   <option value="Credit Card">Credit Card</option>
@@ -174,56 +170,34 @@ export default function RecurringForm({
                   <option value="Cash">Cash</option>
                   <option value="Auto Debit">Auto Debit</option>
                   <option value="Other">Other</option>
-                </select>
+                </CustomSelect>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Frequency</label>
-              <select
+              <CustomSelect
+                label="Frequency"
                 value={formData.frequency}
                 onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
-                className="w-full p-2 border border-gray-300 dark:border-neutral-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white bg-white dark:bg-neutral-950"
               >
                 <option value="daily">Daily</option>
                 <option value="weekly">Weekly</option>
                 <option value="monthly">Monthly</option>
                 <option value="quarterly">Quarterly</option>
                 <option value="yearly">Yearly</option>
-              </select>
+              </CustomSelect>
             </div>
           </div>
 
           {/* Start Date */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Start Date
-            </label>
-            <div className="relative w-full">
-              <div className="w-full p-2 border border-gray-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-950 text-gray-900 dark:text-white flex items-center justify-between pointer-events-none transition-colors">
-                <span className={formData.startDate ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-neutral-500'}>
-                  {formData.startDate
-                    ? new Date(formData.startDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-                    : 'Select Date'}
-                </span>
-                <Calendar className="h-5 w-5 text-gray-400 dark:text-neutral-500" />
-              </div>
-              <input
-                type="date"
-                value={formData.startDate}
-                onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                onClick={(e) => {
-                  try {
-                    if ('showPicker' in HTMLInputElement.prototype) {
-                      (e.target as HTMLInputElement).showPicker();
-                    }
-                  } catch (err) {}
-                }}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                required
-              />
-            </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            <CustomDateField
+              label="Start Date"
+              required
+              value={formData.startDate}
+              onChange={(val) => setFormData({ ...formData, startDate: val })}
+            />
+            <p className="text-xs text-slate-500 dark:text-neutral-400 mt-1.5">
               Transactions will be created automatically starting from this date
             </p>
           </div>

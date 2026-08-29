@@ -28,6 +28,7 @@ import { TourOverlay } from './tour/TourOverlay'
 import Sidebar from './dashboard/Sidebar'
 import DashboardHeader from './dashboard/DashboardHeader'
 import OverviewTab from './dashboard/OverviewTab'
+import CustomSelect from '@/components/ui/CustomSelect'
 const AnalyticsTab = dynamic(() => import('./analytics/AnalyticsTab'), { ssr: false, loading: () => <div className="animate-pulse bg-slate-100 dark:bg-neutral-800 rounded-2xl h-[400px] w-full" /> })
 import { SkeletonDashboard } from './ui/SkeletonCard'
 
@@ -578,38 +579,42 @@ function ModernDashboardContent() {
                       </div>
 
                       <div className="hidden sm:flex items-center gap-1.5 sm:gap-2 flex-1 justify-end">
-                        <select
-                          value={advancedFilters.year || 'all'}
-                          onChange={(e) => {
-                            const year = e.target.value === 'all' ? undefined : parseInt(e.target.value)
-                            setAdvancedFilters(prev => ({ ...prev, year, month: undefined }))
-                          }}
-                          className="w-full sm:w-auto min-w-[90px] rounded-xl border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 px-2 sm:px-3 py-1.5 sm:py-2 text-xs font-semibold text-slate-800 dark:text-neutral-200 shadow-sm transition-all focus:border-slate-300 dark:focus:border-neutral-500 focus:bg-white dark:focus:bg-neutral-900 focus:outline-none appearance-none"
-                        >
-                          <option value="all">All Years</option>
-                          {availableYears.map(year => (
-                            <option key={year} value={year}>
-                              {year}
-                            </option>
-                          ))}
-                        </select>
-
-                        {advancedFilters.year && (
-                          <select
-                            value={advancedFilters.month !== undefined ? advancedFilters.month : 'all'}
+                        <div className="min-w-[110px]">
+                          <CustomSelect
+                            selectSize="xs"
+                            value={advancedFilters.year || 'all'}
                             onChange={(e) => {
-                              const month = e.target.value === 'all' ? undefined : parseInt(e.target.value)
-                              setAdvancedFilters(prev => ({ ...prev, month }))
+                              const year = e.target.value === 'all' ? undefined : parseInt(e.target.value)
+                              setAdvancedFilters(prev => ({ ...prev, year, month: undefined }))
                             }}
-                            className="w-full sm:w-auto min-w-[90px] rounded-xl border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 px-2 sm:px-3 py-1.5 sm:py-2 text-xs font-semibold text-slate-800 dark:text-neutral-200 shadow-sm transition-all focus:border-slate-300 dark:focus:border-neutral-500 focus:bg-white dark:focus:bg-neutral-900 focus:outline-none appearance-none"
                           >
-                            <option value="all">All Months</option>
-                            {Array.from({ length: 12 }, (_, i) => (
-                              <option key={i} value={i}>
-                                {new Date(2024, i, 1).toLocaleDateString('en-US', { month: 'short' })}
+                            <option value="all">All Years</option>
+                            {availableYears.map(year => (
+                              <option key={year} value={year}>
+                                {year}
                               </option>
                             ))}
-                          </select>
+                          </CustomSelect>
+                        </div>
+
+                        {advancedFilters.year && (
+                          <div className="min-w-[120px]">
+                            <CustomSelect
+                              selectSize="xs"
+                              value={advancedFilters.month !== undefined ? advancedFilters.month : 'all'}
+                              onChange={(e) => {
+                                const month = e.target.value === 'all' ? undefined : parseInt(e.target.value)
+                                setAdvancedFilters(prev => ({ ...prev, month }))
+                              }}
+                            >
+                              <option value="all">All Months</option>
+                              {Array.from({ length: 12 }, (_, i) => (
+                                <option key={i} value={i}>
+                                  {new Date(2024, i, 1).toLocaleDateString('en-US', { month: 'short' })}
+                                </option>
+                              ))}
+                            </CustomSelect>
+                          </div>
                         )}
 
                         {(advancedFilters.year || advancedFilters.month !== undefined) && (

@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { Calendar, X } from 'lucide-react'
+import CustomDateField from '@/components/ui/CustomDateField'
 
 interface TravelAddModalProps {
   isOpen: boolean
@@ -59,62 +60,20 @@ export default function TravelAddModal({
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           <div className="grid grid-cols-2 gap-5 [&>*:last-child:nth-child(odd)]:col-span-2">
             <div>
-              <label className="block text-[12px] font-semibold text-slate-600 dark:text-neutral-400 uppercase tracking-wider mb-2">
-                Start Date
-              </label>
-              <div className="relative w-full">
-                <div className="w-full px-3.5 py-2.5 text-sm bg-white dark:bg-neutral-900 border-0 shadow-sm ring-1 ring-inset ring-slate-300 rounded-xl text-slate-900 dark:text-white flex items-center justify-between pointer-events-none transition-colors">
-                  <span className={formData.startDate ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-neutral-500'}>
-                    {formData.startDate
-                      ? new Date(formData.startDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-                      : 'Select Date'}
-                  </span>
-                  <Calendar className="h-4 w-4 text-slate-400 dark:text-neutral-500" />
-                </div>
-                <input
-                  type="date"
-                  value={formData.startDate}
-                  onChange={e => setFormData({ ...formData, startDate: e.target.value })}
-                  onClick={e => {
-                    try {
-                      if ('showPicker' in HTMLInputElement.prototype) {
-                        (e.target as HTMLInputElement).showPicker()
-                      }
-                    } catch {}
-                  }}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  required
-                />
-              </div>
+              <CustomDateField
+                label="Start Date"
+                required
+                value={formData.startDate}
+                onChange={val => setFormData(prev => ({ ...prev, startDate: val }))}
+              />
             </div>
             <div>
-              <label className="block text-[12px] font-semibold text-slate-600 dark:text-neutral-400 uppercase tracking-wider mb-2">
-                End Date
-              </label>
-              <div className="relative w-full">
-                <div className="w-full px-3.5 py-2.5 text-sm bg-white dark:bg-neutral-900 border-0 shadow-sm ring-1 ring-inset ring-slate-300 rounded-xl text-slate-900 dark:text-white flex items-center justify-between pointer-events-none transition-colors">
-                  <span className={formData.endDate ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-neutral-500'}>
-                    {formData.endDate
-                      ? new Date(formData.endDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-                      : 'Select Date'}
-                  </span>
-                  <Calendar className="h-4 w-4 text-slate-400 dark:text-neutral-500" />
-                </div>
-                <input
-                  type="date"
-                  value={formData.endDate}
-                  onChange={e => setFormData({ ...formData, endDate: e.target.value })}
-                  onClick={e => {
-                    try {
-                      if ('showPicker' in HTMLInputElement.prototype) {
-                        (e.target as HTMLInputElement).showPicker()
-                      }
-                    } catch {}
-                  }}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  required
-                />
-              </div>
+              <CustomDateField
+                label="End Date"
+                required
+                value={formData.endDate}
+                onChange={val => setFormData(prev => ({ ...prev, endDate: val }))}
+              />
             </div>
           </div>
 

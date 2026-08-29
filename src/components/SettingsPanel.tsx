@@ -11,6 +11,7 @@ import { useEnhancedStaticData, StaticDataType, StaticDataItem, BudgetItem } fro
 import { useScrollLock } from '@/hooks/useScrollLock'
 import { useNavPreferences } from '@/hooks/useNavPreferences'
 import { SpreadsheetEditor } from './ui/SpreadsheetEditor'
+import CustomSelect from '@/components/ui/CustomSelect'
 
 interface EditingItem {
   type: StaticDataType
@@ -708,13 +709,11 @@ export function SettingsPanel({ onDataChange, isAdmin, isOpen, onClose }: Settin
               {editingItem.type === 'budgetAmounts' && (
                 <>
                   <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400 mb-1.5">
-                      Link to Category
-                    </label>
-                    <select
+                    <CustomSelect
+                      label="Link to Category"
+                      selectSize="sm"
                       value={editingItem.category || ''}
                       onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value })}
-                      className="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 focus:bg-white dark:focus:bg-neutral-950 rounded-xl outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 dark:focus:ring-indigo-900/50 text-slate-900 dark:text-white font-semibold cursor-pointer"
                     >
                       <option value="">Select Category</option>
                       <optgroup label="System Defaults">
@@ -730,7 +729,7 @@ export function SettingsPanel({ onDataChange, isAdmin, isOpen, onClose }: Settin
                           <option key={c.id} value={c.name}>{c.name}</option>
                         ))}
                       </optgroup>
-                    </select>
+                    </CustomSelect>
                   </div>
 
                   <div>
@@ -741,7 +740,7 @@ export function SettingsPanel({ onDataChange, isAdmin, isOpen, onClose }: Settin
                       type="number"
                       value={editingItem.amount || 0}
                       onChange={(e) => setEditingItem({ ...editingItem, amount: parseFloat(e.target.value) || 0 })}
-                      className="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 focus:bg-white dark:focus:bg-neutral-950 rounded-xl outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 dark:focus:ring-indigo-900/50 text-slate-900 dark:text-white font-semibold"
+                      className="w-full px-3.5 py-2 text-xs sm:text-sm border border-slate-200 dark:border-neutral-700 bg-slate-50/70 dark:bg-neutral-950 focus:bg-white dark:focus:bg-neutral-900 rounded-xl outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 dark:focus:ring-indigo-900/50 text-slate-900 dark:text-white font-semibold"
                       placeholder="Enter budget threshold amount"
                       min="0"
                       step="100"
@@ -749,17 +748,15 @@ export function SettingsPanel({ onDataChange, isAdmin, isOpen, onClose }: Settin
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400 mb-1.5">
-                      Budget Period
-                    </label>
-                    <select
+                    <CustomSelect
+                      label="Budget Period"
+                      selectSize="sm"
                       value={editingItem.period || 'monthly'}
                       onChange={(e) => setEditingItem({ ...editingItem, period: e.target.value as 'monthly' | 'yearly' })}
-                      className="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 focus:bg-white dark:focus:bg-neutral-950 rounded-xl outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 dark:focus:ring-indigo-900/50 text-slate-900 dark:text-white font-semibold cursor-pointer"
                     >
                       <option value="monthly">Monthly Budget</option>
                       <option value="yearly">Yearly Budget</option>
-                    </select>
+                    </CustomSelect>
                   </div>
                 </>
               )}

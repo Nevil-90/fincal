@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { Target, X, Calendar, ChevronDown, Plus } from 'lucide-react'
+import CustomDateField from '@/components/ui/CustomDateField'
 
 interface NewGoal {
   name: string
@@ -169,32 +170,13 @@ export function AddGoalModal({
 
           {/* Target Date */}
           <div>
-            <label className="block text-[11px] font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider mb-1.5">
-              Target Deadline <span className="normal-case font-normal text-slate-400">(Optional)</span>
-            </label>
-            <div className="relative w-full">
-              <div className="w-full px-3.5 py-2.5 text-xs bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 rounded-xl text-slate-900 dark:text-white flex items-center justify-between pointer-events-none transition-colors">
-                <span className={newGoal.deadline ? 'text-slate-900 dark:text-white font-medium' : 'text-slate-400 dark:text-neutral-500'}>
-                  {newGoal.deadline
-                    ? new Date(newGoal.deadline).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-                    : 'Select Target Date'}
-                </span>
-                <Calendar className="h-4 w-4 text-slate-400 dark:text-neutral-500" />
-              </div>
-              <input
-                type="date"
-                value={newGoal.deadline}
-                onChange={e => setNewGoal({ ...newGoal, deadline: e.target.value })}
-                onClick={e => {
-                  try {
-                    if ('showPicker' in HTMLInputElement.prototype) {
-                      (e.target as HTMLInputElement).showPicker()
-                    }
-                  } catch {}
-                }}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              />
-            </div>
+            <CustomDateField
+              label="Target Deadline (Optional)"
+              placeholder="Select Target Date"
+              value={newGoal.deadline}
+              onChange={val => setNewGoal({ ...newGoal, deadline: val })}
+              size="sm"
+            />
           </div>
 
           <div className="flex gap-3 pt-3 border-t border-slate-100 dark:border-neutral-800">
