@@ -204,7 +204,7 @@ export default function SavingsGoalsNew({ goals: initialGoals, onRefresh }: Savi
   }
 
   return (
-    <div className="space-y-3.5 sm:space-y-4 font-sans max-w-[1600px] mx-auto pb-24 md:pb-6 overflow-x-hidden">
+    <div className="space-y-3.5 sm:space-y-4 font-sans max-w-[1600px] mx-auto pb-24 md:pb-6">
       {/* 1. Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5">
         <div>
@@ -248,8 +248,8 @@ export default function SavingsGoalsNew({ goals: initialGoals, onRefresh }: Savi
           ))}
         </div>
 
-        <div className="flex items-center justify-between sm:justify-end gap-2 overflow-x-auto [scrollbar-width:none]">
-          <div className="flex items-center gap-1 overflow-x-auto [scrollbar-width:none]">
+        <div className="flex items-center justify-between sm:justify-end gap-2 flex-wrap">
+          <div className="flex items-center gap-1 flex-wrap">
             <button
               type="button"
               onClick={() => setSelectedCategory('all')}

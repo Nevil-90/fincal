@@ -25,8 +25,6 @@ import BottomNav from './dashboard/BottomNav'
 
 import { TourProvider, useTour } from './tour/TourContext'
 import { TourOverlay } from './tour/TourOverlay'
-
-import CommandPalette from '@/components/ui/CommandPalette'
 import Sidebar from './dashboard/Sidebar'
 import DashboardHeader from './dashboard/DashboardHeader'
 import OverviewTab from './dashboard/OverviewTab'
@@ -757,13 +755,6 @@ function ModernDashboardContent() {
           </AnimatePresence>
         </main>
       </div>
-
-      <CommandPalette
-        onNavigate={handleTabChange}
-        onAddTransaction={handleShowAddTransaction}
-        onTransactionAdded={onTransactionAdded}
-        isAdmin={user?.role === 'ADMIN'}
-      />
 
       <BottomNav
         activeTab={activeTab}

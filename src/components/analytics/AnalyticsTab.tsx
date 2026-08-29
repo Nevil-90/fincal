@@ -10,7 +10,7 @@ import {
   ResponsiveContainer,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ReferenceLine,
 } from 'recharts'
-import { ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react'
+import { ArrowUpRight, ArrowDownRight, Minus, AlertTriangle } from 'lucide-react'
 import { formatCurrency, formatCompactCurrency } from '@/lib/financial-utils'
 import { useAnalytics } from '@/hooks/useApi'
 
@@ -192,16 +192,16 @@ function ActivityHeatmap({ grid, maxTotal }: { grid: any; maxTotal: number }) {
 }
 
 function Sk({ h = 'h-40' }: { h?: string }) {
-  return <div className={`${h} w-full rounded-xl bg-slate-100 dark:bg-white/5 animate-pulse`} />
+  return <div className={`${h} w-full rounded-2xl bg-slate-100 dark:bg-white/5 animate-pulse`} />
 }
 
 function Card({ title, children, className = '', noPad, headerRight }: {
   title: string; children: React.ReactNode; className?: string; noPad?: boolean; headerRight?: React.ReactNode
 }) {
   return (
-    <div className={`flex flex-col bg-white dark:bg-[#0a0a0a] border border-slate-200/80 dark:border-white/10 rounded-xl overflow-hidden shadow-sm ${className}`}>
-      <div className="px-5 py-4 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
-        <h3 className="text-xs font-semibold text-slate-800 dark:text-neutral-200 tracking-wide">{title}</h3>
+    <div className={`flex flex-col bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 rounded-2xl overflow-hidden shadow-sm ${className}`}>
+      <div className="px-5 py-4 border-b border-slate-100 dark:border-neutral-800 flex items-center justify-between gap-3">
+        <h3 className="text-[10px] font-bold text-slate-500 dark:text-neutral-400 tracking-widest uppercase">{title}</h3>
         {headerRight}
       </div>
       <div className={`flex-1 ${noPad ? '' : 'p-5'}`}>{children}</div>
@@ -228,17 +228,14 @@ export default function AnalyticsTab({ goals }: AnalyticsTabProps) {
     compare = { metrics: [] as any[], currentSummary: { income: 0, expenses: 0, savings: 0, count: 0 } as any, previousSummary: { income: 0, expenses: 0, savings: 0, count: 0 } as any },
   } = analyticsData || {}
 
-  // All categories from treemap
   const allCats = useMemo(() =>
     ((treemapData[0]?.children ?? []) as any[]).sort((a, b) => b.size - a.size)
     , [treemapData])
   const totalCatSpend = useMemo(() => allCats.reduce((s, c) => s + c.size, 0), [allCats])
 
-  // Scatter: normal vs anomaly
   const normalTxns = useMemo(() => (anomalyData || []).filter((a: any) => !a.isAnomaly), [anomalyData])
   const anomalyTxns = useMemo(() => (anomalyData || []).filter((a: any) => a.isAnomaly), [anomalyData])
 
-  // Deltas
   const incomeDelta = compare.metrics.find((m: any) => m.label === 'Total Income')?.delta?.pct ?? null
   const expenseDelta = compare.metrics.find((m: any) => m.label === 'Total Expenses')?.delta?.pct ?? null
   const savingsDelta = compare.metrics.find((m: any) => m.label === 'Net Savings')?.delta?.pct ?? null
@@ -248,52 +245,60 @@ export default function AnalyticsTab({ goals }: AnalyticsTabProps) {
   const pivotRows = (pivotTableData?.rows ?? []) as any[]
   const pivotCols = (pivotTableData?.columns ?? []) as string[]
   const maxWeekday = useMemo(() => Math.max(...weekdayData.map((d: any) => d.total ?? 0), 1), [weekdayData])
+  const peakDay = useMemo(() => weekdayData.reduce((best: any, d: any) => d.total > (best?.total ?? 0) ? d : best, null), [weekdayData])
+  const totalPayments = useMemo(() => paymentMethodData.reduce((s: number, d: any) => s + (d.value ?? 0), 0), [paymentMethodData])
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 pb-24 md:pb-12">
+    <div className="max-w-7xl mx-auto space-y-5 pb-24 md:pb-12">
 
-      {/* ══ HEADER ═══════════════════════════════════════════════════════════ */}
+      {/* ── HEADER ─────────────────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">Analytics</h1>
-          <p className="text-sm text-slate-500 dark:text-neutral-400 mt-1">Full financial data — {period.replace(/_/g, ' ')}</p>
+          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">Analytics</h1>
+          <p className="text-xs text-slate-400 dark:text-neutral-500 mt-0.5 font-medium">
+            {period.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} · Financial deep dive
+          </p>
         </div>
-        <div className="inline-flex bg-slate-100 dark:bg-white/5 p-1 rounded-lg border border-slate-200/50 dark:border-transparent">
+        <div className="inline-flex bg-slate-100 dark:bg-neutral-800 p-1 rounded-xl border border-slate-200/50 dark:border-neutral-700/50 gap-0.5">
           {PERIODS.map(p => (
             <button key={p.v} onClick={() => setPeriod(p.v)}
-              className={`px-4 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer ${period === p.v
-                ? 'bg-white dark:bg-[#222] text-slate-900 dark:text-white shadow-sm'
-                : 'text-slate-500 dark:text-neutral-400 hover:text-slate-800 dark:hover:text-neutral-200'
-                }`}>
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${period === p.v
+                ? 'bg-white dark:bg-neutral-900 text-slate-900 dark:text-white shadow-sm'
+                : 'text-slate-400 dark:text-neutral-500 hover:text-slate-700 dark:hover:text-neutral-300'
+              }`}>
               {p.l}
             </button>
           ))}
         </div>
       </div>
 
-      {/* ══ KPI STRIP (6 metrics) ════════════════════════════════════════════ */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+      {/* ── KPI STRIP ──────────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {[
           { label: 'Income', value: formatCompactCurrency(kpis.income ?? 0), pct: incomeDelta, inv: false, accent: C.income },
           { label: 'Expenses', value: formatCompactCurrency(kpis.expense ?? 0), pct: expenseDelta, inv: true, accent: C.expense },
-          { label: 'Net Flow', value: formatCompactCurrency(Math.abs(netFlow)), pct: savingsDelta, inv: false, accent: C.net },
-          { label: 'Savings Margin', value: `${(kpis.savingsRate ?? 0).toFixed(1)}%`, pct: null, inv: false, accent: C.amber },
-          { label: 'Burn Rate / Day', value: `${formatCompactCurrency(kpis.burnRate ?? 0)}`, pct: null, inv: false, accent: C.cyan },
+          { label: 'Net Flow', value: formatCompactCurrency(Math.abs(netFlow)), pct: savingsDelta, inv: false, accent: netFlow >= 0 ? C.income : C.expense },
+          { label: 'Savings Rate', value: `${(kpis.savingsRate ?? 0).toFixed(1)}%`, pct: null, inv: false, accent: C.amber },
+          { label: 'Burn / Day', value: formatCompactCurrency(kpis.burnRate ?? 0), pct: null, inv: false, accent: C.cyan },
           { label: 'Transactions', value: String(txnCount), pct: null, inv: false, accent: '#8b5cf6' },
         ].map((k, i) => (
-          <div key={i} className="bg-white dark:bg-[#0a0a0a] border border-slate-200/80 dark:border-white/10 rounded-xl px-5 py-4 shadow-sm flex flex-col justify-between h-full">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-500">{k.label}</p>
-              <div className="h-2 w-2 rounded-full shrink-0" style={{ background: k.accent }} />
-            </div>
-            <div className="flex-1 flex flex-col justify-end">
+          <div
+            key={i}
+            className="bg-white dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 rounded-2xl px-4 py-4 shadow-sm flex flex-col gap-2 relative overflow-hidden"
+            style={{ borderLeftWidth: 3, borderLeftColor: k.accent, borderLeftStyle: 'solid' }}
+          >
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-neutral-500 leading-none">{k.label}</p>
+            <div>
               {isLoading
-                ? <div className="h-6 w-16 bg-slate-100 dark:bg-white/5 rounded animate-pulse" />
-                : <p className="text-xl font-medium font-mono text-slate-900 dark:text-white leading-none">{k.value}</p>
+                ? <div className="h-7 w-20 bg-slate-100 dark:bg-white/5 rounded-lg animate-pulse" />
+                : <p className="text-xl font-black font-mono text-slate-900 dark:text-white leading-none">{k.value}</p>
               }
               {!isLoading && (
-                <div className="mt-2 h-4 flex items-center">
-                  {k.pct !== null && <Delta pct={k.pct} inv={k.inv} />}
+                <div className="mt-1.5 h-4 flex items-center">
+                  {k.pct !== null
+                    ? <Delta pct={k.pct} inv={k.inv} />
+                    : <span className="text-[10px] text-slate-300 dark:text-neutral-700 font-mono">—</span>
+                  }
                 </div>
               )}
             </div>
@@ -301,8 +306,26 @@ export default function AnalyticsTab({ goals }: AnalyticsTabProps) {
         ))}
       </div>
 
-      {/* ══ MONTHLY TREND — grouped bar + net line ═══════════════════════════ */}
-      <Card title="Monthly Revenue & Spend">
+      {/* ── MONTHLY REVENUE & SPEND ─────────────────────────────────────────── */}
+      <Card
+        title="Monthly Revenue & Spend"
+        headerRight={
+          !isLoading && monthlyTrendData.length > 0 && (
+            <div className="flex items-center gap-3 text-[10px] font-mono font-bold">
+              <span className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: C.income }} />
+                <span className="text-slate-400 dark:text-neutral-500">In</span>
+                <span className="text-slate-700 dark:text-neutral-200">{formatCompactCurrency(kpis.income ?? 0)}</span>
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: C.expense }} />
+                <span className="text-slate-400 dark:text-neutral-500">Out</span>
+                <span className="text-slate-700 dark:text-neutral-200">{formatCompactCurrency(kpis.expense ?? 0)}</span>
+              </span>
+            </div>
+          )
+        }
+      >
         {isLoading ? <Sk h="h-64" /> : monthlyTrendData.length === 0
           ? <div className="h-64 flex items-center justify-center text-sm text-slate-400">No data</div>
           : (
@@ -320,10 +343,10 @@ export default function AnalyticsTab({ goals }: AnalyticsTabProps) {
           )}
       </Card>
 
-      {/* ══ CASH FLOW TIMELINE + CATEGORY DONUT ═════════════════════════════ */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      {/* ── CASH FLOW DYNAMICS + CATEGORY DISTRIBUTION ─────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
 
-        {/* Cash flow timeline */}
+        {/* Cash Flow Dynamics — kept exactly */}
         <Card title="Cash Flow Dynamics" className="lg:col-span-3">
           {isLoading ? <Sk h="h-60" /> : timelineData.length === 0
             ? <div className="h-60 flex items-center justify-center text-sm text-slate-400">No data</div>
@@ -349,34 +372,47 @@ export default function AnalyticsTab({ goals }: AnalyticsTabProps) {
             )}
         </Card>
 
-        {/* Category donut */}
+        {/* Category Distribution — redesigned */}
         <Card title="Category Distribution" className="lg:col-span-2">
           {isLoading ? <Sk h="h-60" /> : allCats.length === 0
             ? <div className="h-60 flex items-center justify-center text-sm text-slate-400">No data</div>
             : (
-              <>
-                <ResponsiveContainer width="100%" height={180}>
-                  <PieChart>
-                    <Pie data={allCats.slice(0, 10)} cx="50%" cy="50%" innerRadius={55} outerRadius={80} paddingAngle={2} stroke="none" dataKey="size">
-                      {allCats.slice(0, 10).map((_: any, i: number) => <Cell key={i} fill={CAT[i % CAT.length]} />)}
-                    </Pie>
-                    <Tooltip content={<PieTip />} />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-4">
-                  {allCats.slice(0, 8).map((c: any, i: number) => (
-                    <div key={i} className="flex items-center gap-2 min-w-0">
-                      <span className="h-2 w-2 rounded-full shrink-0" style={{ background: CAT[i % CAT.length] }} />
-                      <span className="text-xs text-slate-600 dark:text-neutral-400 truncate">{c.name}</span>
-                    </div>
-                  ))}
+              <div className="flex flex-col items-center gap-4">
+                {/* Donut with centre total */}
+                <div className="relative w-full" style={{ height: 180 }}>
+                  <ResponsiveContainer width="100%" height={180}>
+                    <PieChart>
+                      <Pie data={allCats.slice(0, 10)} cx="50%" cy="50%" innerRadius={52} outerRadius={78} paddingAngle={2} stroke="none" dataKey="size">
+                        {allCats.slice(0, 10).map((_: any, i: number) => <Cell key={i} fill={CAT[i % CAT.length]} />)}
+                      </Pie>
+                      <Tooltip content={<PieTip />} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  {/* Centre label overlay */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none gap-0.5">
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400 dark:text-neutral-500">Total</span>
+                    <span className="text-sm font-black font-mono text-slate-900 dark:text-white">{formatCompactCurrency(totalCatSpend)}</span>
+                  </div>
                 </div>
-              </>
+                {/* Single-col legend */}
+                <div className="w-full space-y-2.5">
+                  {allCats.slice(0, 7).map((c: any, i: number) => {
+                    const pct = totalCatSpend > 0 ? (c.size / totalCatSpend) * 100 : 0
+                    return (
+                      <div key={i} className="flex items-center gap-2.5 min-w-0">
+                        <span className="h-2 w-2 rounded-full shrink-0" style={{ background: CAT[i % CAT.length] }} />
+                        <span className="text-xs text-slate-600 dark:text-neutral-400 truncate flex-1">{c.name}</span>
+                        <span className="text-[10px] font-mono font-bold text-slate-500 dark:text-neutral-500 shrink-0">{pct.toFixed(1)}%</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
             )}
         </Card>
       </div>
 
-      {/* ══ ACTIVITY HEATMAP ═════════════════════════════════════════ */}
+      {/* ── 365-DAY ACTIVITY LOG — kept exactly ────────────────────────────── */}
       <Card title={period === 'all_time' ? "Activity Log" : "365-Day Activity Log"} headerRight={
         period === 'all_time' && compare.availableYears && compare.availableYears.length > 0 && (
           <select
@@ -406,7 +442,6 @@ export default function AnalyticsTab({ goals }: AnalyticsTabProps) {
                     <span className="text-[10px] text-slate-400">More</span>
                   </div>
                 </div>
-
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Expense</span>
                   <div className="flex items-center gap-1.5">
@@ -422,10 +457,10 @@ export default function AnalyticsTab({ goals }: AnalyticsTabProps) {
           )}
       </Card>
 
-      {/* ══ CATEGORY BARS + WEEKDAY ══════════════════════════════════════════ */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      {/* ── CATEGORY BREAKDOWN + SPEND BY WEEKDAY ──────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
 
-        {/* All categories horizontal bar */}
+        {/* Category Breakdown — kept exactly */}
         <Card title="Category Breakdown" className="lg:col-span-3" noPad>
           {isLoading ? <div className="p-5"><Sk h="h-72" /></div> : allCats.length === 0
             ? <div className="h-72 flex items-center justify-center text-sm text-slate-400">No data</div>
@@ -456,8 +491,19 @@ export default function AnalyticsTab({ goals }: AnalyticsTabProps) {
             )}
         </Card>
 
-        {/* Weekday pattern */}
-        <Card title="Spend by Weekday" className="lg:col-span-2">
+        {/* Spend by Weekday — redesigned header with peak chip */}
+        <Card
+          title="Spend by Weekday"
+          className="lg:col-span-2"
+          headerRight={
+            peakDay && !isLoading && (
+              <div className="flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-lg bg-rose-50 dark:bg-rose-950/30 text-rose-500 dark:text-rose-400">
+                <span>Peak</span>
+                <span className="font-black">{peakDay.day}</span>
+              </div>
+            )
+          }
+        >
           {isLoading ? <Sk h="h-72" /> : (
             <ResponsiveContainer width="100%" height={310}>
               <BarChart data={weekdayData} margin={{ top: 0, right: 0, bottom: 0, left: -20 }} barSize={18} layout="vertical">
@@ -476,76 +522,157 @@ export default function AnalyticsTab({ goals }: AnalyticsTabProps) {
         </Card>
       </div>
 
-      {/* ══ PAYMENT METHODS + ANOMALY SCATTER ═══════════════════════════════ */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* ── PAYMENT METHODS + ANOMALY DETECTION ────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
-        {/* Payment methods */}
-        <Card title="Payment Method Share">
+        {/* Payment Method Share — redesigned as ranked list */}
+        <Card
+          title="Payment Method Share"
+          headerRight={
+            !isLoading && paymentMethodData.length > 0 && (
+              <span className="text-[10px] font-mono font-bold text-slate-400 dark:text-neutral-500">
+                {paymentMethodData.length} {paymentMethodData.length === 1 ? 'method' : 'methods'}
+              </span>
+            )
+          }
+        >
           {isLoading ? <Sk h="h-56" /> : paymentMethodData.length === 0
             ? <div className="h-56 flex items-center justify-center text-sm text-slate-400">No data</div>
             : (
-              <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={paymentMethodData} margin={{ top: 10, right: 0, bottom: 0, left: -20 }} barSize={24}>
-                  <CartesianGrid strokeDasharray="4 4" stroke="currentColor" className="text-slate-100 dark:text-white/5" vertical={false} />
-                  <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#737373' }} axisLine={false} tickLine={false} dy={10} />
-                  <YAxis tick={{ fontSize: 11, fill: '#737373', fontFamily: 'monospace' }} axisLine={false} tickLine={false} tickFormatter={v => formatCompactCurrency(v)} width={60} />
-                  <Tooltip content={<Tip />} cursor={{ fill: 'currentColor', className: 'text-slate-50 dark:text-white/5' }} />
-                  <Bar dataKey="value" name="Spent" radius={[4, 4, 0, 0]}>
-                    {paymentMethodData.map((_: any, i: number) => <Cell key={i} fill={CAT[i % CAT.length]} />)}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              <div className="space-y-4">
+                {[...paymentMethodData]
+                  .sort((a: any, b: any) => b.value - a.value)
+                  .map((d: any, i: number) => {
+                    const pct = totalPayments > 0 ? (d.value / totalPayments) * 100 : 0
+                    const color = CAT[i % CAT.length]
+                    return (
+                      <div key={i}>
+                        <div className="flex items-center justify-between mb-1.5 gap-3">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <span className="text-[10px] font-mono font-bold text-slate-400 w-4 shrink-0 tabular-nums">{i + 1}</span>
+                            <span className="h-2 w-2 rounded-full shrink-0" style={{ background: color }} />
+                            <span className="text-sm font-semibold text-slate-800 dark:text-neutral-200 truncate">{d.name}</span>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-xs font-mono font-bold text-slate-900 dark:text-white">{formatCompactCurrency(d.value)}</span>
+                            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-neutral-800 text-slate-500 dark:text-neutral-400">
+                              {pct.toFixed(1)}%
+                            </span>
+                          </div>
+                        </div>
+                        <div className="h-1.5 bg-slate-100 dark:bg-neutral-800 rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{ width: `${pct}%`, background: color }}
+                          />
+                        </div>
+                      </div>
+                    )
+                  })}
+              </div>
             )}
         </Card>
 
-        {/* Anomaly scatter */}
-        <Card title={`Anomaly Detection — ${anomalyTxns.length} events`}>
+        {/* Anomaly Detection — redesigned header + inline chip legend */}
+        <Card
+          title="Anomaly Detection"
+          headerRight={
+            !isLoading && (
+              <div className={`flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-lg ${
+                anomalyTxns.length > 0
+                  ? 'bg-rose-50 dark:bg-rose-950/30 text-rose-500 dark:text-rose-400'
+                  : 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400'
+              }`}>
+                <AlertTriangle className="h-3 w-3" />
+                <span>{anomalyTxns.length} {anomalyTxns.length === 1 ? 'event' : 'events'}</span>
+              </div>
+            )
+          }
+        >
           {isLoading ? <Sk h="h-56" /> : anomalyData.length === 0
             ? <div className="h-56 flex items-center justify-center text-sm text-slate-400">No transaction data</div>
             : (
-              <ResponsiveContainer width="100%" height={220}>
-                <ScatterChart margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
-                  <CartesianGrid strokeDasharray="4 4" stroke="currentColor" className="text-slate-100 dark:text-white/5" />
-                  <XAxis dataKey="rawDate" type="number" domain={['auto', 'auto']} tick={false} axisLine={false} tickLine={false} name="Date" />
-                  <YAxis dataKey="amount" tick={{ fontSize: 11, fill: '#737373', fontFamily: 'monospace' }} axisLine={false} tickLine={false} tickFormatter={v => formatCompactCurrency(v)} width={60} name="Amount" />
-                  <ZAxis range={[40, 40]} />
-                  <Tooltip content={<ScatterTip />} cursor={{ stroke: 'currentColor', strokeWidth: 1, strokeDasharray: '4 4', className: 'text-slate-200 dark:text-white/10' }} />
-                  <Legend iconType="circle" iconSize={6} wrapperStyle={{ fontSize: 12, fontWeight: 500, paddingTop: 16 }} />
-                  <Scatter name="Normal" data={normalTxns} fill={C.net} fillOpacity={0.4} />
-                  <Scatter name="Anomaly" data={anomalyTxns} fill={C.expense} fillOpacity={0.9} />
-                </ScatterChart>
-              </ResponsiveContainer>
+              <>
+                {/* Inline chip legend — replaces Recharts Legend */}
+                <div className="flex items-center gap-4 mb-3">
+                  <div className="flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full" style={{ background: C.net, opacity: 0.6 }} />
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-neutral-500 uppercase tracking-wider">Normal</span>
+                    <span className="text-[10px] font-mono font-bold text-slate-500 dark:text-neutral-400 ml-0.5">{normalTxns.length}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full" style={{ background: C.expense }} />
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-neutral-500 uppercase tracking-wider">Anomaly</span>
+                    <span className="text-[10px] font-mono font-bold text-slate-500 dark:text-neutral-400 ml-0.5">{anomalyTxns.length}</span>
+                  </div>
+                </div>
+                <ResponsiveContainer width="100%" height={200}>
+                  <ScatterChart margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
+                    <CartesianGrid strokeDasharray="4 4" stroke="currentColor" className="text-slate-100 dark:text-white/5" />
+                    <XAxis dataKey="rawDate" type="number" domain={['auto', 'auto']} tick={false} axisLine={false} tickLine={false} name="Date" />
+                    <YAxis dataKey="amount" tick={{ fontSize: 11, fill: '#737373', fontFamily: 'monospace' }} axisLine={false} tickLine={false} tickFormatter={v => formatCompactCurrency(v)} width={60} name="Amount" />
+                    <ZAxis range={[40, 40]} />
+                    <Tooltip content={<ScatterTip />} cursor={{ stroke: 'currentColor', strokeWidth: 1, strokeDasharray: '4 4', className: 'text-slate-200 dark:text-white/10' }} />
+                    <Scatter name="Normal" data={normalTxns} fill={C.net} fillOpacity={0.4} />
+                    <Scatter name="Anomaly" data={anomalyTxns} fill={C.expense} fillOpacity={0.9} />
+                  </ScatterChart>
+                </ResponsiveContainer>
+              </>
             )}
         </Card>
       </div>
 
-      {/* ══ CATEGORY × MONTH PIVOT TABLE ════════════════════════════════════ */}
+      {/* ── CATEGORY × MONTH PIVOT TABLE — redesigned ─────────────────────── */}
       {(isLoading || pivotRows.length > 0) && (
-        <Card title={`Category × Month Matrix — ${pivotRows.length} Categories`} noPad>
+        <Card
+          title="Category × Month Matrix"
+          noPad
+          headerRight={
+            !isLoading && (
+              <span className="text-[10px] font-mono font-bold text-slate-400 dark:text-neutral-500">
+                {pivotRows.length} {pivotRows.length === 1 ? 'category' : 'categories'}
+              </span>
+            )
+          }
+        >
           {isLoading ? <div className="p-5"><Sk h="h-60" /></div> :
-            pivotRows.length === 0 ? <div className="p-5"><div className="h-60 flex items-center justify-center text-sm text-slate-400">No data</div></div>
+            pivotRows.length === 0
+              ? <div className="p-5"><div className="h-60 flex items-center justify-center text-sm text-slate-400">No data</div></div>
               : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs border-collapse">
-                    <thead className="bg-slate-50 dark:bg-white/[0.02]">
-                      <tr>
-                        <th className="sticky left-0 bg-slate-50 dark:bg-[#111] z-10 text-left px-3 sm:px-5 py-3 font-semibold text-slate-500 border-b border-slate-200 dark:border-white/5">Category</th>
+                    <thead>
+                      <tr className="bg-slate-50 dark:bg-neutral-800/60">
+                        <th className="sticky left-0 bg-slate-50 dark:bg-neutral-800/60 z-10 text-left px-3 sm:px-5 py-3.5 font-bold text-[10px] uppercase tracking-widest text-slate-500 dark:text-neutral-400 border-b border-slate-200/80 dark:border-neutral-700">
+                          Category
+                        </th>
                         {pivotCols.map(col => (
-                          <th key={col} className="text-right px-2 sm:px-4 py-3 font-semibold text-slate-500 border-b border-slate-200 dark:border-white/5 whitespace-nowrap">{col}</th>
+                          <th key={col} className="text-right px-2 sm:px-4 py-3.5 font-bold text-[10px] uppercase tracking-widest text-slate-500 dark:text-neutral-400 border-b border-slate-200/80 dark:border-neutral-700 whitespace-nowrap">
+                            {col}
+                          </th>
                         ))}
-                        <th className="text-right px-3 sm:px-5 py-3 font-semibold text-slate-500 border-b border-slate-200 dark:border-white/5">Total</th>
+                        <th className="text-right px-3 sm:px-5 py-3.5 font-bold text-[10px] uppercase tracking-widest text-slate-600 dark:text-neutral-300 border-b border-slate-200/80 dark:border-neutral-700">
+                          Total
+                        </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+                    <tbody>
                       {pivotRows.map((row: any, i: number) => {
                         const color = CAT[i % CAT.length]
                         const rowMax = Math.max(...pivotCols.map(c => row[c] ?? 0), 1)
                         return (
-                          <tr key={i} className="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group">
-                            <td className="sticky left-0 bg-white dark:bg-[#0a0a0a] group-hover:bg-slate-50 dark:group-hover:bg-[#111] z-10 px-3 sm:px-5 py-2.5 border-r border-slate-100 dark:border-white/5">
-                              <div className="flex items-center gap-2 sm:gap-3">
-                                <div className="h-2 w-2 rounded-full shrink-0" style={{ background: color }} />
-                                <span className="font-medium text-slate-900 dark:text-neutral-200 truncate max-w-[80px] sm:max-w-[120px]">{row.category}</span>
+                          <tr
+                            key={i}
+                            className={`transition-colors group hover:bg-slate-50 dark:hover:bg-white/[0.025] ${
+                              i % 2 !== 0 ? 'bg-slate-50/50 dark:bg-neutral-800/20' : ''
+                            }`}
+                          >
+                            <td className="sticky left-0 bg-white dark:bg-neutral-900 group-hover:bg-slate-50 dark:group-hover:bg-neutral-800/50 z-10 px-3 sm:px-5 py-3 border-r border-slate-100 dark:border-neutral-800">
+                              <div className="flex items-center gap-2.5">
+                                <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: color }} />
+                                <span className="font-semibold text-slate-900 dark:text-neutral-200 truncate max-w-[80px] sm:max-w-[120px]">
+                                  {row.category}
+                                </span>
                               </div>
                             </td>
                             {pivotCols.map(col => {
@@ -553,20 +680,24 @@ export default function AnalyticsTab({ goals }: AnalyticsTabProps) {
                               const heat = val > 0 ? Math.min(val / rowMax, 1) : 0
                               const alpha = Math.round(heat * 0.4 * 255).toString(16).padStart(2, '0')
                               return (
-                                <td key={col} className="px-1 sm:px-4 py-2 text-right">
+                                <td key={col} className="px-1 sm:px-4 py-3 text-right">
                                   {val > 0 ? (
-                                    <span className="inline-block font-mono font-medium text-slate-900 dark:text-white px-1.5 sm:px-2 py-1 rounded"
-                                      style={{ background: color + alpha }}>
+                                    <span
+                                      className="inline-block font-mono font-semibold text-slate-900 dark:text-white px-1.5 sm:px-2 py-1 rounded-lg"
+                                      style={{ background: color + alpha }}
+                                    >
                                       {formatCompactCurrency(val)}
                                     </span>
                                   ) : (
-                                    <span className="text-slate-300 dark:text-neutral-700">—</span>
+                                    <span className="text-slate-300 dark:text-neutral-700 font-mono">—</span>
                                   )}
                                 </td>
                               )
                             })}
-                            <td className="px-3 sm:px-5 py-2 text-right">
-                              <span className="font-mono font-semibold text-slate-900 dark:text-white">{formatCompactCurrency(Number(row.total ?? 0))}</span>
+                            <td className="px-3 sm:px-5 py-3 text-right">
+                              <span className="font-mono font-black text-slate-900 dark:text-white">
+                                {formatCompactCurrency(Number(row.total ?? 0))}
+                              </span>
                             </td>
                           </tr>
                         )
@@ -577,8 +708,6 @@ export default function AnalyticsTab({ goals }: AnalyticsTabProps) {
               )}
         </Card>
       )}
-
-
 
     </div>
   )

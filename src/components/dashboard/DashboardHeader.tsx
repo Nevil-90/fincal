@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTheme } from 'next-themes'
-import { Plus, Menu, User, Settings, Shield, LogOut, Car, Calendar, PieChart, BarChart3, CreditCard, Target, RefreshCw, Sun, Moon, Search } from 'lucide-react'
+import { Plus, Menu, User, Settings, Shield, LogOut, Car, Calendar, PieChart, BarChart3, CreditCard, Target, RefreshCw, Sun, Moon } from 'lucide-react'
 import { useScrollLock } from '@/hooks/useScrollLock'
 import { useNavPreferences } from '@/hooks/useNavPreferences'
 import ProfileModal from '@/components/ProfileModal'
@@ -97,19 +97,6 @@ export default React.memo(function DashboardHeader({
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
-            {/* Command Palette Trigger */}
-            <button
-              onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}
-              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-neutral-800/80 bg-slate-150 dark:bg-[#131316] text-slate-500 dark:text-neutral-400 hover:bg-slate-200 dark:hover:bg-[#18181c] transition-colors text-sm"
-            >
-              <Search className="h-4 w-4" />
-              <span>Search...</span>
-              <kbd className="hidden md:inline-flex items-center gap-1 font-mono text-[10px] font-medium opacity-70 ml-2">
-                <span className="text-xs">⌘</span>K
-              </kbd>
-            </button>
-
-
             {/* Desktop Add Transaction Button */}
             <button
               data-tour="add-transaction"
