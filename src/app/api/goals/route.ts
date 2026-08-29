@@ -70,10 +70,10 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { id, currentAmount } = body
+    const { id, currentAmount, targetAmount, isCompleted: reqIsCompleted, name, category, deadline } = body
 
-    if (!id || currentAmount === undefined) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    if (!id) {
+      return NextResponse.json({ error: 'Missing required goal id' }, { status: 400 })
     }
 
     const existingGoal = await withDbLock(() => 
@@ -86,21 +86,30 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Goal not found or access denied' }, { status: 404 })
     }
 
-    const newCurrentAmount = parseFloat(currentAmount)
-    const isCompleted = newCurrentAmount >= Number(existingGoal.targetAmount)
-    const wasAlreadyCompleted = existingGoal.isCompleted
+    const newCurrentAmount = currentAmount !== undefined ? parseFloat(currentAmount) : Number(existingGoal.currentAmount)
+    const newTargetAmount = targetAmount !== undefined ? parseFloat(targetAmount) : Number(existingGoal.targetAmount)
 
-    const updateData: {
-      currentAmount: number
-      isCompleted: boolean
-      completedAt?: Date
-    } = {
+    let isCompleted = existingGoal.isCompleted
+    if (typeof reqIsCompleted === 'boolean') {
+      isCompleted = reqIsCompleted
+    } else if (currentAmount !== undefined) {
+      isCompleted = newCurrentAmount >= newTargetAmount
+    }
+
+    const updateData: any = {
       currentAmount: newCurrentAmount,
+      targetAmount: newTargetAmount,
       isCompleted
     }
 
-    if (isCompleted && !wasAlreadyCompleted) {
+    if (name) updateData.name = name
+    if (category) updateData.category = category
+    if (deadline !== undefined) updateData.deadline = deadline ? new Date(deadline) : null
+
+    if (isCompleted && !existingGoal.isCompleted) {
       updateData.completedAt = new Date()
+    } else if (!isCompleted && existingGoal.isCompleted) {
+      updateData.completedAt = null
     }
 
     const goal = await withDbLock(() => 

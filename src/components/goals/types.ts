@@ -1,38 +1,32 @@
-// Domain types for savings goals and contributions.
 export interface SavingsGoal {
   id: string
   name: string
   targetAmount: number
   currentAmount: number
+  deadline?: string | null
+  category: string
   priority: number
-  deadline?: string
-  category?: string
-  isCompleted?: boolean
-  completedAt?: string
-  createdAt?: Date
-  updatedAt?: Date
-  contributions?: GoalContribution[]
-}
-
-export interface BulkEntry {
-  id: string
-  goalId: string
-  amount: string
-  date: string
-  description: string
-  paymentMethod: string
+  isCompleted: boolean
+  completedAt?: string | null
+  createdAt?: string
+  updatedAt?: string
+  userId?: string
 }
 
 export interface GoalContribution {
   id: string
   goalId: string
   amount: number
-  description: string | null
   date: string
+  description?: string | null
+  transactionId?: string | null
   transaction?: {
     id: string
-    paymentMethod: string | null
-  }
+    amount: number
+    date: string
+    description?: string | null
+    paymentMethod?: string | null
+  } | null
 }
 
 export interface SavingsGoalsProps {
@@ -40,3 +34,13 @@ export interface SavingsGoalsProps {
   availableBalance: number
   onRefresh?: () => void
 }
+
+export type GoalCategory = 
+  | 'emergency'
+  | 'travel'
+  | 'vehicle'
+  | 'gadgets'
+  | 'investment'
+  | 'home'
+  | 'education'
+  | 'general'

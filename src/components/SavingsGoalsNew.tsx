@@ -1,244 +1,136 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import { Plus, Target, ArrowUpDown, ChevronDown } from 'lucide-react'
+import { toast } from 'sonner'
 import { useEnhancedStaticData } from '@/lib/enhanced-static-data-manager'
-
-import { SavingsGoal, GoalContribution, BulkEntry, SavingsGoalsProps } from './goals/types'
+import { SavingsGoal, GoalContribution, SavingsGoalsProps } from './goals/types'
+import GoalKPIStrip from './goals/GoalKPIStrip'
+import GoalCard from './goals/GoalCard'
+import GoalActivityDrawer from './goals/GoalActivityDrawer'
 import { AddGoalModal } from './goals/AddGoalModal'
-import { MobileGoalsView } from './goals/MobileGoalsView'
-import { DesktopGoalsView } from './goals/DesktopGoalsView'
+import DeleteGoalModal from './goals/DeleteGoalModal'
 
-export default function SavingsGoalsNew({ goals, availableBalance, onRefresh }: SavingsGoalsProps) {
+export default function SavingsGoalsNew({ goals: initialGoals, onRefresh }: SavingsGoalsProps) {
   const { data: staticData } = useEnhancedStaticData()
-  const [showAddForm, setShowAddForm] = useState(false)
-  const [selectedGoal, setSelectedGoal] = useState<string | null>(null)
-  const [selectedCompletedGoal, setSelectedCompletedGoal] = useState<string | null>(null)
-
-  const [detailTab, setDetailTab] = useState<'quick' | 'history'>('quick')
   const [completedGoals, setCompletedGoals] = useState<SavingsGoal[]>([])
-  const [loadingCompleted, setLoadingCompleted] = useState(false)
+  const [activeTab, setActiveTab] = useState<'all' | 'in_progress' | 'completed'>('all')
+  const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [sortBy, setSortBy] = useState<'deadline' | 'progress' | 'target' | 'name'>('deadline')
+
+  // Drawer & Modal State
+  const [drawerGoal, setDrawerGoal] = useState<SavingsGoal | null>(null)
+  const [drawerTab, setDrawerTab] = useState<'deposit' | 'history'>('history')
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [goalToDelete, setGoalToDelete] = useState<SavingsGoal | null>(null)
   const [contributions, setContributions] = useState<Record<string, GoalContribution[]>>({})
-  const [loadingContributions, setLoadingContributions] = useState<string | null>(null)
-
-  const [goalFilter, setGoalFilter] = useState<'overview' | 'active' | 'achieved' | 'bulk_add'>('overview')
-  
-  // Desktop layout controls
-  const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards')
-  const [desktopSort, setDesktopSort] = useState<'priority' | 'deadline' | 'progress' | 'name'>('priority')
-
-  // Bulk Add feature state
-  const [bulkEntries, setBulkEntries] = useState<BulkEntry[]>([])
-  const [bulkSaving, setBulkSaving] = useState(false)
-
-  const initializeBulkEntries = useCallback(() => {
-    const activePaymentMethod = staticData.paymentMethods.find(m => m.isActive)?.name || ''
-    
-    const initial: BulkEntry[] = goals.filter(g => !g.isCompleted).map(g => ({
-      id: crypto.randomUUID(),
-      goalId: g.id,
-      amount: '',
-      date: new Date().toISOString().split('T')[0],
-      paymentMethod: activePaymentMethod,
-      description: ''
-    }))
-    setBulkEntries(initial)
-  }, [goals, staticData])
-
-  useEffect(() => {
-    if (goalFilter === 'bulk_add') {
-      initializeBulkEntries()
-    }
-  }, [goalFilter, initializeBulkEntries])
-
-  const handleBulkEntryChange = (entryId: string, field: keyof BulkEntry, value: string) => {
-    setBulkEntries(prev => prev.map(entry => 
-      entry.id === entryId ? { ...entry, [field]: value } : entry
-    ))
-  }
-
-  const handleAddBulkRow = (goalId: string) => {
-    const activePaymentMethod = staticData.paymentMethods.find(m => m.isActive)?.name || ''
-    setBulkEntries(prev => {
-      // Find the last entry for this goalId to insert the new one after it
-      const lastIndex = [...prev].reverse().findIndex(e => e.goalId === goalId)
-      const actualIndex = lastIndex >= 0 ? prev.length - 1 - lastIndex : prev.length - 1
-      
-      const newEntry: BulkEntry = {
-        id: crypto.randomUUID(),
-        goalId,
-        amount: '',
-        date: new Date().toISOString().split('T')[0],
-        paymentMethod: activePaymentMethod,
-        description: ''
-      }
-      
-      const newEntries = [...prev]
-      newEntries.splice(actualIndex + 1, 0, newEntry)
-      return newEntries
-    })
-  }
-
-  const handleRemoveBulkRow = (entryId: string) => {
-    setBulkEntries(prev => prev.filter(e => e.id !== entryId))
-  }
+  const [loadingContributions, setLoadingContributions] = useState(false)
 
   const [newGoal, setNewGoal] = useState({
     name: '',
     targetAmount: '',
     deadline: '',
-    category: ''
+    category: 'General'
   })
 
-  const [quickContribution, setQuickContribution] = useState({
-    amount: '',
-    date: new Date().toISOString().split('T')[0],
-    paymentMethod: staticData.paymentMethods.find(m => m.isActive)?.name || '',
-    description: ''
-  })
-
-  useEffect(() => {
-    if (!quickContribution.paymentMethod) {
-      const activeMethod = staticData.paymentMethods.find(m => m.isActive)
-      if (activeMethod) {
-        setQuickContribution(prev => ({ ...prev, paymentMethod: activeMethod.name }))
-      }
-    }
-  }, [staticData])
-
-  const currentGoal = goals.find(g => g.id === selectedGoal)
-  const monthlySavingPotential = Math.max(0, availableBalance * 0.2)
-  const monthlySavingRequired = currentGoal?.deadline 
-    ? (() => {
-      const remainingAmount = Math.max(0, currentGoal.targetAmount - currentGoal.currentAmount)
-      const today = new Date()
-      const deadline = new Date(currentGoal.deadline)
-      const monthsRemaining = Math.max(
-        1,
-        (deadline.getFullYear() - today.getFullYear()) * 12 +
-        (deadline.getMonth() - today.getMonth())
-      )
-      return remainingAmount / monthsRemaining
-    })() 
-    : 0
-
-  // Aggregate Metrics for Dashboard Header
-  const totalActiveTarget = goals.filter(g => !g.isCompleted).reduce((sum, g) => sum + g.targetAmount, 0)
-  const totalActiveSaved = goals.filter(g => !g.isCompleted).reduce((sum, g) => sum + g.currentAmount, 0)
-  const overallProgress = totalActiveTarget > 0 ? (totalActiveSaved / totalActiveTarget) * 100 : 0
-  
-  const totalMonthlySavingRequired = goals.filter(g => !g.isCompleted).reduce((sum, goal) => {
-    if (!goal.deadline) return sum
-    const remainingAmount = Math.max(0, goal.targetAmount - goal.currentAmount)
-    const today = new Date()
-    const deadlineDate = new Date(goal.deadline)
-    const monthsRemaining = Math.max(
-      1,
-      (deadlineDate.getFullYear() - today.getFullYear()) * 12 +
-      (deadlineDate.getMonth() - today.getMonth())
-    )
-    return sum + (remainingAmount / monthsRemaining)
-  }, 0)
-
-  const nextMilestoneGoal = goals.filter(g => !g.isCompleted && g.deadline)
-    .sort((a, b) => new Date(a.deadline!).getTime() - new Date(b.deadline!).getTime())[0]
-
-  const totalCompletedSaved = completedGoals.reduce((sum, g) => sum + g.targetAmount, 0)
-
-  const getSortedGoals = (goalsList: SavingsGoal[]) => {
-    return [...goalsList].sort((a, b) => {
-      switch (desktopSort) {
-        case 'priority': return b.priority - a.priority
-        case 'deadline': return new Date(a.deadline || '9999').getTime() - new Date(b.deadline || '9999').getTime()
-        case 'progress': {
-          const progressA = a.targetAmount > 0 ? (a.currentAmount / a.targetAmount) : 0
-          const progressB = b.targetAmount > 0 ? (b.currentAmount / b.targetAmount) : 0
-          return progressB - progressA
-        }
-        case 'name': return a.name.localeCompare(b.name)
-        default: return 0
-      }
-    })
-  }
-
-  const handleSaveBulkAllocation = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setBulkSaving(true)
-    try {
-      const promises = bulkEntries
-        .filter(entry => {
-          const amt = parseFloat(entry.amount)
-          return !isNaN(amt) && amt > 0
-        })
-        .map(entry => fetch('/api/contributions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            goalId: entry.goalId,
-            amount: parseFloat(entry.amount),
-            date: entry.date,
-            paymentMethod: entry.paymentMethod,
-            description: entry.description
-          })
-        }))
-      
-      await Promise.all(promises)
-      if (onRefresh) onRefresh()
-      initializeBulkEntries() // reset inputs
-    } catch (error) {
-      console.error('Failed to save bulk contributions:', error)
-    } finally {
-      setBulkSaving(false)
-    }
-  }
-
-  const loadCompletedGoals = async () => {
-    setLoadingCompleted(true)
+  // Fetch Achieved Goals
+  const loadCompletedGoals = useCallback(async () => {
     try {
       const response = await fetch('/api/goals/completed')
-      if (response.ok) {
-        const completed = await response.json()
-        setCompletedGoals(completed)
-      }
+      if (response.ok) setCompletedGoals(await response.json())
     } catch (error) {
       console.error('Failed to load completed goals:', error)
-    } finally {
-      setLoadingCompleted(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     loadCompletedGoals()
-  }, [])
+  }, [loadCompletedGoals])
 
-  const fetchContributions = useCallback(async (goalId: string, forceRefresh = false) => {
-    if (contributions[goalId] && !forceRefresh) return
-    
-    setLoadingContributions(goalId)
+  // Fetch Contributions when opening drawer
+  const fetchContributions = useCallback(async (goalId: string) => {
+    setLoadingContributions(true)
     try {
       const response = await fetch(`/api/contributions?goalId=${goalId}`)
       if (response.ok) {
         const data = await response.json()
         setContributions(prev => ({ ...prev, [goalId]: data }))
       }
-    } catch (error) {
-      console.error('Error fetching contributions:', error)
     } finally {
-      setLoadingContributions(null)
+      setLoadingContributions(false)
     }
-  }, [contributions])
+  }, [])
 
-  useEffect(() => {
-    if (selectedGoal && detailTab === 'history') {
-      fetchContributions(selectedGoal)
+  const handleOpenDrawer = (goal: SavingsGoal, tab: 'deposit' | 'history' = 'history') => {
+    setDrawerGoal(goal)
+    setDrawerTab(tab)
+    fetchContributions(goal.id)
+  }
+
+  // Combined unique goals pool
+  const allGoalsPool = useMemo(() => {
+    const map = new Map<string, SavingsGoal>()
+    initialGoals.forEach(g => map.set(g.id, g))
+    completedGoals.forEach(g => map.set(g.id, g))
+    return Array.from(map.values())
+  }, [initialGoals, completedGoals])
+
+  // Available categories derived dynamically from user static data & goals
+  const availableCategories = useMemo(() => {
+    const cats = new Set<string>()
+    if (staticData?.expenseCategories) {
+      staticData.expenseCategories.filter(c => c.isActive).forEach(c => cats.add(c.name))
     }
-  }, [selectedGoal, detailTab, fetchContributions])
-
-  useEffect(() => {
-    if (selectedCompletedGoal) {
-      fetchContributions(selectedCompletedGoal)
+    if (staticData?.incomeCategories) {
+      staticData.incomeCategories.filter(c => c.isActive).forEach(c => cats.add(c.name))
     }
-  }, [selectedCompletedGoal, fetchContributions])
+    allGoalsPool.forEach(g => {
+      if (g.category) cats.add(g.category)
+    })
+    return Array.from(cats).sort()
+  }, [staticData, allGoalsPool])
 
+  const activeFilterCategories = useMemo(() => {
+    const cats = new Set<string>()
+    allGoalsPool.forEach(g => { if (g.category) cats.add(g.category) })
+    return Array.from(cats).sort()
+  }, [allGoalsPool])
+
+  // Processed Goals based on Tab, Category & Sort
+  const inProgressGoals = useMemo(() => allGoalsPool.filter(g => Number(g.currentAmount) < Number(g.targetAmount)), [allGoalsPool])
+  const achievedGoals = useMemo(() => allGoalsPool.filter(g => Number(g.currentAmount) >= Number(g.targetAmount) || g.isCompleted), [allGoalsPool])
+
+  const processedGoals = useMemo(() => {
+    let pool: SavingsGoal[] = []
+    if (activeTab === 'in_progress') {
+      pool = inProgressGoals
+    } else if (activeTab === 'completed') {
+      pool = achievedGoals
+    } else {
+      pool = allGoalsPool
+    }
+
+    if (selectedCategory !== 'all') {
+      pool = pool.filter(g => (g.category || 'General').toLowerCase() === selectedCategory.toLowerCase())
+    }
+
+    return pool.sort((a, b) => {
+      if (sortBy === 'deadline') {
+        const timeA = a.deadline ? new Date(a.deadline).getTime() : 9999999999999
+        const timeB = b.deadline ? new Date(b.deadline).getTime() : 9999999999999
+        return timeA - timeB
+      }
+      if (sortBy === 'progress') {
+        const progA = (Number(a.currentAmount) || 0) / (Number(a.targetAmount) || 1)
+        const progB = (Number(b.currentAmount) || 0) / (Number(b.targetAmount) || 1)
+        return progB - progA
+      }
+      if (sortBy === 'target') return Number(b.targetAmount) - Number(a.targetAmount)
+      return a.name.localeCompare(b.name)
+    })
+  }, [allGoalsPool, inProgressGoals, achievedGoals, activeTab, selectedCategory, sortBy])
+
+  // Handlers
   const handleAddGoal = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
@@ -248,189 +140,215 @@ export default function SavingsGoalsNew({ goals, availableBalance, onRefresh }: 
         body: JSON.stringify(newGoal)
       })
       if (response.ok) {
-        setShowAddForm(false)
-        setNewGoal({ name: '', targetAmount: '', deadline: '', category: '' })
+        toast.success('Savings goal created!')
+        setShowAddModal(false)
+        setNewGoal({ name: '', targetAmount: '', deadline: '', category: availableCategories[0] || 'General' })
         if (onRefresh) onRefresh()
+      } else {
+        const err = await response.json()
+        toast.error(err.error || 'Failed to create goal')
       }
-    } catch (error) {
-      console.error('Failed to create goal:', error)
+    } catch {
+      toast.error('Network error creating goal')
     }
   }
 
-  const handleQuickAddContribution = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!selectedGoal) return
-
+  const handleAddContribution = async (goalId: string, amount: number, paymentMethod: string, description: string, date: string) => {
     try {
-      const response = await fetch('/api/contributions', {
+      const res = await fetch('/api/contributions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          goalId: selectedGoal,
-          amount: parseFloat(quickContribution.amount),
-          date: quickContribution.date,
-          paymentMethod: quickContribution.paymentMethod,
-          description: quickContribution.description
-        })
+        body: JSON.stringify({ goalId, amount, paymentMethod, description, date })
       })
-
-      if (response.ok) {
-        setQuickContribution({
-          amount: '',
-          date: new Date().toISOString().split('T')[0],
-          paymentMethod: quickContribution.paymentMethod,
-          description: ''
-        })
-        
-        const addedAmount = parseFloat(quickContribution.amount)
-        const willComplete = currentGoal && (currentGoal.currentAmount + addedAmount >= currentGoal.targetAmount)
-
+      if (res.ok) {
+        toast.success(`Logged contribution of ₹${amount.toLocaleString('en-IN')}`)
         if (onRefresh) onRefresh()
-        await fetchContributions(selectedGoal, true)
-        setDetailTab('history')
-        
-        if (willComplete) {
-          const completedId = selectedGoal
-          setSelectedGoal(null)
-          setGoalFilter('achieved')
-          setSelectedCompletedGoal(completedId)
-        }
+        loadCompletedGoals()
+        fetchContributions(goalId)
       }
-    } catch (error) {
-      console.error('Failed to add contribution:', error)
+    } catch {
+      toast.error('Failed to log contribution')
     }
   }
 
-  const handleDeleteContribution = async (contributionId: string, goalId: string) => {
-    if (!confirm('Are you sure you want to delete this contribution?')) return
-    
+  const handleDeleteContribution = async (id: string, goalId: string) => {
     try {
-      const response = await fetch(`/api/contributions?contributionId=${contributionId}`, {
-        method: 'DELETE'
-      })
-      
-      if (response.ok) {
-        await fetchContributions(goalId, true)
+      const res = await fetch(`/api/contributions?id=${id}`, { method: 'DELETE' })
+      if (res.ok) {
+        toast.success('Contribution removed')
         if (onRefresh) onRefresh()
+        loadCompletedGoals()
+        fetchContributions(goalId)
       }
-    } catch (error) {
-      console.error('Failed to delete contribution:', error)
+    } catch {
+      toast.error('Failed to delete contribution')
     }
   }
 
-  const handleDeleteGoal = async (goal: SavingsGoal) => {
-    if (!confirm(`Are you sure you want to delete "${goal.name}"?`)) return
-
-    let deleteTransactions = false
-    if (goal.currentAmount > 0) {
-      deleteTransactions = confirm('This goal has contributions. Do you also want to delete all related transactions from your expenses?\n\nClick OK to delete the transactions, or Cancel to keep them in your expenses.')
-    }
-    
+  const handleConfirmDeleteGoal = async (goal: SavingsGoal, deleteTransactions: boolean) => {
     try {
-      const response = await fetch(`/api/goals?id=${goal.id}&deleteTransactions=${deleteTransactions}`, {
-        method: 'DELETE'
-      })
-      
-      if (response.ok) {
-        if (selectedGoal === goal.id) setSelectedGoal(null)
-        if (selectedCompletedGoal === goal.id) setSelectedCompletedGoal(null)
+      const res = await fetch(`/api/goals?id=${goal.id}&deleteTransactions=${deleteTransactions}`, { method: 'DELETE' })
+      if (res.ok) {
+        toast.success(deleteTransactions ? 'Goal and linked transactions deleted' : 'Goal removed (transactions preserved)')
+        setGoalToDelete(null)
+        setDrawerGoal(null)
         if (onRefresh) onRefresh()
+        loadCompletedGoals()
+      } else {
+        const err = await res.json()
+        toast.error(err.error || 'Failed to delete goal')
       }
-    } catch (error) {
-      console.error('Failed to delete goal:', error)
+    } catch {
+      toast.error('Failed to delete goal')
     }
   }
-
-  const calculatePace = (goal: SavingsGoal) => {
-    if (!goal.deadline) return 0
-    const remainingAmount = Math.max(0, goal.targetAmount - goal.currentAmount)
-    const today = new Date()
-    const deadline = new Date(goal.deadline)
-    const monthsRemaining = Math.max(
-      1,
-      (deadline.getFullYear() - today.getFullYear()) * 12 +
-      (deadline.getMonth() - today.getMonth())
-    )
-    return remainingAmount / monthsRemaining
-  }
-
-  const filteredGoals = goals.filter(g => !g.isCompleted)
 
   return (
-    <>
-      <MobileGoalsView
-        goalFilter={goalFilter === 'overview' ? 'active' : goalFilter}
-        setGoalFilter={(f) => setGoalFilter((f === 'pending' ? 'active' : f === 'completed' ? 'achieved' : f) as any)}
-        setShowAddForm={setShowAddForm}
-        filteredGoals={filteredGoals}
-        completedGoals={completedGoals}
-        selectedGoal={selectedGoal}
-        setSelectedGoal={setSelectedGoal}
-        selectedCompletedGoal={selectedCompletedGoal}
-        setSelectedCompletedGoal={setSelectedCompletedGoal}
-        monthlySavingRequired={monthlySavingRequired}
-        monthlySavingPotential={monthlySavingPotential}
-        detailTab={detailTab}
-        setDetailTab={setDetailTab}
-        quickContribution={quickContribution}
-        setQuickContribution={setQuickContribution}
-        handleQuickAddContribution={handleQuickAddContribution}
-        handleDeleteContribution={handleDeleteContribution}
-        handleDeleteGoal={handleDeleteGoal}
-        contributions={contributions}
+    <div className="space-y-3.5 sm:space-y-4 font-sans max-w-[1600px] mx-auto pb-24 md:pb-6 overflow-x-hidden">
+      {/* 1. Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Savings Goals</h1>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-neutral-400 mt-0.5">Track your milestones and monthly commitment automatically.</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowAddModal(true)}
+          className="px-3.5 py-1.5 text-xs sm:text-sm font-semibold bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-slate-100 text-white rounded-xl shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+        >
+          <Plus className="h-4 w-4" />
+          <span>New Goal</span>
+        </button>
+      </div>
+
+      {/* 2. Executive Summary Strip */}
+      <GoalKPIStrip goals={allGoalsPool} completedGoals={achievedGoals} />
+
+      {/* 3. Toolbar */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 bg-white dark:bg-neutral-900 border border-slate-200/90 dark:border-neutral-800 rounded-2xl p-2 sm:px-3 shadow-sm">
+        <div className="flex items-center bg-slate-100 dark:bg-neutral-900 border border-slate-200/80 dark:border-neutral-800 p-0.5 rounded-xl shrink-0">
+          {[
+            { id: 'all', label: 'All Goals', count: allGoalsPool.length },
+            { id: 'in_progress', label: 'In Progress', count: inProgressGoals.length },
+            { id: 'completed', label: 'Completed', count: achievedGoals.length }
+          ].map(tab => (
+            <button
+              key={`tab-${tab.id}`}
+              type="button"
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                activeTab === tab.id
+                  ? 'bg-white dark:bg-neutral-800 text-slate-900 dark:text-white shadow-sm'
+                  : 'text-slate-500 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <span>{tab.label}</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-200/70 dark:bg-neutral-700 font-mono">{tab.count}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center justify-between sm:justify-end gap-2 overflow-x-auto [scrollbar-width:none]">
+          <div className="flex items-center gap-1 overflow-x-auto [scrollbar-width:none]">
+            <button
+              type="button"
+              onClick={() => setSelectedCategory('all')}
+              className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all shrink-0 ${
+                selectedCategory === 'all'
+                  ? 'bg-slate-900 dark:bg-white text-white dark:text-neutral-900 shadow-sm'
+                  : 'text-slate-500 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-800'
+              }`}
+            >
+              All
+            </button>
+            {activeFilterCategories.map(cat => (
+              <button
+                key={`cat-${cat}`}
+                type="button"
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all shrink-0 capitalize ${
+                  selectedCategory.toLowerCase() === cat.toLowerCase()
+                    ? 'bg-slate-900 dark:bg-white text-white dark:text-neutral-900 shadow-sm'
+                    : 'text-slate-500 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-800'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          <div className="relative flex items-center gap-1.5 bg-slate-100 dark:bg-neutral-800 border border-slate-200/80 dark:border-neutral-700/80 rounded-xl px-2.5 py-1 text-xs text-slate-600 dark:text-neutral-300 shrink-0">
+            <ArrowUpDown className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+            <select
+              value={sortBy}
+              onChange={e => setSortBy(e.target.value as any)}
+              className="appearance-none [-webkit-appearance:none] bg-transparent font-bold outline-none cursor-pointer text-xs pr-5 pl-0.5 border-0 focus:ring-0 text-slate-800 dark:text-neutral-200"
+            >
+              <option value="deadline" className="bg-white dark:bg-neutral-900 text-slate-800 dark:text-white">Target Date</option>
+              <option value="progress" className="bg-white dark:bg-neutral-900 text-slate-800 dark:text-white">Progress %</option>
+              <option value="target" className="bg-white dark:bg-neutral-900 text-slate-800 dark:text-white">Target (High)</option>
+              <option value="name" className="bg-white dark:bg-neutral-900 text-slate-800 dark:text-white">Name</option>
+            </select>
+            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+          </div>
+        </div>
+      </div>
+
+      {/* 4. Goal Cards Grid */}
+      {processedGoals.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+          {processedGoals.map(goal => (
+            <GoalCard
+              key={goal.id}
+              goal={goal}
+              contributionsCount={contributions[goal.id]?.length ?? 0}
+              onOpenDrawer={handleOpenDrawer}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-slate-200 dark:border-neutral-800 p-8 text-center shadow-sm">
+          <div className="h-9 w-9 rounded-2xl bg-slate-100 dark:bg-neutral-800 flex items-center justify-center mx-auto mb-2 text-slate-500 dark:text-neutral-400">
+            <Target className="h-4 w-4" />
+          </div>
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white">No savings goals found</h3>
+          <p className="text-xs text-slate-500 dark:text-neutral-400 mt-0.5 max-w-sm mx-auto">
+            {activeTab === 'completed' ? 'No completed goals yet. Keep saving!' : 'Create your first goal to start tracking progress.'}
+          </p>
+        </div>
+      )}
+
+      {/* 5. Slide-Over Goal Activity & Deposit Drawer */}
+      <GoalActivityDrawer
+        goal={drawerGoal}
+        isOpen={Boolean(drawerGoal)}
+        onClose={() => setDrawerGoal(null)}
+        initialTab={drawerTab}
+        contributions={drawerGoal ? contributions[drawerGoal.id] || [] : []}
         loadingContributions={loadingContributions}
+        onAddContribution={handleAddContribution}
+        onDeleteContribution={handleDeleteContribution}
+        onDeleteGoal={g => setGoalToDelete(g)}
       />
 
-      <DesktopGoalsView
-        goalFilter={goalFilter}
-        setGoalFilter={setGoalFilter}
-        setShowAddForm={setShowAddForm}
-        filteredGoals={filteredGoals}
-        completedGoals={completedGoals}
-        goals={goals}
-        selectedGoal={selectedGoal}
-        setSelectedGoal={setSelectedGoal}
-        selectedCompletedGoal={selectedCompletedGoal}
-        setSelectedCompletedGoal={setSelectedCompletedGoal}
-        viewMode={viewMode}
-        setViewMode={setViewMode}
-        desktopSort={desktopSort}
-        setDesktopSort={setDesktopSort}
-        getSortedGoals={getSortedGoals}
-        overallProgress={overallProgress}
-        totalActiveSaved={totalActiveSaved}
-        totalActiveTarget={totalActiveTarget}
-        totalMonthlySavingRequired={totalMonthlySavingRequired}
-        monthlySavingPotential={monthlySavingPotential}
-        nextMilestoneGoal={nextMilestoneGoal}
-        totalCompletedSaved={totalCompletedSaved}
-        calculatePace={calculatePace}
-        contributions={contributions}
-        loadingContributions={loadingContributions}
-        detailTab={detailTab}
-        setDetailTab={setDetailTab}
-        quickContribution={quickContribution}
-        setQuickContribution={setQuickContribution}
-        handleQuickAddContribution={handleQuickAddContribution}
-        handleDeleteContribution={handleDeleteContribution}
-        handleDeleteGoal={handleDeleteGoal}
-        availableBalance={availableBalance}
-        bulkEntries={bulkEntries}
-        handleBulkEntryChange={handleBulkEntryChange}
-        handleSaveBulkAllocation={handleSaveBulkAllocation}
-        handleAddBulkRow={handleAddBulkRow}
-        handleRemoveBulkRow={handleRemoveBulkRow}
-        bulkSaving={bulkSaving}
-      />
-
+      {/* 6. Add Goal Modal */}
       <AddGoalModal
-        isOpen={showAddForm}
-        onClose={() => setShowAddForm(false)}
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
         newGoal={newGoal}
         setNewGoal={setNewGoal}
         handleAddGoal={handleAddGoal}
-        categories={staticData.expenseCategories.filter(c => c.isActive)}
+        availableCategories={availableCategories}
       />
-    </>
+
+      {/* 7. Delete Goal Confirmation Modal with Full Transparency */}
+      <DeleteGoalModal
+        goal={goalToDelete}
+        isOpen={Boolean(goalToDelete)}
+        onClose={() => setGoalToDelete(null)}
+        onConfirmDelete={handleConfirmDeleteGoal}
+        contributionsCount={goalToDelete ? contributions[goalToDelete.id]?.length ?? 0 : 0}
+      />
+    </div>
   )
 }
