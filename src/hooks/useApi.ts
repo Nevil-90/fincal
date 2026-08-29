@@ -125,17 +125,26 @@ export function useGoals() {
   }
 }
 
-export function useTravelEntries(page: number = 1, limit: number = 10) {
+export function useTravelEntries(page: number = 1, limit: number = 10, search: string = '', sortBy: string = 'date-desc') {
   const { user } = useUser()
   const isTourActive = user && !user.hasCompletedOnboarding
 
-  const { data, error, isLoading, mutate } = useSWR(isTourActive ? null : `/api/travel?page=${page}&limit=${limit}`, fetcher, {
-    shouldRetryOnError: false
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: String(limit)
+  })
+  if (search.trim()) params.set('search', search.trim())
+  if (sortBy) params.set('sortBy', sortBy)
+
+  const { data, error, isLoading, isValidating, mutate } = useSWR(isTourActive ? null : `/api/travel?${params.toString()}`, fetcher, {
+    shouldRetryOnError: false,
+    keepPreviousData: true
   })
   return {
     entries: data?.travelEntries || [],
-    pagination: data?.pagination,
+    pagination: data?.pagination || { currentPage: 1, totalPages: 1, totalCount: 0, limit: 10, hasNextPage: false, hasPrevPage: false },
     isLoading,
+    isValidating,
     isError: error,
     mutate
   }
