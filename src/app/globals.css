@@ -18,28 +18,51 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-geist-sans), "Geist Fallback", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: var(--font-geist-sans), "Geist Fallback", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
-html {
+*,
+*::before,
+*::after {
+  font-family: inherit;
+}
+
+html,
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans) !important;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   -webkit-text-size-adjust: 100%;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* Ensure all typography elements inherit the unified Geist font stack */
+h1, h2, h3, h4, h5, h6, p, span, a, label, li, td, th, div, blockquote, figcaption {
+  font-family: inherit;
 }
 
-/* Cross-browser form controls & mobile touch normalization */
-input, select, textarea, button {
+/* Cross-browser form controls & mobile touch normalization with font inheritance */
+input,
+select,
+textarea,
+button,
+optgroup {
+  font-family: inherit !important;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Ensure all numbers, monospace, and code elements use the exact same Geist font */
+.font-mono,
+code,
+kbd,
+samp,
+pre {
+  font-family: var(--font-sans) !important;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
 }
 
 /* Normalize iOS WebKit date inputs */

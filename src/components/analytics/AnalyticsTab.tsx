@@ -334,7 +334,7 @@ export default function AnalyticsTab({ goals }: AnalyticsTabProps) {
               <ComposedChart data={monthlyTrendData} margin={{ top: 10, right: 0, bottom: 0, left: -20 }} barGap={4}>
                 <CartesianGrid strokeDasharray="4 4" stroke="currentColor" className="text-slate-100 dark:text-white/5" vertical={false} />
                 <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#737373' }} axisLine={false} tickLine={false} dy={10} />
-                <YAxis tick={{ fontSize: 11, fill: '#737373', fontFamily: 'monospace' }} axisLine={false} tickLine={false} tickFormatter={v => formatCompactCurrency(v)} width={60} />
+                <YAxis tick={{ fontSize: 11, fill: '#737373', fontFamily: 'var(--font-sans), sans-serif' }} axisLine={false} tickLine={false} tickFormatter={v => formatCompactCurrency(v)} width={60} />
                 <Tooltip content={<Tip />} cursor={{ fill: 'currentColor', className: 'text-slate-50 dark:text-white/5' }} />
                 <Legend iconType="circle" iconSize={6} wrapperStyle={{ fontSize: 12, fontWeight: 500, paddingTop: 16 }} />
                 <Bar dataKey="income" name="Income" fill={C.income} radius={[4, 4, 0, 0]} barSize={20} />
@@ -362,7 +362,7 @@ export default function AnalyticsTab({ goals }: AnalyticsTabProps) {
                   </defs>
                   <CartesianGrid strokeDasharray="4 4" stroke="currentColor" className="text-slate-100 dark:text-white/5" vertical={false} />
                   <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#737373' }} axisLine={false} tickLine={false} dy={10} minTickGap={30} />
-                  <YAxis tick={{ fontSize: 11, fill: '#737373', fontFamily: 'monospace' }} axisLine={false} tickLine={false} tickFormatter={v => formatCompactCurrency(v)} width={60} />
+                  <YAxis tick={{ fontSize: 11, fill: '#737373', fontFamily: 'var(--font-sans), sans-serif' }} axisLine={false} tickLine={false} tickFormatter={v => formatCompactCurrency(v)} width={60} />
                   <Tooltip content={<Tip />} cursor={{ stroke: 'currentColor', strokeWidth: 1, strokeDasharray: '4 4', className: 'text-slate-200 dark:text-white/10' }} />
                   <ReferenceLine y={0} stroke={C.expense} strokeDasharray="4 4" strokeWidth={1} opacity={0.5} />
                   <Area type="monotone" dataKey="balance" name="Balance" stroke={C.net} strokeWidth={2} fill="url(#gBal)" dot={false} activeDot={{ r: 4 }} />
@@ -511,7 +511,7 @@ export default function AnalyticsTab({ goals }: AnalyticsTabProps) {
             <ResponsiveContainer width="100%" height={310}>
               <BarChart data={weekdayData} margin={{ top: 0, right: 0, bottom: 0, left: -20 }} barSize={18} layout="vertical">
                 <CartesianGrid strokeDasharray="4 4" stroke="currentColor" className="text-slate-100 dark:text-white/5" horizontal={false} />
-                <XAxis type="number" tick={{ fontSize: 11, fill: '#737373', fontFamily: 'monospace' }} axisLine={false} tickLine={false} tickFormatter={v => formatCompactCurrency(v)} />
+                <XAxis type="number" tick={{ fontSize: 11, fill: '#737373', fontFamily: 'var(--font-sans), sans-serif' }} axisLine={false} tickLine={false} tickFormatter={v => formatCompactCurrency(v)} />
                 <YAxis type="category" dataKey="day" tick={{ fontSize: 11, fill: '#737373' }} axisLine={false} tickLine={false} />
                 <Tooltip content={<Tip />} cursor={{ fill: 'currentColor', className: 'text-slate-50 dark:text-white/5' }} />
                 <Bar dataKey="total" name="Spent" radius={[0, 4, 4, 0]}>
@@ -613,7 +613,7 @@ export default function AnalyticsTab({ goals }: AnalyticsTabProps) {
                   <ScatterChart margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
                     <CartesianGrid strokeDasharray="4 4" stroke="currentColor" className="text-slate-100 dark:text-white/5" />
                     <XAxis dataKey="rawDate" type="number" domain={['auto', 'auto']} tick={false} axisLine={false} tickLine={false} name="Date" />
-                    <YAxis dataKey="amount" tick={{ fontSize: 11, fill: '#737373', fontFamily: 'monospace' }} axisLine={false} tickLine={false} tickFormatter={v => formatCompactCurrency(v)} width={60} name="Amount" />
+                    <YAxis dataKey="amount" tick={{ fontSize: 11, fill: '#737373', fontFamily: 'var(--font-sans), sans-serif' }} axisLine={false} tickLine={false} tickFormatter={v => formatCompactCurrency(v)} width={60} name="Amount" />
                     <ZAxis range={[40, 40]} />
                     <Tooltip content={<ScatterTip />} cursor={{ stroke: 'currentColor', strokeWidth: 1, strokeDasharray: '4 4', className: 'text-slate-200 dark:text-white/10' }} />
                     <Scatter name="Normal" data={normalTxns} fill={C.net} fillOpacity={0.4} />

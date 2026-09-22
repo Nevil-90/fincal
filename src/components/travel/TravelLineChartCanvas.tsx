@@ -39,7 +39,7 @@ export default function TravelLineChartCanvas({
               width={55}
               tickLine={false}
               axisLine={false}
-              tick={{ fontSize: 11, fill: '#737373', fontFamily: 'monospace', fontWeight: 500 }}
+              tick={{ fontSize: 11, fill: '#737373', fontFamily: 'var(--font-sans), sans-serif', fontWeight: 500 }}
               tickFormatter={value => {
                 try {
                   return activeConfig.formatCompact(Number(value) || 0)
@@ -87,7 +87,7 @@ export default function TravelLineChartCanvas({
               width={55}
               tickLine={false}
               axisLine={false}
-              tick={{ fontSize: 11, fill: '#737373', fontFamily: 'monospace', fontWeight: 500 }}
+              tick={{ fontSize: 11, fill: '#737373', fontFamily: 'var(--font-sans), sans-serif', fontWeight: 500 }}
               tickFormatter={value => {
                 try {
                   return activeConfig.formatCompact(Number(value) || 0)
