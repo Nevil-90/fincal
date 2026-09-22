@@ -4,7 +4,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useScrollLock } from '@/hooks/useScrollLock'
 import { PriceChange, RecurringTransaction } from './types'
-import { Calendar, Lightbulb } from 'lucide-react'
 import { toast } from 'sonner'
 import CustomDateField from '@/components/ui/CustomDateField'
 
@@ -124,8 +123,8 @@ export default function PriceHistoryModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/45 dark:bg-neutral-950/80 p-4 backdrop-blur-sm">
-      <div className="bg-white dark:bg-neutral-900 rounded-2xl flex flex-col w-full max-w-4xl max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-slate-950/45 dark:bg-neutral-950/80 p-3 sm:p-4 backdrop-blur-sm overflow-hidden" onClick={onClose}>
+      <div className="bg-white dark:bg-neutral-900 rounded-3xl border border-slate-200 dark:border-neutral-800 shadow-2xl flex flex-col w-full max-w-2xl max-h-[90vh] sm:max-h-[85vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-neutral-800 shrink-0">
           <div>
             <h3 className="text-base font-bold text-slate-900 dark:text-white">Price History</h3>
@@ -143,7 +142,7 @@ export default function PriceHistoryModal({
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-6 no-scrollbar">
           {/* Add Price Change Button */}
           {!showAddForm && (
             <div className="mb-6 flex gap-3">
@@ -259,8 +258,7 @@ export default function PriceHistoryModal({
                 <svg className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
-                <p>No price changes yet.</p>
-                <p className="text-sm">Add a price change to track historical amounts for different billing periods.</p>
+                <p className="text-sm">No price changes yet.</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -300,44 +298,6 @@ export default function PriceHistoryModal({
             )}
           </div>
 
-          {/* Info Box */}
-          <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-900/50 rounded-lg p-4">
-            <div className="flex">
-              <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <div>
-                <h5 className="text-sm font-medium text-blue-900 dark:text-blue-300 mb-1">How Price History Works</h5>
-                <p className="text-sm text-blue-800 dark:text-blue-200 mb-2">
-                  When you add a price change, the system will automatically apply the correct amount for each billing period.
-                  Past transactions keep their original amounts, and future transactions will use the new amount from the effective date.
-                </p>
-                <div className="text-xs text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/40 rounded p-2 mt-2">
-                  <strong className="text-blue-900 dark:text-blue-200">Example:</strong> If your Netflix subscription increases from ₹199 to ₹249 in March 2025,
-                  all transactions from March onwards will use ₹249, while January and February transactions remain at ₹199.
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Future Transactions Preview */}
-          {priceChanges.length > 0 && (
-            <div className="mt-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-900/50 rounded-lg p-4">
-              <h5 className="text-sm font-medium text-green-900 dark:text-green-300 mb-2 flex items-center gap-1.5"><Lightbulb className="h-4 w-4" /> Price Changes Active</h5>
-              <p className="text-sm text-green-800 dark:text-green-200 mb-2">
-                This recurring transaction has {priceChanges.length} price change{priceChanges.length > 1 ? 's' : ''}.
-                Future transactions will automatically use the correct amount based on their billing date.
-              </p>
-              <div className="text-xs text-green-700 dark:text-green-300 mt-2 bg-green-100 dark:bg-green-900/40 rounded p-2">
-                <strong className="flex items-center gap-1 text-green-900 dark:text-green-200"><Lightbulb className="h-3 w-3" /> Tip:</strong> If you see incorrect amounts in past transactions, use the &quot;Fix Past Transactions&quot; button above to recalculate all existing transactions based on the current price history.
-              </div>
-              <div className="text-xs text-green-700 dark:text-green-300 mt-1">
-                Next billing: Uses {formatCurrency(recurringTransaction.amount)}
-                ({priceChanges[0]?.effectiveDate && new Date(priceChanges[0].effectiveDate) <= new Date() 
-                ? 'current rate' : 'scheduled rate'})
-            </div>
-          </div>
-        )}
         </div>
       </div>
     </div>

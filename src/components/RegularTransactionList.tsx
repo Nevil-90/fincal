@@ -22,7 +22,9 @@ interface Transaction {
   type: 'income' | 'expense'
   amount: number
   category: string
-  description: string | null
+  title?: string
+  description?: string | null
+  notes?: string | null
   paymentMethod: string | null
   source: string | null
   date: string
@@ -247,7 +249,7 @@ export default function RegularTransactionList({
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   type: t.type, amount: t.amount, category: t.category,
-                  description: t.description, paymentMethod: t.paymentMethod,
+                  title: t.title || t.description || '', notes: t.notes || null, paymentMethod: t.paymentMethod,
                   source: t.source, date: t.date, recurringTransactionId: t.recurringTransactionId
                 })
               })
@@ -282,7 +284,8 @@ export default function RegularTransactionList({
           type: t.type,
           amount: t.amount,
           category: t.category,
-          description: (t.description || '') + ' (Copy)',
+          title: (t.title || t.description || '') + ' (Copy)',
+          notes: t.notes || null,
           paymentMethod: t.paymentMethod,
           source: t.source,
           date: t.date,
@@ -332,7 +335,7 @@ export default function RegularTransactionList({
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   type: t.type, amount: t.amount, category: t.category,
-                  description: t.description, paymentMethod: t.paymentMethod,
+                  title: t.title || t.description || '', notes: t.notes || null, paymentMethod: t.paymentMethod,
                   source: t.source, date: t.date, recurringTransactionId: t.recurringTransactionId
                 })
               })))
@@ -599,12 +602,19 @@ export default function RegularTransactionList({
                           {new Date(transaction.date).toLocaleDateString()}
                         </td>
                         <td className="px-4 py-3 text-sm text-slate-900 dark:text-neutral-200">
-                          <div className="flex items-center gap-2">
-                            <span>{transaction.description || 'No description'}</span>
-                            {transaction.recurringTransactionId && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
-                                <span className="flex items-center gap-1"><RefreshCw className="h-3 w-3" /> {transaction.recurringTransaction?.frequency || 'Auto'}</span>
-                              </span>
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-slate-900 dark:text-neutral-100">{transaction.title || transaction.description || 'No title'}</span>
+                              {transaction.recurringTransactionId && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
+                                  <span className="flex items-center gap-1"><RefreshCw className="h-3 w-3" /> {transaction.recurringTransaction?.frequency || 'Auto'}</span>
+                                </span>
+                              )}
+                            </div>
+                            {transaction.notes && (
+                              <p className="text-xs text-slate-500 dark:text-neutral-400 mt-0.5 line-clamp-1 max-w-[280px]" title={transaction.notes}>
+                                {transaction.notes}
+                              </p>
                             )}
                           </div>
                         </td>
@@ -683,8 +693,13 @@ export default function RegularTransactionList({
 
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-bold text-slate-900 dark:text-white leading-snug truncate">
-                            {transaction.description || 'No description'}
+                            {transaction.title || transaction.description || 'No title'}
                           </p>
+                          {transaction.notes && (
+                            <p className="text-[11px] text-slate-500 dark:text-neutral-400 line-clamp-1 truncate mt-0.5" title={transaction.notes}>
+                              {transaction.notes}
+                            </p>
+                          )}
                           <div className="flex items-center text-[11px] text-slate-500 dark:text-neutral-400 gap-1.5 mt-0.5">
                             <span className="font-semibold">{new Date(transaction.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</span>
                             <span>•</span>
@@ -800,12 +815,19 @@ export default function RegularTransactionList({
                                   {new Date(transaction.date).toLocaleDateString()}
                                 </td>
                                 <td className="px-4 py-2 text-sm text-slate-900 dark:text-neutral-200">
-                                  <div className="flex items-center gap-2">
-                                    <span>{transaction.description || 'No description'}</span>
-                                    {transaction.recurringTransactionId && (
-                                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
-                                        <span className="flex items-center gap-1"><RefreshCw className="h-3 w-3" /> {transaction.recurringTransaction?.frequency || 'Auto'}</span>
-                                      </span>
+                                  <div className="flex flex-col">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-medium text-slate-900 dark:text-neutral-100">{transaction.title || transaction.description || 'No title'}</span>
+                                      {transaction.recurringTransactionId && (
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
+                                          <span className="flex items-center gap-1"><RefreshCw className="h-3 w-3" /> {transaction.recurringTransaction?.frequency || 'Auto'}</span>
+                                        </span>
+                                      )}
+                                    </div>
+                                    {transaction.notes && (
+                                      <p className="text-xs text-slate-500 dark:text-neutral-400 mt-0.5 line-clamp-1 max-w-[280px]" title={transaction.notes}>
+                                        {transaction.notes}
+                                      </p>
                                     )}
                                   </div>
                                 </td>
@@ -887,8 +909,13 @@ export default function RegularTransactionList({
                                 {/* Details */}
                                 <div className="flex-1 min-w-0">
                                   <p className="text-sm font-bold text-slate-900 dark:text-white leading-snug truncate">
-                                    {transaction.description || 'No description'}
+                                    {transaction.title || transaction.description || 'No title'}
                                   </p>
+                                  {transaction.notes && (
+                                    <p className="text-[11px] text-slate-500 dark:text-neutral-400 line-clamp-1 truncate mt-0.5" title={transaction.notes}>
+                                      {transaction.notes}
+                                    </p>
+                                  )}
                                   <div className="flex items-center text-[11px] text-slate-500 dark:text-neutral-400 gap-1.5 mt-0.5">
                                     <span className="font-semibold">{new Date(transaction.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</span>
                                     <span>•</span>
@@ -1122,6 +1149,8 @@ export default function RegularTransactionList({
                 type: editingTransaction.type,
                 amount: editingTransaction.amount,
                 category: editingTransaction.category,
+                title: editingTransaction.title || editingTransaction.description || '',
+                notes: editingTransaction.notes || '',
                 description: editingTransaction.description,
                 paymentMethod: editingTransaction.paymentMethod,
                 source: editingTransaction.source,

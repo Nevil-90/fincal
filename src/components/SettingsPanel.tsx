@@ -318,10 +318,6 @@ export function SettingsPanel({ onDataChange, isAdmin, isOpen, onClose }: Settin
       setParsedPreview(null)
       setEditableData(null)
       
-      setTimeout(() => {
-        null
-      }, 0)
-      
       await manager.refresh()
       onDataChange?.()
     } catch (error: any) {

@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
       type,
       amount: parseFloat(amount),
       category,
-      description,
+      title: description || category || 'Recurring Transaction',
       paymentMethod,
       source,
       recurringTransactionId: recurringTransaction.id,

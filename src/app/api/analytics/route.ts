@@ -73,7 +73,7 @@ export async function GET(request: Request) {
           deletedAt: null,
           date: { gte: queryStartDate }
         },
-        select: { id: true, type: true, amount: true, category: true, description: true, date: true, paymentMethod: true },
+        select: { id: true, type: true, amount: true, category: true, title: true, notes: true, date: true, paymentMethod: true },
         orderBy: { date: 'asc' }
       }),
       prisma.savingsGoal.findMany({ where: { userId, deletedAt: null } }),
@@ -319,7 +319,7 @@ export async function GET(request: Request) {
 
     interface Anomaly {
       id: string; index: number; date: string; rawDate: number
-      amount: number; category: string | null; description: string; isAnomaly: boolean
+      amount: number; category: string | null; title: string; description: string; notes?: string | null; isAnomaly: boolean
     }
     let anomalyData: Anomaly[] = []
     if (expenses.length > 0) {
@@ -333,7 +333,9 @@ export async function GET(request: Request) {
           date: format(new Date(t.date), 'MMM dd'),
           rawDate: new Date(t.date).getTime() + i,
           amount: amt, category: t.category,
-          description: t.description || 'Unknown',
+          title: (t as any).title || 'Unknown',
+          description: (t as any).title || 'Unknown',
+          notes: (t as any).notes || null,
           isAnomaly: amt > mean + (stdDev * 1.5),
         }
       })

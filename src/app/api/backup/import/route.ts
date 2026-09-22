@@ -84,9 +84,11 @@ export async function POST(request: NextRequest) {
       }
 
       if (data.transactions?.length) {
-        const transactionsToInsert = data.transactions.map(({ id, ...rest }: any) => ({
+        const transactionsToInsert = data.transactions.map(({ id, description, ...rest }: any) => ({
           id,
           ...rest,
+          title: rest.title || description || 'Untitled Transaction',
+          notes: rest.notes || null,
           date: rest.date ? localToUtcMidnight(new Date(rest.date)) : undefined,
           userId: user.id
         }))

@@ -16,7 +16,9 @@ interface AddTransactionFormProps {
     type: 'income' | 'expense'
     amount: number
     category: string
-    description: string | null
+    title?: string | null
+    description?: string | null
+    notes?: string | null
     paymentMethod: string | null
     source: string | null
     date: string
@@ -48,7 +50,8 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
   const [type, setType] = useState<'income' | 'expense'>(initialData?.type || 'expense')
   const [amount, setAmount] = useState(initialData?.amount ? String(initialData.amount) : '')
   const [category, setCategory] = useState(initialData?.category || '')
-  const [description, setDescription] = useState(initialData?.description || '')
+  const [title, setTitle] = useState(initialData?.title || initialData?.description || '')
+  const [notes, setNotes] = useState(initialData?.notes || '')
   const [paymentMethod, setPaymentMethod] = useState(initialData?.paymentMethod || '')
   const [source, setSource] = useState(initialData?.source || '')
   const [date, setDate] = useState(initialData?.date ? new Date(initialData.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0])
@@ -74,11 +77,11 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
   }, [])
 
   useEffect(() => {
-    if (!description.trim()) {
+    if (!title.trim()) {
       setSuggestion(null)
       return
     }
-    const key = description.toLowerCase().trim()
+    const key = title.toLowerCase().trim()
     const rules = getLocalRules()
     const match = rules[key] || Object.entries(rules).find(([k]) => key.startsWith(k) || k.startsWith(key))?.[1]
     if (match) {
@@ -86,7 +89,7 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
     } else {
       setSuggestion(null)
     }
-  }, [description])
+  }, [title])
 
   const applySuggestion = () => {
     if (suggestion) {
@@ -108,7 +111,7 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!amount || !category || !paymentMethod) return
+    if (!amount || !category || !paymentMethod || !title.trim()) return
 
     setLoading(true)
     try {
@@ -120,7 +123,8 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
           type,
           amount: parseFloat(amount),
           category,
-          description: description || null,
+          title: title.trim(),
+          notes: notes.trim() || null,
           paymentMethod: paymentMethod || null,
           source: source || null,
           date,
@@ -128,13 +132,13 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
       })
 
       if (response.ok) {
-        if (description.trim() && category) {
-          saveLocalRule(description, category, type)
+        if (title.trim() && category) {
+          saveLocalRule(title, category, type)
           fetch('/api/user/autocategorize', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              rules: [{ keyword: description.toLowerCase().trim(), category, type }]
+              rules: [{ keyword: title.toLowerCase().trim(), category, type }]
             }),
           }).catch(() => {})
         }
@@ -159,8 +163,8 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 bg-white dark:bg-neutral-900">
-        <div className="flex-1 overflow-y-auto p-5 custom-scrollbar">
-          <div className="grid grid-cols-2 gap-x-4 gap-y-4">
+        <div className="flex-1 overflow-y-auto px-5 py-3.5 no-scrollbar">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-3">
         <div className="col-span-2">
           <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400 mb-1.5">
             Type
@@ -192,16 +196,17 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
         </div>
 
         <div className="col-span-2">
-          <label htmlFor="description" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400 mb-1">
-            Description (Optional)
+          <label htmlFor="title" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400 mb-1">
+            Title <span className="text-rose-500">*</span>
           </label>
           <input
             type="text"
-            id="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            id="title"
+            required
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
             className="w-full px-3 py-2 border border-slate-200 dark:border-neutral-700 rounded-xl focus:border-blue-500 focus:bg-white dark:focus:bg-neutral-900 focus:outline-none focus:ring-4 focus:ring-blue-50/50 dark:focus:ring-blue-500/20 text-slate-900 dark:text-white bg-slate-50/70 dark:bg-neutral-950 text-sm font-semibold transition-all"
-            placeholder="What was this for?"
+            placeholder="e.g. Grocery shopping, Salary, Dinner"
           />
           {suggestion && (
             <button
@@ -213,6 +218,20 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
               Auto-fill: <strong>{suggestion.category}</strong> ({suggestion.type}) — tap to apply
             </button>
           )}
+        </div>
+
+        <div className="col-span-2">
+          <label htmlFor="notes" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400 mb-1">
+            Notes <span className="text-slate-400 text-[10px] lowercase font-normal">(optional)</span>
+          </label>
+          <textarea
+            id="notes"
+            rows={2}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className="w-full px-3 py-2 border border-slate-200 dark:border-neutral-700 rounded-xl focus:border-blue-500 focus:bg-white dark:focus:bg-neutral-900 focus:outline-none focus:ring-4 focus:ring-blue-50/50 dark:focus:ring-blue-500/20 text-slate-900 dark:text-white bg-slate-50/70 dark:bg-neutral-950 text-sm transition-all resize-y min-h-[56px]"
+            placeholder="Add detailed notes, items list, or transaction remarks..."
+          />
         </div>
 
         <div>

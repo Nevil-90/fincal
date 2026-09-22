@@ -13,7 +13,8 @@ model Transaction {
   type                   String
   amount                 Decimal
   category               String
-  description            String?
+  title                  String
+  notes                  String?               @db.Text
   paymentMethod          String?
   source                 String?
   recurringTransactionId String?

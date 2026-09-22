@@ -64,7 +64,8 @@ function ScatterTip({ active, payload }: any) {
   if (!d) return null
   return (
     <div className="bg-white/95 dark:bg-[#111]/95 backdrop-blur-md border border-slate-200 dark:border-white/10 rounded-xl px-3.5 py-3 shadow-2xl">
-      <p className="font-semibold text-slate-800 dark:text-neutral-200 text-xs truncate max-w-[180px]">{d.description}</p>
+      <p className="font-semibold text-slate-800 dark:text-neutral-200 text-xs truncate max-w-[180px]">{d.title || d.description}</p>
+      {d.notes && <p className="text-slate-400 dark:text-neutral-400 text-[10px] truncate max-w-[180px]">{d.notes}</p>}
       <p className="text-slate-500 dark:text-neutral-400 text-[10px] mt-1">{d.category} · {d.date}</p>
       <p className={`font-mono font-medium mt-1 text-xs ${d.isAnomaly ? 'text-red-500' : 'text-slate-800 dark:text-neutral-200'}`}>
         {formatCurrency(d.amount)} {d.isAnomaly ? ' (Anomaly)' : ''}

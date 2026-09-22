@@ -73,7 +73,8 @@ export async function POST(request: NextRequest) {
             type: 'expense',
             amount: parseFloat(amount),
             category: (goal as any).category,
-            description: description || `Savings contribution to ${goal.name}`,
+            title: description || `Savings contribution to ${goal.name}`,
+            notes: null,
             paymentMethod: paymentMethod || null,
             source: 'Savings Goal Contribution',
             userId: currentUserId

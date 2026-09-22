@@ -1,0 +1,68 @@
+name: Safe Database Migration & Backup Gate
+
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason / Ticket for migration'
+        required: true
+        default: 'Schema update: title & notes'
+
+jobs:
+  migrate:
+    name: Backup, Verify & Safe Migrate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: 1. Automated Pre-Migration Backup
+        id: backup
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+        run: node scripts/backup-db.mjs
+
+      - name: 2. Verify Backup Integrity & Checksums
+        id: verify_backup
+        run: node scripts/verify-backup.mjs
+
+      - name: 3. Archive Production Backup to Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pre-migration-production-backup
+          path: backups/latest/
+          retention-days: 90
+
+      - name: 4. Execute Safe Database Migration
+        id: migration
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+        run: node scripts/safe-migrate.mjs
+
+      - name: 5. Post-Migration Verification
+        id: post_verify
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+        run: node scripts/inspect-db.mjs
+
+      - name: Emergency Rollback Guidance (On Failure)
+        if: failure()
+        run: |
+          echo "::error::Migration failed! The pre-migration backup is stored in GitHub Artifacts and backups/latest."
+          echo "To execute an emergency restore locally, run:"
+          echo "  node scripts/restore-db.mjs --dir backups/latest"

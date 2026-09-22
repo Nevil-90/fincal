@@ -56,11 +56,17 @@ next-env.d.ts
 data.json
 
 # Personal / Private
-/scripts/
+/scripts/*
+!/scripts/backup-db.mjs
+!/scripts/verify-backup.mjs
+!/scripts/safe-migrate.mjs
+!/scripts/inspect-db.mjs
+!/scripts/restore-db.mjs
 PROJECT
 /features.md
 /prisma/backup.json
 /prisma/*.live_backup
+/backups/
 
 # QA Testing (Local Only)
 __tests__/

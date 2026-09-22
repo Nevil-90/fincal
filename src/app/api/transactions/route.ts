@@ -47,7 +47,8 @@ export async function GET(request: NextRequest) {
         lte?: number
       }
       OR?: Array<{
-        description?: { contains: string; mode: 'insensitive' }
+        title?: { contains: string; mode: 'insensitive' }
+        notes?: { contains: string; mode: 'insensitive' }
         category?: { contains: string; mode: 'insensitive' }
         paymentMethod?: { contains: string; mode: 'insensitive' }
         source?: { contains: string; mode: 'insensitive' }
@@ -123,7 +124,8 @@ export async function GET(request: NextRequest) {
     
     if (search) {
       whereClause.OR = [
-        { description: { contains: search, mode: 'insensitive' } },
+        { title: { contains: search, mode: 'insensitive' } },
+        { notes: { contains: search, mode: 'insensitive' } },
         { category: { contains: search, mode: 'insensitive' } },
         { paymentMethod: { contains: search, mode: 'insensitive' } },
         { source: { contains: search, mode: 'insensitive' } }
@@ -183,8 +185,13 @@ export async function GET(request: NextRequest) {
     const hasNextPage = page < totalPages
     const hasPrevPage = page > 1
     
+    const sanitizedTransactions = transactions.map((t: any) => ({
+      ...t,
+      description: t.title
+    }))
+
     return NextResponse.json({
-      transactions,
+      transactions: sanitizedTransactions,
       openingBalance,
       pagination: {
         currentPage: page,
@@ -209,10 +216,16 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { type, amount, category, description, paymentMethod, source, date, recurringTransactionId } = body
+    const { type, amount, category, title, description, notes, paymentMethod, source, date, recurringTransactionId } = body
+
+    const titleValue = (title !== undefined ? title : description)?.trim()
 
     if (!type || !amount || !category) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+
+    if (!titleValue) {
+      return NextResponse.json({ error: 'Title is required' }, { status: 400 })
     }
 
     const numericAmount = parseFloat(amount)
@@ -234,16 +247,20 @@ export async function POST(request: NextRequest) {
         type,
         amount: numericAmount,
         category,
-        description,
-        paymentMethod,
-        source,
+        title: titleValue,
+        notes: notes ? String(notes).trim() : null,
+        paymentMethod: paymentMethod || null,
+        source: source || null,
         date: validDate,
-        recurringTransactionId,
+        recurringTransactionId: recurringTransactionId || null,
         userId: currentUserId
       }
     })
 
-    return NextResponse.json(transaction)
+    return NextResponse.json({
+      ...transaction,
+      description: transaction.title
+    })
   } catch (error) {
     console.error('Error creating transaction:', error)
     return NextResponse.json({ error: 'Failed to create transaction' }, { status: 500 })
@@ -305,7 +322,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id, type, amount, category, description, paymentMethod, source, date } = await request.json()
+    const { id, type, amount, category, title, description, notes, paymentMethod, source, date } = await request.json()
 
     if (!id) {
       return NextResponse.json({ error: 'Transaction ID is required' }, { status: 400 })
@@ -346,20 +363,29 @@ export async function PATCH(request: NextRequest) {
       })
     }
 
+    const rawTitle = title !== undefined ? title : description
+    if (rawTitle !== undefined && (!rawTitle || !rawTitle.trim())) {
+      return NextResponse.json({ error: 'Title cannot be empty' }, { status: 400 })
+    }
+
     const updatedTransaction = await prisma.transaction.update({
       where: { id },
       data: {
         type: type || existingTransaction.type,
         amount: numericAmount,
         category,
-        description: description || null,
-        paymentMethod: paymentMethod || null,
-        source: source || null,
+        title: rawTitle !== undefined ? rawTitle.trim() : existingTransaction.title,
+        notes: notes !== undefined ? (notes ? String(notes).trim() : null) : existingTransaction.notes,
+        paymentMethod: paymentMethod !== undefined ? (paymentMethod || null) : existingTransaction.paymentMethod,
+        source: source !== undefined ? (source || null) : existingTransaction.source,
         date: date ? new Date(date) : existingTransaction.date,
       }
     })
 
-    return NextResponse.json(updatedTransaction)
+    return NextResponse.json({
+      ...updatedTransaction,
+      description: updatedTransaction.title
+    })
   } catch (error) {
     console.error('Error updating transaction:', error)
     return NextResponse.json({ error: 'Failed to update transaction' }, { status: 500 })

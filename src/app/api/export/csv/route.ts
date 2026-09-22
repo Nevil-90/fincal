@@ -25,7 +25,8 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search')
     if (search) {
       where.OR = [
-        { description: { contains: search, mode: 'insensitive' } },
+        { title: { contains: search, mode: 'insensitive' } },
+        { notes: { contains: search, mode: 'insensitive' } },
         { category: { contains: search, mode: 'insensitive' } }
       ]
     }
@@ -74,7 +75,8 @@ export async function GET(request: NextRequest) {
         type: true,
         category: true,
         amount: true,
-        description: true,
+        title: true,
+        notes: true,
         paymentMethod: true,
         source: true,
       }
@@ -114,7 +116,8 @@ export async function GET(request: NextRequest) {
         Date: new Date(t.date).toLocaleDateString('en-US'),
         Type: t.type.toUpperCase(),
         Category: t.category,
-        Description: t.description || '',
+        Title: t.title || '',
+        Notes: t.notes || '',
         'Payment Method': t.paymentMethod || '',
         Source: t.source || '',
         'Debit (-)': t.type === 'expense' ? amount.toFixed(2) : '',
@@ -128,7 +131,8 @@ export async function GET(request: NextRequest) {
         Date: new Date(where.date.gte).toLocaleDateString('en-US'),
         Type: 'SYSTEM',
         Category: 'Opening Balance',
-        Description: 'Opening Balance',
+        Title: 'Opening Balance',
+        Notes: '',
         'Payment Method': '',
         Source: '',
         'Debit (-)': '',
@@ -137,7 +141,7 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    const fields = ['Date', 'Type', 'Category', 'Description', 'Payment Method', 'Source', 'Debit (-)', 'Credit (+)', 'Balance']
+    const fields = ['Date', 'Type', 'Category', 'Title', 'Notes', 'Payment Method', 'Source', 'Debit (-)', 'Credit (+)', 'Balance']
     const parser = new Parser({ fields })
     const csv = parser.parse(csvData)
 

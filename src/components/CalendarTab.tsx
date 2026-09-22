@@ -51,7 +51,9 @@ interface Transaction {
   type: 'income' | 'expense'
   amount: number
   category: string
-  description: string | null
+  title?: string
+  description?: string | null
+  notes?: string | null
   paymentMethod: string | null
   source: string | null
   date: string
@@ -172,7 +174,7 @@ function CalendarTab({}: CalendarTabProps) {
       if (typeFilter === 'income' && t.type !== 'income') return false
       if (typeFilter === 'expense' && t.type !== 'expense') return false
       if (q) {
-        const haystack = [t.category, t.description || '', t.paymentMethod || '', t.source || ''].join(' ').toLowerCase()
+        const haystack = [t.category, t.title || '', t.description || '', t.notes || '', t.paymentMethod || '', t.source || ''].join(' ').toLowerCase()
         if (!haystack.includes(q)) return false
       }
       return true
@@ -276,7 +278,7 @@ function CalendarTab({}: CalendarTabProps) {
         className={`w-full flex items-center gap-1.5 px-2 py-1 rounded-lg text-[11px] font-semibold truncate transition-colors ${theme.bg} ${theme.text} ${theme.hoverBg}`}
       >
         <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${theme.dot}`} />
-        <span className="truncate">{t.description || t.category}</span>
+        <span className="truncate">{t.title || t.description || t.category}</span>
         <span className={`ml-auto font-bold whitespace-nowrap ${t.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'}`}>
           {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
         </span>
@@ -297,7 +299,7 @@ function CalendarTab({}: CalendarTabProps) {
           <Icon className="h-4 w-4" />
         </div>
         <div className="flex-1 text-left min-w-0">
-          <p className={`text-sm font-bold truncate ${theme.text}`}>{t.description || t.category}</p>
+          <p className={`text-sm font-bold truncate ${theme.text}`}>{t.title || t.description || t.category}</p>
           <p className="text-[11px] text-slate-500 dark:text-neutral-400 mt-0.5">{t.category} · {format(new Date(t.date), 'hh:mm a')}</p>
         </div>
         <div className="text-right shrink-0">
@@ -687,7 +689,7 @@ function CalendarTab({}: CalendarTabProps) {
                       >
                         <div className={`h-2 w-2 rounded-full shrink-0 ${theme.dot}`} />
                         <div className="flex-1 text-left min-w-0">
-                          <p className={`text-xs font-bold truncate ${theme.text}`}>{t.description || t.category}</p>
+                          <p className={`text-xs font-bold truncate ${theme.text}`}>{t.title || t.description || t.category}</p>
                           <p className="text-[10px] text-slate-500 dark:text-neutral-400 mt-0.5">
                             {daysAway === 0 ? 'Today' : daysAway === 1 ? 'Tomorrow' : `In ${daysAway} days`}
                           </p>
@@ -819,10 +821,16 @@ function CalendarTab({}: CalendarTabProps) {
                         <p className="text-[10px] font-bold text-slate-400 dark:text-neutral-500 uppercase tracking-wider">Payment</p>
                         <p className="text-sm font-bold text-slate-900 dark:text-white mt-1">{t.paymentMethod || '—'}</p>
                       </div>
-                      {t.description && (
+                      {(t.title || t.description) && (
                         <div className="col-span-2 p-3 rounded-xl bg-slate-50 dark:bg-neutral-800 border border-slate-100 dark:border-neutral-700">
-                          <p className="text-[10px] font-bold text-slate-400 dark:text-neutral-500 uppercase tracking-wider">Description</p>
-                          <p className="text-sm text-slate-700 dark:text-neutral-300 mt-1">{t.description}</p>
+                          <p className="text-[10px] font-bold text-slate-400 dark:text-neutral-500 uppercase tracking-wider">Title</p>
+                          <p className="text-sm font-semibold text-slate-900 dark:text-white mt-1">{t.title || t.description}</p>
+                        </div>
+                      )}
+                      {t.notes && (
+                        <div className="col-span-2 p-3 rounded-xl bg-slate-50 dark:bg-neutral-800 border border-slate-100 dark:border-neutral-700">
+                          <p className="text-[10px] font-bold text-slate-400 dark:text-neutral-500 uppercase tracking-wider">Notes</p>
+                          <p className="text-sm text-slate-700 dark:text-neutral-300 mt-1 whitespace-pre-wrap">{t.notes}</p>
                         </div>
                       )}
                       {t.source && (
@@ -857,15 +865,13 @@ function CalendarTab({}: CalendarTabProps) {
       )}
       
       {addRecDate && (
-        <div className="fixed inset-0 z-[300]">
-          <RecurringForm
-            formData={recFormData}
-            setFormData={setRecFormData}
-            onSubmit={handleAddRecurringSubmit}
-            onCancel={() => setAddRecDate(null)}
-            formLoading={recFormLoading}
-          />
-        </div>
+        <RecurringForm
+          formData={recFormData}
+          setFormData={setRecFormData}
+          onSubmit={handleAddRecurringSubmit}
+          onCancel={() => setAddRecDate(null)}
+          formLoading={recFormLoading}
+        />
       )}
     </div>
   )

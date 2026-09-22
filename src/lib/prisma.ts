@@ -19,14 +19,20 @@ const globalForPrisma = globalThis as unknown as {
 }
 
 // Reuse a single connection across hot-reloads in development and across
-// requests within a container in production.
-const staleInstance = globalForPrisma.prisma
-const isStale = staleInstance && !('userSetting' in staleInstance)
+// requests within a container in production, invalidating if schema changes.
+const SCHEMA_VERSION = '2026-09-22-title-notes'
+const staleInstance = globalForPrisma.prisma as any
+const isStale = !staleInstance || staleInstance._schemaVersion !== SCHEMA_VERSION || !('userSetting' in staleInstance)
 
-if (!staleInstance || isStale) {
-  globalForPrisma.prisma = new PrismaClient({
+if (isStale) {
+  if (staleInstance && typeof staleInstance.$disconnect === 'function') {
+    try { staleInstance.$disconnect() } catch {}
+  }
+  const newClient = new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['warn', 'error'] : [],
   })
+  ;(newClient as any)._schemaVersion = SCHEMA_VERSION
+  globalForPrisma.prisma = newClient
 }
 const activePrisma = globalForPrisma.prisma!
 

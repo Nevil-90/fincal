@@ -369,8 +369,7 @@ export default function PaginatedRecurringTransactions() {
       })
 
       if (response.ok) {
-        const result = await response.json()
-        showToast(`Recurring transaction created successfully!\n\n${result.message || 'Transaction will be processed automatically.'}`, 'success')
+        showToast('Recurring transaction created successfully', 'success')
 
         // Reset form
         setFormData({

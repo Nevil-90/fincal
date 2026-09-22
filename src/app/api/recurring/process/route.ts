@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
           type: rt.type,
           amount: Number(rt.amount),
           category: rt.category,
-          description: rt.description,
+          title: rt.description || rt.category || 'Recurring Transaction',
           paymentMethod: rt.paymentMethod,
           source: rt.source,
           recurringTransactionId: rt.id,

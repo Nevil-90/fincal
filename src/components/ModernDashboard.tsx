@@ -64,7 +64,9 @@ interface Transaction {
   type: 'income' | 'expense'
   amount: number
   category: string
-  description: string | null
+  title?: string
+  description?: string | null
+  notes?: string | null
   paymentMethod: string | null
   source: string | null
   date: string

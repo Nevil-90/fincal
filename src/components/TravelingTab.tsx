@@ -5,7 +5,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
-import { Plus, Car, Fuel, TrendingUp } from 'lucide-react'
+import { Plus, Car, Fuel, TrendingUp, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatCurrency } from '@/lib/financial-utils'
 import { useScrollLock } from '@/hooks/useScrollLock'
