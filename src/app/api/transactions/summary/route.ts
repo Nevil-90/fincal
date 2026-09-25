@@ -95,25 +95,25 @@ export async function GET(request: NextRequest) {
       const year = parseInt(yearParam, 10)
       const isAllYear = !monthParam
 
-      const startDate = isAllYear ? new Date(year, 0, 1) : new Date(year, parseInt(monthParam, 10) - 1, 1)
-      const endDate = isAllYear ? new Date(year, 11, 31, 23, 59, 59, 999) : new Date(year, parseInt(monthParam, 10), 0, 23, 59, 59, 999)
+      const startDate = isAllYear ? new Date(Date.UTC(year, 0, 1, 0, 0, 0, 0)) : new Date(Date.UTC(year, parseInt(monthParam, 10) - 1, 1, 0, 0, 0, 0))
+      const endDate = isAllYear ? new Date(Date.UTC(year, 11, 31, 23, 59, 59, 999)) : new Date(Date.UTC(year, parseInt(monthParam, 10), 0, 23, 59, 59, 999))
 
       const prevStartDate = isAllYear 
-        ? new Date(year - 1, 0, 1) 
+        ? new Date(Date.UTC(year - 1, 0, 1, 0, 0, 0, 0)) 
         : (() => {
             const m = parseInt(monthParam, 10)
             const prevMonth = m === 1 ? 12 : m - 1
             const prevYear = m === 1 ? year - 1 : year
-            return new Date(prevYear, prevMonth - 1, 1)
+            return new Date(Date.UTC(prevYear, prevMonth - 1, 1, 0, 0, 0, 0))
           })()
 
       const prevEndDate = isAllYear
-        ? new Date(year - 1, 11, 31, 23, 59, 59, 999)
+        ? new Date(Date.UTC(year - 1, 11, 31, 23, 59, 59, 999))
         : (() => {
             const m = parseInt(monthParam, 10)
             const prevMonth = m === 1 ? 12 : m - 1
             const prevYear = m === 1 ? year - 1 : year
-            return new Date(prevYear, prevMonth, 0, 23, 59, 59, 999)
+            return new Date(Date.UTC(prevYear, prevMonth, 0, 23, 59, 59, 999))
           })()
 
       const [periodGrouped, prevExpenseAgg, categoryAgg, categoryIncomeAgg] = await Promise.all([

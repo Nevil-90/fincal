@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
     if (startDate || endDate) {
       whereClause.date = {}
       if (startDate) {
-        const d = new Date(startDate)
+        const d = new Date(startDate.includes('T') ? startDate : `${startDate}T00:00:00.000Z`)
         if (!isNaN(d.getTime())) whereClause.date.gte = d
         else return NextResponse.json({ success: false, error: 'Invalid startDate', code: 'INVALID_START_DATE' }, { status: 400 })
       }
@@ -116,8 +116,8 @@ export async function GET(request: NextRequest) {
       const year = parseInt(yearParam, 10)
       const month = parseInt(monthParam, 10) - 1
       if (isNaN(year) || isNaN(month)) return NextResponse.json({ success: false, error: 'Invalid month or year', code: 'INVALID_PERIOD' }, { status: 400 })
-      const startOfMonth = new Date(year, month, 1)
-      const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59, 999)
+      const startOfMonth = new Date(Date.UTC(year, month, 1, 0, 0, 0, 0))
+      const endOfMonth = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59, 999))
       
       whereClause.date = {
         gte: startOfMonth,
@@ -126,8 +126,8 @@ export async function GET(request: NextRequest) {
     } else if (yearParam && !monthParam) {
       const year = parseInt(yearParam, 10)
       if (isNaN(year)) return NextResponse.json({ success: false, error: 'Invalid year', code: 'INVALID_YEAR' }, { status: 400 })
-      const startOfYear = new Date(year, 0, 1)
-      const endOfYear = new Date(year, 11, 31, 23, 59, 59, 999)
+      const startOfYear = new Date(Date.UTC(year, 0, 1, 0, 0, 0, 0))
+      const endOfYear = new Date(Date.UTC(year, 11, 31, 23, 59, 59, 999))
       
       whereClause.date = {
         gte: startOfYear,

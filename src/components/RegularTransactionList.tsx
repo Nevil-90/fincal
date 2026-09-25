@@ -27,11 +27,11 @@ import {
 } from './TransactionFilters'
 import { TransactionPagination } from './TransactionPagination'
 import TransactionDetailDrawer from './transactions/TransactionDetailDrawer'
-import { useTransactions, useGoals } from '@/hooks/useApi'
+import { useTransactions, useGoals, useTransactionSummary } from '@/hooks/useApi'
 import { useEnhancedStaticData } from '@/lib/enhanced-static-data-manager'
 import CustomDateField from '@/components/ui/CustomDateField'
 import CustomSelect from '@/components/ui/CustomSelect'
-import { formatDateForDisplay } from '@/lib/dateUtils'
+import { formatDateForDisplay, formatToDateString, parseLocalDate } from '@/lib/dateUtils'
 
 export interface Transaction {
   id: string
@@ -208,6 +208,10 @@ export default function RegularTransactionList({
     apiFilters
   )
 
+  const activeMonthNumber = selectedMonth !== undefined ? selectedMonth + 1 : new Date().getMonth() + 1
+  const activeYearNumber = selectedYear !== undefined ? selectedYear : new Date().getFullYear()
+  const { summary: monthSummary } = useTransactionSummary(activeMonthNumber, activeYearNumber, true)
+
   const categoryOptions = useMemo(() => {
     const staticNames = [
       ...(staticData?.expenseCategories || []),
@@ -344,6 +348,14 @@ export default function RegularTransactionList({
   const netAmount = totalIncome - totalExpenses
   const expenseCount = filteredTransactions.filter(t => t.type === 'expense').length
   const avgExpense = expenseCount > 0 ? Math.round(totalExpenses / expenseCount) : 0
+
+  const monthSpend = monthSummary?.period?.expense !== undefined ? monthSummary.period.expense : totalExpenses
+  const monthEarned = monthSummary?.period?.income !== undefined ? monthSummary.period.income : totalIncome
+  const monthBalance = monthSummary?.period?.balance !== undefined ? monthSummary.period.balance : netAmount
+  const monthLabel = useMemo(() => {
+    const d = new Date(activeYearNumber, activeMonthNumber - 1, 1)
+    return d.toLocaleDateString('en-US', { month: 'short' })
+  }, [activeMonthNumber, activeYearNumber])
 
   const handleColumnSort = (column: 'date' | 'title' | 'category' | 'amount') => {
     if (column === 'date') {
@@ -615,7 +627,7 @@ export default function RegularTransactionList({
 
     const headers = ['Date', 'Title/Description', 'Type', 'Category', 'Amount', 'Payment Method', 'Source', 'Notes', 'Recurring']
     const rows = selectedList.map(t => [
-      new Date(t.date).toISOString().split('T')[0],
+      t.date ? formatToDateString(new Date(t.date)) : '',
       `"${(t.title || t.description || '').replace(/"/g, '""')}"`,
       t.type,
       `"${(t.category || '').replace(/"/g, '""')}"`,
@@ -630,7 +642,7 @@ export default function RegularTransactionList({
     const encodedUri = encodeURI(csvContent)
     const link = document.createElement('a')
     link.setAttribute('href', encodedUri)
-    link.setAttribute('download', `fincal_transactions_${new Date().toISOString().split('T')[0]}.csv`)
+    link.setAttribute('download', `fincal_transactions_${formatToDateString(new Date())}.csv`)
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -783,20 +795,24 @@ export default function RegularTransactionList({
     const map = new Map<string, { dateKey: string; label: string; subtotal: number; items: Transaction[] }>()
 
     const now = new Date()
-    const todayStr = now.toISOString().split('T')[0]
+    const todayStr = formatToDateString(now)
     const yesterday = new Date(now)
     yesterday.setDate(yesterday.getDate() - 1)
-    const yesterdayStr = yesterday.toISOString().split('T')[0]
+    const yesterdayStr = formatToDateString(yesterday)
 
     paginatedTransactions.forEach(t => {
-      const dateKey = t.date ? t.date.split('T')[0] : 'unknown'
+      const dateKey = t.date
+        ? (typeof t.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(t.date)
+            ? t.date
+            : formatToDateString(new Date(t.date)))
+        : 'unknown'
       let label = dateKey
       if (dateKey === todayStr) {
         label = 'Today'
       } else if (dateKey === yesterdayStr) {
         label = 'Yesterday'
       } else if (dateKey !== 'unknown') {
-        const d = new Date(t.date)
+        const d = parseLocalDate(dateKey) || new Date(t.date)
         label = d.toLocaleDateString('en-US', {
           weekday: 'short',
           month: 'short',
@@ -909,8 +925,8 @@ export default function RegularTransactionList({
           setDensity={setDensity}
         />
 
-        {/* Integrated Ledger Status Ribbon / Executive KPI Strip */}
-        <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 bg-slate-50/70 dark:bg-white/[0.02] border-b border-slate-200/70 dark:border-white/[0.06] text-xs">
+        {/* Desktop Ledger Status Ribbon (hidden on mobile) */}
+        <div className="hidden md:flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 bg-slate-50/70 dark:bg-white/[0.02] border-b border-slate-200/70 dark:border-white/[0.06] text-xs">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-bold text-slate-400 dark:text-neutral-500 uppercase text-[10px] tracking-wider">
               Period:
@@ -952,6 +968,55 @@ export default function RegularTransactionList({
               <span className={`font-black ${netAmount >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                 {netAmount >= 0 ? '+' : ''}{formatCurrency(netAmount)}
               </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Glanceable Monthly Cashflow Card (visible only on mobile) */}
+        <div className="block md:hidden px-3.5 py-2.5 bg-slate-50/70 dark:bg-[#151518]/70 border-b border-slate-200/70 dark:border-white/[0.06]">
+          <div className="flex items-center justify-between pb-1.5 px-0.5">
+            <div className="flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-blue-500 shrink-0" />
+              <span className="text-[11px] font-bold text-slate-700 dark:text-neutral-300 uppercase tracking-wider">
+                {monthLabel} Cashflow
+              </span>
+            </div>
+            <div className="text-[11px] font-semibold tabular-nums text-slate-500 dark:text-neutral-400">
+              Net: <span className={`font-bold ${monthBalance >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                {monthBalance >= 0 ? '+' : ''}{formatCurrency(monthBalance)}
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            {/* Outflow / Total Spent */}
+            <div className="flex items-center gap-2 p-2 rounded-xl bg-rose-500/[0.06] dark:bg-rose-500/[0.1] border border-rose-200/70 dark:border-rose-900/40">
+              <div className="h-7 w-7 rounded-lg bg-rose-500/15 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+                <ArrowUpRight className="h-3.5 w-3.5 stroke-[2.5]" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-[10px] font-semibold text-rose-600/90 dark:text-rose-400/90 uppercase tracking-wider">
+                  Spent
+                </div>
+                <div className="text-xs sm:text-[13px] font-bold text-rose-700 dark:text-rose-300 tabular-nums truncate">
+                  {formatCurrency(monthSpend)}
+                </div>
+              </div>
+            </div>
+
+            {/* Inflow / Total Earned */}
+            <div className="flex items-center gap-2 p-2 rounded-xl bg-emerald-500/[0.06] dark:bg-emerald-500/[0.1] border border-emerald-200/70 dark:border-emerald-900/40">
+              <div className="h-7 w-7 rounded-lg bg-emerald-500/15 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                <ArrowDownLeft className="h-3.5 w-3.5 stroke-[2.5]" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-[10px] font-semibold text-emerald-600/90 dark:text-emerald-400/90 uppercase tracking-wider">
+                  Earned
+                </div>
+                <div className="text-xs sm:text-[13px] font-bold text-emerald-700 dark:text-emerald-300 tabular-nums truncate">
+                  +{formatCurrency(monthEarned)}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1153,7 +1218,7 @@ export default function RegularTransactionList({
                           </td>
                           <td className={`px-4 ${density === 'compact' ? 'py-1.5' : 'py-2.5'} text-right whitespace-nowrap`}>
                             <span className={`text-xs sm:text-sm font-bold tabular-nums tracking-tight ${
-                              isIncome ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-900 dark:text-white'
+                              isIncome ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
                             }`}>
                               {isIncome ? '+' : '-'}{formatCurrency(transaction.amount)}
                             </span>
@@ -1211,17 +1276,17 @@ export default function RegularTransactionList({
                 ) : dateGroupedTransactions.map((group) => (
                   <div key={group.dateKey} className="relative">
                     {/* Connected Date Group Header */}
-                    <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-1.5 bg-slate-50/90 dark:bg-[#151518]/95 backdrop-blur border-b border-slate-100 dark:border-white/[0.04] text-xs font-semibold">
+                    <div className="sticky top-0 z-10 flex items-center justify-between px-3.5 py-1.5 bg-slate-50/95 dark:bg-[#151518]/95 backdrop-blur-xs border-b border-slate-100 dark:border-white/[0.04] text-xs font-semibold">
                       <div className="flex items-center gap-2">
-                        <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-blue-500 shrink-0" />
                         <span className="text-slate-900 dark:text-white font-bold">{group.label}</span>
                         <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-200/70 dark:bg-white/[0.06] text-slate-600 dark:text-neutral-400 tabular-nums font-semibold">
                           {group.items.length} {group.items.length === 1 ? 'item' : 'items'}
                         </span>
                       </div>
                       <div className="tabular-nums font-bold text-xs">
-                        <span className={group.subtotal >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-neutral-400'}>
-                          {group.subtotal >= 0 ? '+' : ''}{formatCurrency(group.subtotal)}
+                        <span className={group.subtotal > 0 ? 'text-emerald-600 dark:text-emerald-400' : group.subtotal < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500 dark:text-neutral-400'}>
+                          {group.subtotal > 0 ? '+' : ''}{formatCurrency(group.subtotal)}
                         </span>
                       </div>
                     </div>
@@ -1234,103 +1299,114 @@ export default function RegularTransactionList({
                         const isIncome = transaction.type === 'income'
                         const isSelected = selectedTransactions.has(transaction.id)
 
+                        // Format time if timestamp exists and is non-midnight
+                        let timeStr: string | null = null
+                        if (transaction.date) {
+                          const d = new Date(transaction.date)
+                          if (!isNaN(d.getTime()) && !transaction.date.includes('T00:00:00') && (d.getHours() !== 0 || d.getMinutes() !== 0)) {
+                            timeStr = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })
+                          }
+                        }
+
                         return (
                           <div
                             key={transaction.id}
-                            onClick={() => setInspectingTransaction(transaction)}
-                            className={`group flex items-center gap-3 px-4 ${density === 'compact' ? 'py-1.5' : 'py-2.5'} hover:bg-slate-50/90 dark:hover:bg-[#18181d] cursor-pointer transition-colors ${
-                              isSelected ? 'bg-blue-50/30 dark:bg-blue-950/20' : ''
+                            onClick={() => {
+                              if (selectedTransactions.size > 0) {
+                                handleSelectTransaction(transaction.id)
+                              } else {
+                                setInspectingTransaction(transaction)
+                              }
+                            }}
+                            className={`group relative flex items-center gap-2.5 px-3.5 ${
+                              density === 'compact' ? 'py-1.5' : 'py-2.5'
+                            } hover:bg-slate-50/90 dark:hover:bg-[#18181d] active:bg-slate-100/70 dark:active:bg-[#1e1e23] cursor-pointer transition-colors ${
+                              isSelected ? 'bg-blue-50/50 dark:bg-blue-950/25' : ''
                             }`}
                           >
-                            {/* Checkbox */}
-                            <div onClick={e => e.stopPropagation()} className="flex items-center shrink-0">
-                              <input
-                                type="checkbox"
-                                checked={isSelected}
-                                onChange={() => handleSelectTransaction(transaction.id)}
-                                className="h-3.5 w-3.5 rounded border-slate-300 dark:border-neutral-700 bg-white dark:bg-[#18181b] text-blue-600 focus:ring-blue-500 cursor-pointer"
-                              />
-                            </div>
+                            {/* Interactive Category Avatar with Built-in Selection State */}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleSelectTransaction(transaction.id)
+                              }}
+                              className={`relative rounded-xl flex items-center justify-center shrink-0 border transition-all cursor-pointer ${
+                                density === 'compact' ? 'h-7 w-7' : 'h-8 w-8'
+                              } ${
+                                isSelected
+                                  ? 'bg-blue-600 border-blue-600 text-white shadow-xs'
+                                  : `${visual.bg} border-slate-200/60 dark:border-white/[0.08]`
+                              }`}
+                              title={isSelected ? 'Deselect' : 'Select'}
+                            >
+                              {isSelected ? (
+                                <Check className={density === 'compact' ? 'h-3.5 w-3.5 stroke-[2.5]' : 'h-4 w-4 stroke-[2.5]'} />
+                              ) : (
+                                <VisualIcon className={density === 'compact' ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
+                              )}
+                            </button>
 
-                            {/* Compact Category Icon */}
-                            <div className={`${density === 'compact' ? 'h-6 w-6' : 'h-7 w-7'} rounded-lg flex items-center justify-center shrink-0 border ${visual.bg}`}>
-                              <VisualIcon className={density === 'compact' ? 'h-3 w-3' : 'h-3.5 w-3.5'} />
-                            </div>
-
-                            {/* Middle Information */}
+                            {/* Middle Information (Generous Horizontal Space) */}
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-1.5">
-                                <span className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white group-hover:text-blue-500 transition-colors truncate">
+                              {/* Line 1: Title + Context Badges */}
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <span className="text-[13px] font-semibold text-slate-900 dark:text-white group-hover:text-blue-500 transition-colors truncate">
                                   {transaction.title || transaction.description || 'Untitled Transaction'}
                                 </span>
                                 {transaction.recurringTransactionId && (
-                                  <span className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/40">
+                                  <span className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/40 shrink-0">
                                     <RefreshCw className="h-2 w-2" />
-                                    Recurring
+                                    Auto
+                                  </span>
+                                )}
+                                {transaction.goalContribution && (
+                                  <span className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/40 shrink-0">
+                                    Goal
                                   </span>
                                 )}
                               </div>
 
-                              <div className="flex items-center gap-1.5 text-[11px] text-slate-400 dark:text-neutral-500 truncate mt-0.5">
-                                <span className="font-medium text-slate-600 dark:text-neutral-400">
+                              {/* Line 2: Category · Payment Method · Source */}
+                              <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-neutral-400 truncate mt-0.5">
+                                <span className="font-medium text-slate-700 dark:text-neutral-300 truncate">
                                   {transaction.category}
                                 </span>
                                 {transaction.paymentMethod && (
                                   <>
-                                    <span>·</span>
-                                    <span>{transaction.paymentMethod}</span>
+                                    <span className="text-slate-300 dark:text-neutral-600">·</span>
+                                    <span className="truncate">{transaction.paymentMethod}</span>
                                   </>
                                 )}
-                                {transaction.notes && density === 'comfortable' && (
+                                {transaction.source && transaction.source !== transaction.paymentMethod && (
                                   <>
-                                    <span>·</span>
-                                    <span className="flex items-center gap-1 text-slate-400 dark:text-neutral-500 truncate max-w-[180px]" title={transaction.notes}>
-                                      <FileText className="h-2.5 w-2.5 shrink-0" />
-                                      <span className="truncate">{transaction.notes}</span>
-                                    </span>
+                                    <span className="text-slate-300 dark:text-neutral-600">·</span>
+                                    <span className="truncate text-slate-400 dark:text-neutral-500">{transaction.source}</span>
                                   </>
                                 )}
                               </div>
+
+                              {/* Line 3: Notes preview (Comfortable density only) */}
+                              {transaction.notes && density === 'comfortable' && (
+                                <div className="flex items-center gap-1 text-[11px] text-slate-400 dark:text-neutral-500 truncate mt-0.5 italic">
+                                  <FileText className="h-2.5 w-2.5 shrink-0 text-slate-400 dark:text-neutral-500" />
+                                  <span className="truncate">{transaction.notes}</span>
+                                </div>
+                              )}
                             </div>
 
-                            {/* Right Amount & Actions */}
-                            <div className="flex items-center gap-2.5 shrink-0">
-                              <div className="text-right">
-                                <span className={`text-xs sm:text-sm font-bold tabular-nums tracking-tight ${
-                                  isIncome ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-900 dark:text-white'
-                                }`}>
-                                  {isIncome ? '+' : '-'}{formatCurrency(transaction.amount)}
+                            {/* Right Amount & Time */}
+                            <div className="flex flex-col items-end justify-center shrink-0 pl-1.5 text-right">
+                              <span className={`text-[13px] sm:text-sm font-bold tabular-nums tracking-tight ${
+                                isIncome ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+                              }`}>
+                                {isIncome ? '+' : '-'}{formatCurrency(transaction.amount)}
+                              </span>
+                              {timeStr && (
+                                <span className="text-[10px] text-slate-400 dark:text-neutral-500 tabular-nums mt-0.5 font-medium">
+                                  {timeStr}
                                 </span>
-                              </div>
-
-                              <div onClick={e => e.stopPropagation()} className="hidden sm:flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button
-                                  type="button"
-                                  onClick={() => setEditingTransaction(transaction)}
-                                  className="p-1 rounded-lg text-slate-400 hover:text-blue-500 hover:bg-slate-100 dark:hover:bg-[#202024] transition-colors cursor-pointer"
-                                  title="Edit"
-                                >
-                                  <Edit2 className="w-3 h-3" />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => duplicateTransaction(transaction)}
-                                  className="p-1 rounded-lg text-slate-400 hover:text-emerald-500 hover:bg-slate-100 dark:hover:bg-[#202024] transition-colors cursor-pointer"
-                                  title="Duplicate"
-                                >
-                                  <Copy className="w-3 h-3" />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => deleteTransaction(transaction.id)}
-                                  className="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-[#202024] transition-colors cursor-pointer"
-                                  title="Delete"
-                                >
-                                  <Trash2 className="w-3 h-3" />
-                                </button>
-                              </div>
-
-                              <ChevronRight className="w-3.5 h-3.5 text-slate-300 dark:text-neutral-600 group-hover:text-slate-500 dark:group-hover:text-neutral-400 transition-colors" />
+                              )}
                             </div>
                           </div>
                         )
@@ -1380,37 +1456,90 @@ export default function RegularTransactionList({
                         const visual = resolveVisual(transaction.category, transaction.type)
                         const VisualIcon = visual.icon
                         const isIncome = transaction.type === 'income'
+                        const isSelected = selectedTransactions.has(transaction.id)
+
+                        let timeStr: string | null = null
+                        if (transaction.date) {
+                          const d = new Date(transaction.date)
+                          if (!isNaN(d.getTime()) && !transaction.date.includes('T00:00:00') && (d.getHours() !== 0 || d.getMinutes() !== 0)) {
+                            timeStr = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })
+                          }
+                        }
 
                         return (
                           <div
                             key={transaction.id}
-                            onClick={() => setInspectingTransaction(transaction)}
-                            className="group flex items-center gap-3 px-4 py-2 hover:bg-slate-50/90 dark:hover:bg-[#18181d] cursor-pointer transition-colors"
+                            onClick={() => {
+                              if (selectedTransactions.size > 0) {
+                                handleSelectTransaction(transaction.id)
+                              } else {
+                                setInspectingTransaction(transaction)
+                              }
+                            }}
+                            className={`group relative flex items-center gap-2.5 px-3.5 py-2 hover:bg-slate-50/90 dark:hover:bg-[#18181d] active:bg-slate-100/70 dark:active:bg-[#1e1e23] cursor-pointer transition-colors ${
+                              isSelected ? 'bg-blue-50/50 dark:bg-blue-950/25' : ''
+                            }`}
                           >
-                            <div onClick={e => e.stopPropagation()} className="flex items-center shrink-0">
-                              <input
-                                type="checkbox"
-                                checked={selectedTransactions.has(transaction.id)}
-                                onChange={() => handleSelectTransaction(transaction.id)}
-                                className="h-3.5 w-3.5 rounded border-slate-300 dark:border-neutral-700 bg-white dark:bg-[#18181b] text-blue-600 focus:ring-blue-500 cursor-pointer"
-                              />
-                            </div>
-                            <div className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 border ${visual.bg}`}>
-                              <VisualIcon className="h-3.5 w-3.5" />
-                            </div>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleSelectTransaction(transaction.id)
+                              }}
+                              className={`relative rounded-xl flex items-center justify-center shrink-0 border transition-all cursor-pointer h-7 w-7 ${
+                                isSelected
+                                  ? 'bg-blue-600 border-blue-600 text-white shadow-xs'
+                                  : `${visual.bg} border-slate-200/60 dark:border-white/[0.08]`
+                              }`}
+                              title={isSelected ? 'Deselect' : 'Select'}
+                            >
+                              {isSelected ? (
+                                <Check className="h-3.5 w-3.5 stroke-[2.5]" />
+                              ) : (
+                                <VisualIcon className="h-3.5 w-3.5" />
+                              )}
+                            </button>
                             <div className="flex-1 min-w-0">
-                              <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white truncate">
-                                {transaction.title || transaction.description || 'Untitled Transaction'}
-                              </p>
-                              <p className="text-[11px] text-slate-400 dark:text-neutral-500 mt-0.5 truncate">
-                                {formatDateForDisplay(transaction.date)} · {transaction.category} {transaction.paymentMethod ? `· ${transaction.paymentMethod}` : ''}
-                              </p>
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <span className="text-[13px] font-semibold text-slate-900 dark:text-white group-hover:text-blue-500 transition-colors truncate">
+                                  {transaction.title || transaction.description || 'Untitled Transaction'}
+                                </span>
+                                {transaction.recurringTransactionId && (
+                                  <span className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/40 shrink-0">
+                                    <RefreshCw className="h-2 w-2" />
+                                    Auto
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-neutral-400 mt-0.5 truncate">
+                                <span>{formatDateForDisplay(transaction.date)}</span>
+                                <span className="text-slate-300 dark:text-neutral-600">·</span>
+                                <span className="font-medium text-slate-700 dark:text-neutral-300 truncate">{transaction.category}</span>
+                                {transaction.paymentMethod && (
+                                  <>
+                                    <span className="text-slate-300 dark:text-neutral-600">·</span>
+                                    <span className="truncate">{transaction.paymentMethod}</span>
+                                  </>
+                                )}
+                              </div>
+                              {transaction.notes && (
+                                <div className="flex items-center gap-1 text-[11px] text-slate-400 dark:text-neutral-500 truncate mt-0.5 italic">
+                                  <FileText className="h-2.5 w-2.5 shrink-0 text-slate-400 dark:text-neutral-500" />
+                                  <span className="truncate">{transaction.notes}</span>
+                                </div>
+                              )}
                             </div>
-                            <div className="flex items-center gap-2 shrink-0">
-                              <span className={`text-xs sm:text-sm font-bold tabular-nums ${isIncome ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-900 dark:text-white'}`}>
+                            <div className="flex flex-col items-end justify-center shrink-0 pl-1.5 text-right">
+                              <span className={`text-[13px] sm:text-sm font-bold tabular-nums tracking-tight ${
+                                isIncome ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+                              }`}>
                                 {isIncome ? '+' : '-'}{formatCurrency(transaction.amount)}
                               </span>
-                              <ChevronRight className="w-3.5 h-3.5 text-slate-300 dark:text-neutral-600" />
+                              {timeStr && (
+                                <span className="text-[10px] text-slate-400 dark:text-neutral-500 tabular-nums mt-0.5 font-medium">
+                                  {timeStr}
+                                </span>
+                              )}
                             </div>
                           </div>
                         )

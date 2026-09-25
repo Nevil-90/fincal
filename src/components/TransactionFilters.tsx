@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 import CustomSelect from '@/components/ui/CustomSelect'
 import CustomDateField from '@/components/ui/CustomDateField'
+import { formatToDateString } from '@/lib/dateUtils'
 
 export type DatePresetType = 'all' | 'this-month' | 'last-30' | 'last-month' | 'this-year' | 'custom'
 export type QuickPresetType = 'all' | 'high-value' | 'recurring' | 'notes'
@@ -152,23 +153,23 @@ export function TransactionFilters({
     } else if (preset === 'this-month') {
       const start = new Date(now.getFullYear(), now.getMonth(), 1)
       const end = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-      setStartDate(start.toISOString().split('T')[0])
-      setEndDate(end.toISOString().split('T')[0])
+      setStartDate(formatToDateString(start))
+      setEndDate(formatToDateString(end))
     } else if (preset === 'last-30') {
       const start = new Date(now)
       start.setDate(start.getDate() - 30)
-      setStartDate(start.toISOString().split('T')[0])
-      setEndDate(now.toISOString().split('T')[0])
+      setStartDate(formatToDateString(start))
+      setEndDate(formatToDateString(now))
     } else if (preset === 'last-month') {
       const start = new Date(now.getFullYear(), now.getMonth() - 1, 1)
       const end = new Date(now.getFullYear(), now.getMonth(), 0)
-      setStartDate(start.toISOString().split('T')[0])
-      setEndDate(end.toISOString().split('T')[0])
+      setStartDate(formatToDateString(start))
+      setEndDate(formatToDateString(end))
     } else if (preset === 'this-year') {
       const start = new Date(now.getFullYear(), 0, 1)
       const end = new Date(now.getFullYear(), 11, 31)
-      setStartDate(start.toISOString().split('T')[0])
-      setEndDate(end.toISOString().split('T')[0])
+      setStartDate(formatToDateString(start))
+      setEndDate(formatToDateString(end))
     }
   }
 
@@ -374,7 +375,7 @@ export function TransactionFilters({
                 setMinAmount(e.target.value)
                 setCurrentPage(1)
               }}
-              className="w-full h-7 px-2.5 rounded-xl border border-slate-200/90 dark:border-white/[0.08] bg-slate-50 dark:bg-[#18181b] text-xs tabular-nums text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-blue-500"
+              className="w-full h-7 px-2.5 rounded-xl border border-slate-200/90 dark:border-white/[0.08] bg-slate-50 dark:bg-[#18181b] text-base sm:text-xs tabular-nums text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-blue-500"
             />
           </div>
 
@@ -391,7 +392,7 @@ export function TransactionFilters({
                 setMaxAmount(e.target.value)
                 setCurrentPage(1)
               }}
-              className="w-full h-7 px-2.5 rounded-xl border border-slate-200/90 dark:border-white/[0.08] bg-slate-50 dark:bg-[#18181b] text-xs tabular-nums text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-blue-500"
+              className="w-full h-7 px-2.5 rounded-xl border border-slate-200/90 dark:border-white/[0.08] bg-slate-50 dark:bg-[#18181b] text-base sm:text-xs tabular-nums text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-blue-500"
             />
           </div>
 
