@@ -48,7 +48,7 @@ export default React.memo(function SpendGauge({ pct }: SpendGaugeProps) {
       </svg>
       {/* Centered Text */}
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center select-none pointer-events-none">
-        <span className="text-2xl font-black font-mono tracking-tight text-slate-900 dark:text-white leading-none">
+        <span className="text-2xl font-black tabular-nums tracking-tight text-slate-900 dark:text-white leading-none">
           {Math.round(clamped)}%
         </span>
         <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-400 mt-1">

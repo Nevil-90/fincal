@@ -12,13 +12,17 @@ interface CategorySlice {
 interface CategoryDonutChartProps {
   slices: CategorySlice[]
   totalSpent: number
+  size?: number
 }
 
 export default React.memo(function CategoryDonutChart({
   slices,
-  totalSpent
+  totalSpent,
+  size = 110
 }: CategoryDonutChartProps) {
-  const r = 58
+  const center = size / 2
+  const strokeWidth = size >= 130 ? 12 : 9
+  const r = center - strokeWidth
   const circ = 2 * Math.PI * r
   let accumulated = 0
 
@@ -28,14 +32,14 @@ export default React.memo(function CategoryDonutChart({
 
   return (
     <div className="relative flex items-center justify-center shrink-0">
-      <svg width="150" height="150" viewBox="0 0 150 150" className="shrink-0 drop-shadow-sm">
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0 drop-shadow-sm">
         {/* Background Track */}
         <circle
-          cx="75"
-          cy="75"
+          cx={center}
+          cy={center}
           r={r}
           fill="none"
-          strokeWidth="12"
+          strokeWidth={strokeWidth}
           className="stroke-slate-100 dark:stroke-neutral-800"
         />
 
@@ -49,34 +53,32 @@ export default React.memo(function CategoryDonutChart({
           return (
             <circle
               key={`slice-${slice.name}-${idx}`}
-              cx="75"
-              cy="75"
+              cx={center}
+              cy={center}
               r={r}
               fill="none"
               stroke={slice.color}
-              strokeWidth="12"
+              strokeWidth={strokeWidth}
               strokeDasharray={`${strokeLength} ${circ}`}
               strokeDashoffset={offset}
               strokeLinecap="round"
-              transform="rotate(-90 75 75)"
-              style={{ transition: 'all 0.6s ease' }}
+              className="transition-all duration-500 ease-out"
+              transform={`rotate(-90 ${center} ${center})`}
             />
           )
         })}
       </svg>
 
-      {/* Center Label (Never Truncated) */}
-      <div
-        className="absolute inset-0 flex flex-col items-center justify-center text-center select-none pointer-events-none px-3"
-        title={fullFormatted}
-      >
-        <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-400">
-          Total Spent
+      {/* Center Metric Display */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center px-1">
+        <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-400 leading-none">
+          Total
         </span>
-        <span className={`font-black font-mono text-slate-900 dark:text-white leading-tight mt-0.5 ${
-          isLargeNumber ? 'text-sm sm:text-base' : 'text-base sm:text-lg'
-        }`}>
-          {totalSpent >= 1000000 ? formatCompactCurrency(totalSpent) : fullFormatted}
+        <span 
+          className="text-xs font-bold text-slate-900 dark:text-white tabular-nums tracking-tight leading-tight mt-0.5"
+          title={fullFormatted}
+        >
+          {isLargeNumber ? formatCompactCurrency(totalSpent) : fullFormatted}
         </span>
       </div>
     </div>

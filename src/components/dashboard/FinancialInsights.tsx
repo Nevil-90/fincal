@@ -137,20 +137,20 @@ export default function FinancialInsights({
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-900 bg-slate-950 p-5 text-white shadow-sm">
+      <section className="rounded-2xl border border-slate-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-5 shadow-sm text-slate-900 dark:text-white">
         <div className="mb-4">
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Actions</p>
-          <h3 className="mt-1 text-xl font-bold">Quick shortcuts</h3>
-          <p className="mt-1 text-sm text-slate-400">Manage entries faster.</p>
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400 dark:text-neutral-500">Actions</p>
+          <h3 className="mt-1 text-xl font-bold text-slate-900 dark:text-white">Quick shortcuts</h3>
+          <p className="mt-1 text-sm text-slate-500 dark:text-neutral-400">Manage entries faster.</p>
         </div>
 
         <div className="space-y-2">
           <button
             type="button"
             onClick={onShowAddTransaction}
-            className="flex w-full items-center gap-3 rounded-2xl bg-white dark:bg-neutral-900 px-4 py-3 text-left text-slate-950 dark:text-white transition hover:bg-blue-50"
+            className="flex w-full items-center gap-3 rounded-2xl bg-slate-50 dark:bg-neutral-800/60 border border-slate-200/80 dark:border-neutral-700/60 px-4 py-3 text-left text-slate-900 dark:text-white transition hover:bg-blue-50/80 dark:hover:bg-blue-900/20 cursor-pointer"
           >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-lg"><CreditCard className="h-5 w-5 text-blue-600" /></span>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-950/50 text-lg"><CreditCard className="h-5 w-5 text-blue-600 dark:text-blue-400" /></span>
             <span className="min-w-0">
               <span className="block font-bold">Add Transaction</span>
               <span className="block text-sm text-slate-500 dark:text-neutral-400">Record income or expense</span>
@@ -160,9 +160,9 @@ export default function FinancialInsights({
           <button
             type="button"
             onClick={() => onTabChange('goals')}
-            className="flex w-full items-center gap-3 rounded-2xl bg-white dark:bg-neutral-900 px-4 py-3 text-left text-slate-950 dark:text-white transition hover:bg-violet-50"
+            className="flex w-full items-center gap-3 rounded-2xl bg-slate-50 dark:bg-neutral-800/60 border border-slate-200/80 dark:border-neutral-700/60 px-4 py-3 text-left text-slate-900 dark:text-white transition hover:bg-violet-50/80 dark:hover:bg-violet-900/20 cursor-pointer"
           >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-100 text-lg"><Target className="h-5 w-5 text-violet-600" /></span>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-100 dark:bg-violet-950/50 text-lg"><Target className="h-5 w-5 text-violet-600 dark:text-violet-400" /></span>
             <span className="min-w-0">
               <span className="block font-bold">Manage Goals</span>
               <span className="block text-sm text-slate-500 dark:text-neutral-400">Track savings targets</span>
@@ -172,9 +172,9 @@ export default function FinancialInsights({
           <button
             type="button"
             onClick={() => onTabChange('recurring')}
-            className="flex w-full items-center gap-3 rounded-2xl bg-white dark:bg-neutral-900 px-4 py-3 text-left text-slate-950 dark:text-white transition hover:bg-emerald-50"
+            className="flex w-full items-center gap-3 rounded-2xl bg-slate-50 dark:bg-neutral-800/60 border border-slate-200/80 dark:border-neutral-700/60 px-4 py-3 text-left text-slate-900 dark:text-white transition hover:bg-emerald-50/80 dark:hover:bg-emerald-900/20 cursor-pointer"
           >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-lg"><RefreshCw className="h-5 w-5 text-emerald-600" /></span>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-950/50 text-lg"><RefreshCw className="h-5 w-5 text-emerald-600 dark:text-emerald-400" /></span>
             <span className="min-w-0">
               <span className="block font-bold">Setup Recurring</span>
               <span className="block text-sm text-slate-500 dark:text-neutral-400">Automate repeated entries</span>

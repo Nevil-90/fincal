@@ -8,17 +8,28 @@ import { useScrollLock } from '@/hooks/useScrollLock'
 import { useNavPreferences } from '@/hooks/useNavPreferences'
 
 import { formatCurrency } from '@/lib/financial-utils'
+import { formatDateForDisplay } from '@/lib/dateUtils'
 import { useUser, useTransactionSummary, useTransactions, useGoals } from '@/hooks/useApi'
 import { mutate } from 'swr'
 import dynamic from 'next/dynamic'
 import { motion, AnimatePresence } from 'framer-motion'
-import AddTransactionForm from './AddTransactionForm'
-const RegularTransactionList = dynamic(() => import('./RegularTransactionList'), { ssr: false, loading: () => <div className="animate-pulse bg-slate-100 dark:bg-neutral-800 rounded-2xl h-[400px] w-full mt-4" /> })
-const RecurringTransactions = dynamic(() => import('./RecurringTransactions'), { ssr: false, loading: () => <div className="animate-pulse bg-slate-100 dark:bg-neutral-800 rounded-2xl h-[400px] w-full mt-4" /> })
-const SavingsGoalsNew = dynamic(() => import('./SavingsGoalsNew'), { ssr: false })
-const TravelingTab = dynamic(() => import('./TravelingTab'), { ssr: false })
+import AddEntryDispatcherModal from './AddEntryDispatcherModal'
+import {
+  SkeletonDashboard,
+  SkeletonTransactions,
+  SkeletonRecurring,
+  SkeletonGoals,
+  SkeletonCalendar,
+  SkeletonTraveling,
+  SkeletonAnalytics
+} from './ui/SkeletonCard'
+
+const RegularTransactionList = dynamic(() => import('./RegularTransactionList'), { ssr: false, loading: () => <SkeletonTransactions /> })
+const RecurringTransactions = dynamic(() => import('./RecurringTransactions'), { ssr: false, loading: () => <SkeletonRecurring /> })
+const SavingsGoalsNew = dynamic(() => import('./SavingsGoalsNew'), { ssr: false, loading: () => <SkeletonGoals /> })
+const TravelingTab = dynamic(() => import('./TravelingTab'), { ssr: false, loading: () => <SkeletonTraveling /> })
 const SettingsPanel = dynamic(() => import('./SettingsPanel').then(mod => mod.SettingsPanel), { ssr: false })
-const CalendarTab = dynamic(() => import('./CalendarTab'), { ssr: false })
+const CalendarTab = dynamic(() => import('./CalendarTab'), { ssr: false, loading: () => <SkeletonCalendar /> })
 const AdminTab = dynamic(() => import('./dashboard/AdminTab'), { ssr: false })
 
 import BottomNav from './dashboard/BottomNav'
@@ -29,8 +40,7 @@ import Sidebar from './dashboard/Sidebar'
 import DashboardHeader from './dashboard/DashboardHeader'
 import OverviewTab from './dashboard/OverviewTab'
 import CustomSelect from '@/components/ui/CustomSelect'
-const AnalyticsTab = dynamic(() => import('./analytics/AnalyticsTab'), { ssr: false, loading: () => <div className="animate-pulse bg-slate-100 dark:bg-neutral-800 rounded-2xl h-[400px] w-full" /> })
-import { SkeletonDashboard } from './ui/SkeletonCard'
+const AnalyticsTab = dynamic(() => import('./analytics/AnalyticsTab'), { ssr: false, loading: () => <SkeletonAnalytics /> })
 
 
 interface SavingsGoal {
@@ -173,7 +183,7 @@ function ModernDashboardContent() {
 
     const latestTx = periodTxns?.[0]
     const latestDate = latestTx
-      ? new Date(latestTx.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+      ? formatDateForDisplay(latestTx.date, '—')
       : '—'
 
     return {
@@ -433,16 +443,18 @@ function ModernDashboardContent() {
     setShowAddTransaction(true)
   }, [])
 
+
+
   const handleOpenSettings = useCallback(() => {
     setIsSettingsOpen(true)
   }, [])
 
   if (loading) {
-    return <SkeletonDashboard />
+    return <SkeletonDashboard activeTab={activeTab} />
   }
 
   return (
-    <div className={`flex w-full bg-white dark:bg-neutral-950 text-slate-900 dark:text-neutral-100 transition-colors duration-200 ${
+    <div className={`flex w-full bg-white dark:bg-neutral-950 text-slate-900 dark:text-neutral-100 ${
       activeTab === 'overview' ? 'h-screen overflow-hidden' : 'min-h-screen'
     }`}>
 
@@ -454,13 +466,14 @@ function ModernDashboardContent() {
         user={user}
         onLogout={handleLogout}
         onClose={handleCloseSidebar}
+        onQuickAdd={handleShowAddTransaction}
       />
 
       <div className={`flex min-w-0 flex-1 flex-col relative ${
-        activeTab === 'overview' ? 'h-screen overflow-hidden' : 'min-h-screen'
+        activeTab === 'overview' ? 'h-[100dvh] md:h-screen overflow-hidden' : 'min-h-[100dvh]'
       }`}>
 
-        <div className="sticky top-0 z-[60] bg-white/80 dark:bg-neutral-950/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-neutral-800/50 transition-colors duration-200">
+        <div className="sticky top-0 z-[60]">
           <DashboardHeader
             activeTab={activeTab as any}
             onToggleSidebar={handleToggleSidebar}
@@ -474,10 +487,8 @@ function ModernDashboardContent() {
         </div>
 
         <main
-          className={`flex-1 bg-transparent relative ${
-            activeTab === 'overview'
-              ? 'px-4 py-4 overflow-y-auto no-scrollbar'
-              : 'px-4 py-6 sm:px-6 lg:px-8 pb-24 md:pb-6 overflow-y-auto'
+          className={`flex-1 bg-transparent relative px-3 py-3 sm:px-5 sm:py-4 lg:px-6 lg:py-4 pb-24 md:pb-5 overflow-y-auto ${
+            activeTab === 'overview' ? 'no-scrollbar' : 'custom-scrollbar'
           }`}
         >
 
@@ -510,7 +521,7 @@ function ModernDashboardContent() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
-                className="space-y-6"
+                className="w-full min-w-0"
               >
                 <AnalyticsTab goals={goals} />
               </motion.div>
@@ -523,7 +534,7 @@ function ModernDashboardContent() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
-                className="space-y-6"
+                className="w-full min-w-0"
               >
                 <SavingsGoalsNew
                   goals={goals}
@@ -540,160 +551,8 @@ function ModernDashboardContent() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
-                className="flex flex-col gap-4 sm:gap-6"
+                className="w-full min-w-0"
               >
-                <div className="rounded-2xl md:rounded-[28px] border border-slate-200/70 dark:border-neutral-800/70 bg-white/90 dark:bg-neutral-900/90 p-3 sm:p-6 shadow-[0_20px_50px_-35px_rgba(15,23,42,0.5)] dark:shadow-none sm:mb-0">
-                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4">
-                    {/* Desktop Headers (Hidden on Mobile) */}
-                    <div className="hidden sm:block">
-                      <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-blue-600 dark:text-blue-500">Transactions</p>
-                      <h3 className="mt-2 text-2xl sm:text-3xl font-semibold tracking-tight text-slate-950 dark:text-white">Dashboard</h3>
-                      <p className="mt-1 text-sm text-slate-500 dark:text-neutral-400">Filter, inspect, and audit income and expense flows.</p>
-
-                      {/* Desktop Summary Badges */}
-                      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-neutral-400">
-                        <div className="rounded-xl bg-slate-100 dark:bg-neutral-800 px-2.5 py-1.5 font-medium text-slate-700 dark:text-neutral-300">
-                          {filteredSummary.count} Transactions
-                        </div>
-
-                        {advancedFilters.year && (
-                          <div className="rounded-xl bg-blue-50 dark:bg-blue-900/30 px-2.5 py-1.5 font-medium text-blue-700 dark:text-blue-400">
-                            Year: {advancedFilters.year}
-                          </div>
-                        )}
-
-                        {advancedFilters.month !== undefined && (
-                          <div className="rounded-xl bg-indigo-50 dark:bg-indigo-900/30 px-2.5 py-1.5 font-medium text-indigo-700 dark:text-indigo-400">
-                            Month: {advancedFilters.month + 1}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Mobile Compact Controls (Txn count + Selects) */}
-                    <div className="flex items-center justify-between gap-2 w-full lg:w-auto">
-                      {/* Mobile Active Date Range Label */}
-                      <div className="sm:hidden flex items-center font-bold text-slate-800 dark:text-neutral-200 text-sm">
-                        {!advancedFilters.year ? 'All Years' :
-                          (advancedFilters.month !== undefined
-                            ? `${new Date(2024, advancedFilters.month, 1).toLocaleDateString('en-US', { month: 'short' })} ${advancedFilters.year}`
-                            : `Year: ${advancedFilters.year}`)}
-                      </div>
-
-                      <div className="hidden sm:flex items-center gap-1.5 sm:gap-2 flex-1 justify-end">
-                        <div className="min-w-[110px]">
-                          <CustomSelect
-                            selectSize="xs"
-                            value={advancedFilters.year || 'all'}
-                            onChange={(e) => {
-                              const year = e.target.value === 'all' ? undefined : parseInt(e.target.value)
-                              setAdvancedFilters(prev => ({ ...prev, year, month: undefined }))
-                            }}
-                          >
-                            <option value="all">All Years</option>
-                            {availableYears.map(year => (
-                              <option key={year} value={year}>
-                                {year}
-                              </option>
-                            ))}
-                          </CustomSelect>
-                        </div>
-
-                        {advancedFilters.year && (
-                          <div className="min-w-[120px]">
-                            <CustomSelect
-                              selectSize="xs"
-                              value={advancedFilters.month !== undefined ? advancedFilters.month : 'all'}
-                              onChange={(e) => {
-                                const month = e.target.value === 'all' ? undefined : parseInt(e.target.value)
-                                setAdvancedFilters(prev => ({ ...prev, month }))
-                              }}
-                            >
-                              <option value="all">All Months</option>
-                              {Array.from({ length: 12 }, (_, i) => (
-                                <option key={i} value={i}>
-                                  {new Date(2024, i, 1).toLocaleDateString('en-US', { month: 'short' })}
-                                </option>
-                              ))}
-                            </CustomSelect>
-                          </div>
-                        )}
-
-                        {(advancedFilters.year || advancedFilters.month !== undefined) && (
-                          <button
-                            onClick={() => setAdvancedFilters({})}
-                            className="rounded-xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs font-semibold text-slate-700 dark:text-neutral-300 shadow-sm transition-all hover:bg-slate-50 dark:hover:bg-neutral-700 shrink-0"
-                          >
-                            Clear
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Desktop: Full Card Grid */}
-                  <div className="hidden sm:grid mt-5 grid-cols-4 gap-3">
-                    <div className="rounded-xl border border-slate-200 dark:border-neutral-700/50 bg-white dark:bg-neutral-800/50 p-3 shadow-sm">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Income</p>
-                      <p className="mt-0.5 text-base font-black text-emerald-600 dark:text-emerald-500 truncate">{formatCurrency(filteredSummary.income)}</p>
-                    </div>
-                    <div className="rounded-xl border border-slate-200 dark:border-neutral-700/50 bg-white dark:bg-neutral-800/50 p-3 shadow-sm">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Expense</p>
-                      <p className="mt-0.5 text-base font-black text-rose-600 dark:text-rose-500 truncate">{formatCurrency(filteredSummary.expense)}</p>
-                    </div>
-                    <div className="rounded-xl border border-slate-200 dark:border-neutral-700/50 bg-white dark:bg-neutral-800/50 p-3 shadow-sm">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Net</p>
-                      <p className="mt-0.5 text-base font-black text-slate-900 dark:text-white truncate">{formatCurrency(filteredSummary.net)}</p>
-                    </div>
-                    <div className="rounded-xl border border-slate-200 dark:border-neutral-700/50 bg-white dark:bg-neutral-800/50 p-3 shadow-sm">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Latest Entry</p>
-                      <p className="mt-0.5 text-base font-black text-slate-900 dark:text-white truncate">{filteredSummary.latestDate}</p>
-                    </div>
-                  </div>
-
-                  {/* Mobile: Modern segmented summary */}
-                  <div className="mt-3 sm:hidden space-y-2.5">
-                    {/* Income vs Expense bar */}
-                    <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <div className="flex items-center gap-1.5">
-                          <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                          <span className="text-[10px] font-semibold text-slate-500 dark:text-neutral-400">Income</span>
-                          <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">{formatCurrency(filteredSummary.income)}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-black text-rose-600 dark:text-rose-400">{formatCurrency(filteredSummary.expense)}</span>
-                          <span className="text-[10px] font-semibold text-slate-500 dark:text-neutral-400">Expense</span>
-                          <div className="h-2 w-2 rounded-full bg-rose-500" />
-                        </div>
-                      </div>
-                      {/* Segmented bar */}
-                      <div className="h-2 w-full rounded-full bg-slate-100 dark:bg-neutral-800 overflow-hidden flex">
-                        <div
-                          className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-l-full transition-all duration-400"
-                          style={{ width: `${filteredSummary.income + filteredSummary.expense > 0 ? (filteredSummary.income / (filteredSummary.income + filteredSummary.expense)) * 100 : 50}%` }}
-                        />
-                        <div
-                          className="h-full bg-gradient-to-r from-rose-400 to-rose-500 rounded-r-full transition-all duration-400"
-                          style={{ width: `${filteredSummary.income + filteredSummary.expense > 0 ? (filteredSummary.expense / (filteredSummary.income + filteredSummary.expense)) * 100 : 50}%` }}
-                        />
-                      </div>
-                    </div>
-                    {/* Net + Count */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-semibold text-slate-400 dark:text-neutral-500 uppercase tracking-wider">Net</span>
-                        <span className={`text-sm font-black ${filteredSummary.net >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                          {filteredSummary.net >= 0 ? '+' : ''}{formatCurrency(filteredSummary.net)}
-                        </span>
-                      </div>
-                      <span className="text-[10px] font-medium text-slate-400 dark:text-neutral-500">{filteredSummary.count} transactions</span>
-                    </div>
-                  </div>
-
-
-                </div>
-
                 <RegularTransactionList
                   selectedMonth={advancedFilters.month}
                   selectedYear={advancedFilters.year}
@@ -713,11 +572,9 @@ function ModernDashboardContent() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
-                className="space-y-6"
+                className="w-full min-w-0"
               >
-                <div className="rounded-[28px] border border-slate-200/70 dark:border-neutral-800/70 bg-white/85 dark:bg-neutral-900/90 p-5 shadow-[0_20px_50px_-35px_rgba(15,23,42,0.5)] dark:shadow-none backdrop-blur sm:p-6">
-                  <RecurringTransactions />
-                </div>
+                <RecurringTransactions />
               </motion.div>
             )}
 
@@ -728,7 +585,7 @@ function ModernDashboardContent() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
-                className="space-y-6"
+                className="w-full min-w-0"
               >
                 <CalendarTab />
               </motion.div>
@@ -741,7 +598,7 @@ function ModernDashboardContent() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
-                className="space-y-6"
+                className="w-full min-w-0"
               >
                 <TravelingTab />
               </motion.div>
@@ -754,7 +611,7 @@ function ModernDashboardContent() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
-                className="space-y-6"
+                className="w-full min-w-0"
               >
                 <AdminTab />
               </motion.div>
@@ -769,16 +626,11 @@ function ModernDashboardContent() {
         onAddTransaction={handleShowAddTransaction}
       />
 
-      {showAddTransaction && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/45 dark:bg-neutral-950/80 p-3 sm:p-4 backdrop-blur-sm overflow-hidden">
-          <div className="w-full max-w-md rounded-3xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-2xl flex flex-col max-h-[90vh] sm:max-h-[85vh] overflow-hidden">
-            <AddTransactionForm
-              onTransactionAdded={onTransactionAdded}
-              onClose={() => setShowAddTransaction(false)}
-            />
-          </div>
-        </div>
-      )}
+      <AddEntryDispatcherModal
+        isOpen={showAddTransaction}
+        onClose={() => setShowAddTransaction(false)}
+        onSuccess={onTransactionAdded}
+      />
 
       <SettingsPanel
         isOpen={isSettingsOpen}

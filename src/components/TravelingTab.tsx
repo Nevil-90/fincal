@@ -1,11 +1,7 @@
-// Tab showing travel and fuel logging data, including charts, aggregated insights,
-// recent entries list, and support for multi-delete and bulk export.
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-// @ts-nocheck
 'use client'
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
-import { Plus, Car, Fuel, TrendingUp, Trash2 } from 'lucide-react'
+import { Plus, Trash2, Fuel, Navigation, BarChart3, ListFilter } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatCurrency } from '@/lib/financial-utils'
 import { useScrollLock } from '@/hooks/useScrollLock'
@@ -16,19 +12,11 @@ import TravelList from './travel/TravelList'
 import TravelCharts from './travel/TravelCharts'
 import TravelAddModal from './travel/TravelAddModal'
 import { useTravelEntries, useTravelAnalytics } from '@/hooks/useApi'
+import { TravelEntry, DerivedData } from './travel/travel-list-types'
+import { SkeletonTraveling } from './ui/SkeletonCard'
 
-interface TravelEntry {
-  id: string
-  startDate: string
-  endDate: string
-  startKm: number
-  endKm: number
-  amount: number
-  liters: number
-  description?: string
-}
-
-interface TravelSummary {
+interface YearlySummary {
+  year: number
   totalKmTraveled: number
   totalAmount: number
   totalLiters: number
@@ -37,19 +25,9 @@ interface TravelSummary {
   totalEntries: number
 }
 
-interface MonthlySummary extends TravelSummary {
-  month: number
-  year: number
-  monthName: string
-}
-
-interface YearlySummary extends TravelSummary {
-  year: number
-}
-
 export default function TravelingTab() {
   const [currentPage, setCurrentPage] = useState(1)
-  const [sortBy, setSortBy] = useState<any>('date-desc')
+  const [sortBy, setSortBy] = useState<string>('date-desc')
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
   const [compareYear, setCompareYear] = useState(new Date().getFullYear() - 1)
 
@@ -62,7 +40,7 @@ export default function TravelingTab() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [selectedEntries, setSelectedEntries] = useState<Set<string>>(new Set())
   const [expandedEntryId, setExpandedEntryId] = useState<string | null>(null)
-  const [activeSubTab, setActiveSubTab] = useState<'overview' | 'charts' | 'entries'>('overview')
+  const [activeSubTab, setActiveSubTab] = useState<'overview' | 'entries' | 'charts'>('overview')
 
   const { data: staticData, manager: staticManager } = useEnhancedStaticData()
   
@@ -84,22 +62,22 @@ export default function TravelingTab() {
   })
 
   const latestEntry = useMemo(() => {
-    if (travelEntries.length === 0) return null
-    return [...travelEntries].sort((a, b) => {
+    if (!travelEntries || travelEntries.length === 0) return null
+    return [...travelEntries].sort((a: TravelEntry, b: TravelEntry) => {
       return new Date(b.endDate).getTime() - new Date(a.endDate).getTime()
     })[0]
   }, [travelEntries])
 
+  const formatDateForInput = (dateString: string) => {
+    const date = new Date(dateString)
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+
   useEffect(() => {
     if (!showAddForm || !latestEntry) return
-
-    const formatDateForInput = (dateString: string) => {
-      const date = new Date(dateString)
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const day = String(date.getDate()).padStart(2, '0')
-      return `${year}-${month}-${day}`
-    }
 
     setFormData(prev => ({
       ...prev,
@@ -136,6 +114,7 @@ export default function TravelingTab() {
       })
 
       if (response.ok) {
+        toast.success('Travel & fuel log saved')
         await Promise.all([
           mutateEntries(),
           refreshAnalytics()
@@ -152,7 +131,7 @@ export default function TravelingTab() {
         setShowAddForm(false)
       } else {
         const errorData = await response.json()
-        toast.error(`Error: ${errorData.error}`)
+        toast.error(`Error: ${errorData.error || 'Failed to save'}`)
       }
     } catch (error) {
       console.error('Error adding travel entry:', error)
@@ -169,6 +148,7 @@ export default function TravelingTab() {
       })
 
       if (response.ok) {
+        toast.success('Log entry deleted')
         await Promise.all([
           mutateEntries(),
           refreshAnalytics()
@@ -182,20 +162,18 @@ export default function TravelingTab() {
     }
   }
 
+  // Atomic bulk deletion via /api/travel?ids=id1,id2
   const handleMultiDelete = async () => {
     if (selectedEntries.size === 0) return
     
     if (!confirm(`Are you sure you want to delete ${selectedEntries.size} travel entries?`)) return
 
     try {
-      const deletePromises = Array.from(selectedEntries).map(id =>
-        fetch(`/api/travel?id=${id}`, { method: 'DELETE' })
-      )
+      const idsParam = Array.from(selectedEntries).join(',')
+      const response = await fetch(`/api/travel?ids=${idsParam}`, { method: 'DELETE' })
       
-      const results = await Promise.all(deletePromises)
-      const allSuccessful = results.every(response => response.ok)
-      
-      if (allSuccessful) {
+      if (response.ok) {
+        toast.success(`Deleted ${selectedEntries.size} entries`)
         setSelectedEntries(new Set())
         await Promise.all([
           mutateEntries(),
@@ -224,20 +202,20 @@ export default function TravelingTab() {
     if (selectedEntries.size === travelEntries.length) {
       setSelectedEntries(new Set())
     } else {
-      setSelectedEntries(new Set(travelEntries.map(entry => entry.id)))
+      setSelectedEntries(new Set(travelEntries.map((entry: TravelEntry) => entry.id)))
     }
   }
 
-  const calculateDerivedData = (entry: TravelEntry, index: number) => {
+  const calculateDerivedData = (entry: TravelEntry, index: number): DerivedData => {
     const kmTraveled = entry.endKm - entry.startKm
-    const pricePerLiter = entry.amount / entry.liters
-    const efficiency = kmTraveled / entry.liters
-    const costPerKm = entry.amount / kmTraveled
+    const pricePerLiter = entry.amount / (entry.liters || 1)
+    const efficiency = kmTraveled / (entry.liters || 1)
+    const costPerKm = entry.amount / (kmTraveled || 1)
     const days = Math.ceil((new Date(entry.endDate).getTime() - new Date(entry.startDate).getTime()) / (1000 * 60 * 60 * 24))
 
     const entriesUpToThis = travelEntries.slice(0, index + 1)
-    const cumulativeKm = entriesUpToThis.reduce((total, e) => total + (e.endKm - e.startKm), 0)
-    const cumulativeAmount = entriesUpToThis.reduce((total, e) => total + e.amount, 0)
+    const cumulativeKm = entriesUpToThis.reduce((total: number, e: TravelEntry) => total + (e.endKm - e.startKm), 0)
+    const cumulativeAmount = entriesUpToThis.reduce((total: number, e: TravelEntry) => total + e.amount, 0)
 
     return {
       kmTraveled: Math.round(kmTraveled * 100) / 100,
@@ -250,93 +228,84 @@ export default function TravelingTab() {
     }
   }
 
-
-
-  const isInitialLoad = (loadingEntries || loadingAnalytics) && travelEntries.length === 0 && !analytics
-  if (isInitialLoad) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] bg-white dark:bg-neutral-900/50 rounded-2xl border border-slate-100 dark:border-neutral-800 border-dashed animate-pulse">
-        <div className="h-8 w-8 border-4 border-slate-200 dark:border-neutral-700 border-t-indigo-500 rounded-full animate-spin mb-4"></div>
-        <p className="text-sm font-medium text-slate-500 dark:text-neutral-400">Loading your travel logs...</p>
-      </div>
-    )
+  if (loading && !analytics && (!travelEntries || travelEntries.length === 0)) {
+    return <SkeletonTraveling />
   }
 
   return (
-    <div className="space-y-4 sm:space-y-5 font-sans max-w-[1600px] mx-auto pb-24 md:pb-6 overflow-x-hidden">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-4 font-sans max-w-[1600px] mx-auto pb-24 md:pb-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">Travel & Fuel Tracking</h1>
-          <p className="text-sm text-slate-500 dark:text-neutral-400 mt-1">Monitor your fuel expenses and vehicle efficiency over time.</p>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+            <Fuel className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            Travel & Fuel Logbook
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-neutral-400 mt-0.5">
+            Vehicle telemetry, odometer logs, efficiency analysis, and fuel cost tracking.
+          </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {selectedEntries.size > 0 && (
             <button
+              type="button"
               onClick={handleMultiDelete}
-              className="px-4 py-2 text-sm font-medium bg-rose-50 text-rose-600 rounded-xl hover:bg-rose-100 flex items-center gap-2 transition-all shadow-sm ring-1 ring-inset ring-rose-600/20"
+              className="px-3 py-1.5 text-xs font-semibold bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
             >
-              <Trash2 className="h-4 w-4" />
-              Delete ({selectedEntries.size})
+              <Trash2 className="h-3.5 w-3.5" />
+              <span>Delete ({selectedEntries.size})</span>
             </button>
           )}
           <button
+            type="button"
             onClick={() => setShowAddForm(true)}
-            className="px-4 py-2 text-sm font-medium bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 flex items-center gap-2 shadow-sm shadow-indigo-600/20 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-600/50"
+            className="px-3.5 py-1.5 text-xs sm:text-sm font-semibold bg-blue-600 hover:bg-blue-500 text-white rounded-xl flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
           >
             <Plus className="h-4 w-4" />
-            Add Entry
+            <span>Log Trip</span>
           </button>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 dark:border-neutral-700 bg-white dark:bg-neutral-900/80 p-2 shadow-sm">
-        <div className="flex flex-row items-center gap-1 sm:gap-2 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden w-full">
+      {/* Subtab Segmented Switcher */}
+      <div className="rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-slate-100 dark:bg-[#121215] p-1 shadow-xs">
+        <div className="flex flex-row items-center gap-1 w-full">
           {[
-            { id: 'overview', label: 'Overview' },
-            { id: 'charts', label: 'Charts' },
-            { id: 'entries', label: 'Entries' }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveSubTab(tab.id as 'overview' | 'charts' | 'entries')}
-              className={`flex-1 sm:flex-initial shrink-0 whitespace-nowrap px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold rounded-xl transition-colors text-center ${
-                activeSubTab === tab.id
-                  ? 'bg-slate-900 text-white shadow-sm'
-                  : 'text-slate-600 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-800 dark:bg-neutral-800'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+            { id: 'overview', label: 'Telemetry & Pacing', icon: Navigation },
+            { id: 'entries', label: 'Trip Logbook', icon: ListFilter },
+            { id: 'charts', label: 'Efficiency Analytics', icon: BarChart3 }
+          ].map(tab => {
+            const Icon = tab.icon
+            const isActive = activeSubTab === tab.id
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveSubTab(tab.id as 'overview' | 'charts' | 'entries')}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
+                  isActive
+                    ? 'bg-white text-slate-900 dark:bg-white dark:text-black shadow-xs font-bold'
+                    : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-white/[0.04]'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                <span>{tab.label}</span>
+              </button>
+            )
+          })}
         </div>
       </div>
 
+      {/* Content Panes */}
       {activeSubTab === 'overview' && analytics && (
-        <TravelSummaryCards analytics={analytics} />
-      )}
-
-      {activeSubTab === 'overview' && analytics && (
-        <TravelSummaryList 
-          analytics={analytics} 
-          selectedYear={selectedYear} 
-          onYearChange={setSelectedYear} 
-        />
-      )}
-
-      {activeSubTab === 'charts' && (
-        <TravelCharts
-          selectedYear={selectedYear}
-          onYearChange={(y) => {
-            setSelectedYear(y)
-            if (compareYear === y) setCompareYear(y - 1)
-          }}
-          compareYear={compareYear}
-          onCompareYearChange={setCompareYear}
-          analytics={analytics}
-          compareAnalytics={compareYearAnalytics}
-          isLoading={loadingAnalytics}
-        />
+        <div className="space-y-4">
+          <TravelSummaryCards analytics={analytics} />
+          <TravelSummaryList 
+            analytics={analytics} 
+            selectedYear={selectedYear} 
+            onYearChange={setSelectedYear} 
+          />
+        </div>
       )}
 
       {activeSubTab === 'entries' && (
@@ -353,12 +322,27 @@ export default function TravelingTab() {
           currentPage={currentPage}
           fetchTravelEntries={(page: number) => setCurrentPage(page)}
           sortBy={sortBy}
-          setSortBy={(s: any) => {
+          setSortBy={(s: string) => {
             setSortBy(s)
             setCurrentPage(1)
           }}
           loading={loading}
           tableRef={tableRef}
+        />
+      )}
+
+      {activeSubTab === 'charts' && (
+        <TravelCharts
+          selectedYear={selectedYear}
+          onYearChange={(y) => {
+            setSelectedYear(y)
+            if (compareYear === y) setCompareYear(y - 1)
+          }}
+          compareYear={compareYear}
+          onCompareYearChange={setCompareYear}
+          analytics={analytics}
+          compareAnalytics={compareYearAnalytics}
+          isLoading={loadingAnalytics}
         />
       )}
 

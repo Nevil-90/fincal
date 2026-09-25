@@ -12,8 +12,9 @@ export function ThemeProvider({
   return (
     <NextThemesProvider 
       attribute="class" 
-      defaultTheme="system" 
-      enableSystem 
+      defaultTheme="dark" 
+      enableSystem
+      storageKey="theme"
       disableTransitionOnChange
       {...props}
     >
@@ -25,43 +26,56 @@ export function ThemeProvider({
 
 function ThemeSync() {
   const { theme, setTheme } = useTheme()
-  const [isSynced, setIsSynced] = React.useState(false)
+  const isInitializedRef = React.useRef(false)
+  const prevThemeRef = React.useRef<string | undefined>(undefined)
 
   React.useEffect(() => {
+    if (isInitializedRef.current) return
+    isInitializedRef.current = true
+
     const fetchTheme = async () => {
       try {
+        const localTheme = typeof window !== 'undefined' ? localStorage.getItem('theme') : null
         const res = await fetch('/api/user/settings')
         if (res.ok) {
           const data = await res.json()
-          if (data.theme && data.theme !== theme) {
+          if (data.theme && data.theme !== 'system' && !localTheme) {
             setTheme(data.theme)
+            prevThemeRef.current = data.theme
+          } else if (localTheme) {
+            prevThemeRef.current = localTheme
+            if (data.theme !== localTheme) {
+              await fetch('/api/user/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ theme: localTheme }),
+              })
+            }
+          } else {
+            prevThemeRef.current = theme
           }
         }
       } catch (err) {
         console.error('Failed to sync theme from backend', err)
-      } finally {
-        setIsSynced(true)
       }
     }
     fetchTheme()
-  }, [])
+  }, [setTheme, theme])
 
+  // Only save when user actually toggles/changes the theme
   React.useEffect(() => {
-    if (!isSynced) return
-
-    const saveTheme = async () => {
-      try {
-        await fetch('/api/user/settings', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ theme }),
-        })
-      } catch (err) {
+    if (!isInitializedRef.current || !prevThemeRef.current) return
+    if (theme && theme !== prevThemeRef.current) {
+      prevThemeRef.current = theme
+      fetch('/api/user/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ theme }),
+      }).catch((err) => {
         console.error('Failed to save theme to backend', err)
-      }
+      })
     }
-    saveTheme()
-  }, [theme, isSynced])
+  }, [theme])
 
   return null
 }

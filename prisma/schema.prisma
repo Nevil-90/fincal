@@ -18,6 +18,7 @@ model Transaction {
   paymentMethod          String?
   source                 String?
   recurringTransactionId String?
+  isOneTimeSubscription  Boolean               @default(false)
   date                   DateTime              @default(now())
   createdAt              DateTime              @default(now())
   updatedAt              DateTime              @updatedAt
@@ -26,6 +27,7 @@ model Transaction {
   deletedAt              DateTime?
   goalContribution       GoalContribution?
   recurringTransaction   RecurringTransaction? @relation(fields: [recurringTransactionId], references: [id], onDelete: Cascade)
+  travelEntry            TravelEntry?
 
   @@index([userId])
   @@index([userId, deletedAt])
@@ -43,6 +45,7 @@ model SavingsGoal {
   name          String
   targetAmount  Decimal
   currentAmount Decimal            @default(0)
+  usedAmount    Decimal            @default(0)
   priority      Int                @default(1)
   deadline      DateTime?
   category      String
@@ -66,6 +69,8 @@ model GoalContribution {
   amount        Decimal
   transactionId String?      @unique
   description   String?
+  type          String       @default("deposit")
+  reason        String?
   date          DateTime     @default(now())
   createdAt     DateTime     @default(now())
   transaction   Transaction? @relation(fields: [transactionId], references: [id], onDelete: Cascade)
@@ -234,22 +239,25 @@ model SubscriptionPriceChange {
 }
 
 model TravelEntry {
-  id          String    @id @default(cuid())
-  startDate   DateTime
-  endDate     DateTime
-  startKm     Decimal
-  endKm       Decimal
-  amount      Decimal
-  liters      Decimal
-  description String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  deletedAt   DateTime?
+  id            String       @id @default(cuid())
+  startDate     DateTime
+  endDate       DateTime
+  startKm       Decimal
+  endKm         Decimal
+  amount        Decimal
+  liters        Decimal
+  description   String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  userId        String
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deletedAt     DateTime?
+  transactionId String?      @unique
+  transaction   Transaction? @relation(fields: [transactionId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([userId, deletedAt])
+  @@index([transactionId])
   @@map("travel_entries")
 }
 
@@ -258,6 +266,7 @@ model StaticDataCategory {
   type      String
   name      String
   isActive  Boolean  @default(true)
+  isSystem  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   userId    String

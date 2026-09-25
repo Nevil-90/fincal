@@ -1,17 +1,23 @@
 @import "tailwindcss";
 
-/* Enable class-based dark mode for next-themes */
-@custom-variant dark (&:is(.dark *));
+/* Enable class-based dark mode for next-themes in Tailwind v4 */
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --background: #fafafa;
+  --foreground: #09090b;
+  --surface: #ffffff;
+  --surface-hover: #f4f4f5;
+  --border: rgba(0, 0, 0, 0.08);
   color-scheme: light;
 }
 
 .dark {
-  --background: #0f172a;
-  --foreground: #f8fafc;
+  --background: #09090b;
+  --foreground: #fafafa;
+  --surface: #121215;
+  --surface-hover: #18181b;
+  --border: rgba(255, 255, 255, 0.08);
   color-scheme: dark;
 }
 
@@ -26,6 +32,10 @@
 *::before,
 *::after {
   font-family: inherit;
+}
+
+html {
+  scrollbar-gutter: stable;
 }
 
 html,
@@ -130,6 +140,42 @@ select option {
 .bg-gradient-to-br.from-red-500 *,
 .bg-gradient-to-br.from-purple-500 * {
   color: inherit;
+}
+
+/* Universal sleek scrollbars across all scrollable containers */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.25) transparent;
+}
+
+.dark * {
+  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 9px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
+}
+
+.dark *::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.dark *::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
 }
 
 /* Custom scrollbar utility for a clean SaaS layout */

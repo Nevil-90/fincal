@@ -11,15 +11,25 @@
  * is parsed as UTC midnight and rolls back to the previous day in western timezones.
  */
 export function formatDateForDisplay(
-  dateStr: string | null | undefined,
-  fallback: string = 'Select Date',
+  dateInput: string | Date | null | undefined,
+  fallback: string = 'Select date (DD MMM YYYY)',
   options: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'short', year: 'numeric' }
 ): string {
-  if (!dateStr || typeof dateStr !== 'string' || !dateStr.trim()) {
+  if (!dateInput) {
     return fallback
   }
 
-  const trimmed = dateStr.trim()
+  // Handle Date object directly
+  if (dateInput instanceof Date) {
+    if (isNaN(dateInput.getTime())) return fallback
+    return dateInput.toLocaleDateString('en-GB', options)
+  }
+
+  if (typeof dateInput !== 'string' || !dateInput.trim()) {
+    return fallback
+  }
+
+  const trimmed = dateInput.trim()
 
   try {
     // If format is YYYY-MM-DD, parse year, month, day explicitly as local numbers
@@ -37,6 +47,23 @@ export function formatDateForDisplay(
   } catch {
     return fallback
   }
+}
+
+/**
+ * Formats a date into a short format like "23 Sep" or "23 Sep 26".
+ */
+export function formatShortDate(
+  dateInput: string | Date | null | undefined,
+  fallback: string = '—',
+  includeYear: boolean = false
+): string {
+  return formatDateForDisplay(
+    dateInput,
+    fallback,
+    includeYear
+      ? { day: '2-digit', month: 'short', year: '2-digit' }
+      : { day: '2-digit', month: 'short' }
+  )
 }
 
 /**

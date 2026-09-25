@@ -176,10 +176,10 @@ export default function PeriodFilter({ overviewPeriod, onPeriodChange }: PeriodF
                 key={filter.label}
                 type="button"
                 onClick={() => onPeriodChange(filter.period)}
-                className={`rounded-lg px-3.5 py-2 text-sm font-semibold transition ${
+                className={`rounded-lg px-3.5 py-2 text-sm font-semibold transition cursor-pointer ${
                   isSelectedQuickFilter(filter.period)
-                    ? 'bg-slate-900 text-white shadow-sm'
-                    : 'bg-slate-50 dark:bg-neutral-900 text-slate-700 dark:text-neutral-300 ring-1 ring-slate-200 hover:bg-blue-50 hover:text-blue-700 hover:ring-blue-200'
+                    ? 'bg-blue-600 text-white shadow-xs font-bold'
+                    : 'bg-slate-50 dark:bg-neutral-900 text-slate-700 dark:text-neutral-300 ring-1 ring-slate-200 dark:ring-white/[0.08] hover:bg-slate-100 dark:hover:bg-neutral-800'
                 }`}
               >
                 {filter.label}

@@ -35,6 +35,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={geist.variable} suppressHydrationWarning>
+      <head />
       <body
         className={`${geist.variable} font-sans antialiased overflow-x-hidden`}
       >

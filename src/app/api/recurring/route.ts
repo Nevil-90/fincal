@@ -8,10 +8,11 @@ import { prisma } from '@/lib/prisma'
 import { calculateNextDue, collectOccurrencesUpTo, localToUtcMidnight } from '@/lib/recurring-date-utils'
 
 export async function GET(request: NextRequest) {
+  const startTime = performance.now()
   try {
     const currentUserId = request.headers.get('x-user-id')
     if (!currentUserId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' }, { status: 401 })
     }
 
     const recurringTransactions = await prisma.recurringTransaction.findMany({
@@ -24,10 +25,20 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    return NextResponse.json(recurringTransactions)
+    const durationMs = Math.round(performance.now() - startTime)
+
+    return NextResponse.json(recurringTransactions, {
+      status: 200,
+      headers: {
+        'Server-Timing': `db;dur=${durationMs}`,
+        'X-Response-Time': `${durationMs}ms`,
+        'X-Total-Count': String(recurringTransactions.length),
+        'Cache-Control': 'private, no-cache, no-store, must-revalidate'
+      }
+    })
   } catch (error) {
     console.error('Error fetching recurring transactions:', error)
-    return NextResponse.json({ error: 'Failed to fetch recurring transactions' }, { status: 500 })
+    return NextResponse.json({ success: false, error: 'Failed to fetch recurring transactions', code: 'FETCH_RECURRING_ERROR' }, { status: 500 })
   }
 }
 
@@ -186,6 +197,24 @@ export async function PUT(request: NextRequest) {
           pauseDate: !Boolean(isActive) ? new Date() : null,
           updatedAt: new Date()
         }
+      })
+      return NextResponse.json(updatedRecurring)
+    }
+
+    // Support updating recurring transaction details (edit flow)
+    const updateData: any = { updatedAt: new Date() }
+    if (body.amount !== undefined) updateData.amount = parseFloat(body.amount)
+    if (body.type !== undefined) updateData.type = body.type
+    if (body.category !== undefined) updateData.category = body.category
+    if (body.description !== undefined) updateData.description = body.description
+    if (body.frequency !== undefined) updateData.frequency = body.frequency
+    if (body.paymentMethod !== undefined) updateData.paymentMethod = body.paymentMethod
+    if (body.source !== undefined) updateData.source = body.source
+
+    if (Object.keys(updateData).length > 1) {
+      const updatedRecurring = await prisma.recurringTransaction.update({
+        where: { id },
+        data: updateData
       })
       return NextResponse.json(updatedRecurring)
     }

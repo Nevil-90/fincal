@@ -39,11 +39,11 @@ export async function runRestore(targetDir, isDryRun = true) {
     'subscriptionParticipant',
     'splitPayment',
     'subscriptionPriceChange',
-    'travelEntry',
     'savingsGoal',
     'recurringTransaction',
     'recurringTransactionPriceChange',
     'transaction',
+    'travelEntry',
     'goalContribution',
     'userSession',
     'otpVerification',
@@ -89,7 +89,7 @@ export async function runRestore(targetDir, isDryRun = true) {
 
       console.log(`  📥 Restoring ${model} (${rawRecords.length} records)...`);
 
-      // Adapt transactions to current schema (handles title / description / notes)
+      // Adapt records to current schema with backward compatibility defaults
       let recordsToInsert = rawRecords;
       if (model === 'transaction') {
         recordsToInsert = rawRecords.map((t) => {
@@ -98,8 +98,30 @@ export async function runRestore(targetDir, isDryRun = true) {
             ...rest,
             title: t.title || description || 'Untitled Transaction',
             notes: t.notes || null,
+            isOneTimeSubscription: t.isOneTimeSubscription ?? false,
           };
         });
+      } else if (model === 'travelEntry') {
+        recordsToInsert = rawRecords.map((t) => ({
+          ...t,
+          transactionId: t.transactionId || null,
+        }));
+      } else if (model === 'savingsGoal') {
+        recordsToInsert = rawRecords.map((g) => ({
+          ...g,
+          usedAmount: g.usedAmount !== undefined ? g.usedAmount : 0,
+        }));
+      } else if (model === 'goalContribution') {
+        recordsToInsert = rawRecords.map((c) => ({
+          ...c,
+          type: c.type || 'deposit',
+          reason: c.reason || null,
+        }));
+      } else if (model === 'staticDataCategory') {
+        recordsToInsert = rawRecords.map((c) => ({
+          ...c,
+          isSystem: c.isSystem ?? (['Fuel', 'Subscriptions', 'Goals'].includes(c.name)),
+        }));
       }
 
       const CHUNK_SIZE = 1000;

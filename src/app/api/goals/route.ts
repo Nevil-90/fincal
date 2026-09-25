@@ -6,27 +6,68 @@ import { prisma } from '@/lib/prisma'
 import { withDbLock } from '@/lib/db-lock'
 
 export async function GET(request: NextRequest) {
+  const startTime = performance.now()
   try {
     const currentUserId = request.headers.get('x-user-id')
     if (!currentUserId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' }, { status: 401 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const status = searchParams.get('status') || 'active' // 'active' | 'completed' | 'all'
+
+    const whereClause: any = {
+      userId: currentUserId,
+      deletedAt: null
+    }
+
+    if (status === 'active') {
+      whereClause.isCompleted = false
+    } else if (status === 'completed') {
+      whereClause.isCompleted = true
     }
 
     const goals = await prisma.savingsGoal.findMany({
-      where: {
-        isCompleted: false,
-        userId: currentUserId,
-        deletedAt: null
+      where: whereClause,
+      include: {
+        _count: {
+          select: {
+            contributions: {
+              where: { deletedAt: null }
+            }
+          }
+        },
+        contributions: {
+          where: { deletedAt: null },
+          orderBy: { date: 'desc' },
+          take: 1,
+          select: {
+            id: true,
+            amount: true,
+            date: true
+          }
+        }
       },
-      orderBy: {
-        priority: 'asc'
-      }
+      orderBy: [
+        { priority: 'asc' },
+        { createdAt: 'desc' }
+      ]
     })
     
-    return NextResponse.json(goals)
+    const durationMs = Math.round(performance.now() - startTime)
+    
+    return NextResponse.json(goals, {
+      status: 200,
+      headers: {
+        'Server-Timing': `db;dur=${durationMs}`,
+        'X-Response-Time': `${durationMs}ms`,
+        'X-Total-Count': String(goals.length),
+        'Cache-Control': 'private, no-cache, no-store, must-revalidate'
+      }
+    })
   } catch (error) {
     console.error('Error fetching goals:', error)
-    return NextResponse.json({ error: 'Failed to fetch goals' }, { status: 500 })
+    return NextResponse.json({ success: false, error: 'Failed to fetch goals', code: 'FETCH_GOALS_ERROR' }, { status: 500 })
   }
 }
 

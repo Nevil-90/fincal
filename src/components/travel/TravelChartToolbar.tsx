@@ -40,7 +40,7 @@ export default function TravelChartToolbar({
           <select
             value={selectedYear}
             onChange={e => onYearChange(Number(e.target.value))}
-            className="appearance-none [-webkit-appearance:none] bg-transparent text-xs font-bold font-mono text-slate-900 dark:text-white outline-none cursor-pointer pr-4 pl-0.5 border-0 focus:ring-0"
+            className="appearance-none [-webkit-appearance:none] bg-transparent text-xs font-bold tabular-nums text-slate-900 dark:text-white outline-none cursor-pointer pr-4 pl-0.5 border-0 focus:ring-0"
           >
             {availableYears.map(y => (
               <option key={`base-${y}`} value={y} className="bg-white dark:bg-neutral-900 text-slate-800 dark:text-white">
@@ -62,7 +62,7 @@ export default function TravelChartToolbar({
           <select
             value={compareYear}
             onChange={e => onCompareYearChange(Number(e.target.value))}
-            className="appearance-none [-webkit-appearance:none] bg-transparent text-xs font-bold font-mono text-slate-900 dark:text-white outline-none cursor-pointer pr-4 pl-0.5 border-0 focus:ring-0"
+            className="appearance-none [-webkit-appearance:none] bg-transparent text-xs font-bold tabular-nums text-slate-900 dark:text-white outline-none cursor-pointer pr-4 pl-0.5 border-0 focus:ring-0"
           >
             {availableYears.map(y => (
               <option key={`comp-${y}`} value={y} className="bg-white dark:bg-neutral-900 text-slate-800 dark:text-white">
@@ -81,7 +81,7 @@ export default function TravelChartToolbar({
           onClick={selectAllMonths}
           className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all whitespace-nowrap ${
             selectedMonths.size === 12
-              ? 'bg-slate-900 dark:bg-white text-white dark:text-neutral-900 shadow-sm'
+              ? 'bg-indigo-600 text-white shadow-xs'
               : 'text-slate-500 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-800'
           }`}
         >

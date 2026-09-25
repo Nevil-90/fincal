@@ -1,7 +1,7 @@
 // CRUD endpoints for user-specific static data: expense/income categories,
 // payment methods, income sources, expense purposes, and budget amounts.
 // On first fetch, default categories are auto-seeded for new users.
-// Responses include a private Cache-Control header (5 min, stale-while-revalidate 10 min).
+// Responses include no-store Cache-Control headers to ensure real-time consistency.
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
@@ -21,8 +21,17 @@ interface StaticDataItem {
   id: string
   name: string
   isActive: boolean
+  isSystem?: boolean
   createdAt: string
   updatedAt: string
+}
+
+function normalizeStem(str: string): string {
+  const clean = str.trim().toLowerCase()
+  if (clean.length > 3 && clean.endsWith('s') && !clean.endsWith('ss')) {
+    return clean.slice(0, -1)
+  }
+  return clean
 }
 
 export async function GET(request: NextRequest) {
@@ -39,20 +48,41 @@ export async function GET(request: NextRequest) {
 
     if (categories.length === 0) {
       const defaultData = [
-        ...['Food & Dining', 'Groceries', 'Transportation', 'Petrol/Fuel', 'Auto Rickshaw/Taxi',
-        'Public Transport', 'Shopping', 'Clothing', 'Entertainment', 'Movies/OTT',
-        'Bills & Utilities', 'Electricity', 'Mobile Recharge', 'Internet', 'LPG/Gas',
-        'Water Bill', 'Healthcare', 'Medicine', 'Doctor Consultation', 'Education',
-        'Books/Courses', 'School/College Fees', 'Travel', 'Train/Flight', 'Hotel/Accommodation',
-        'Rent', 'House Maintenance', 'Domestic Help', 'Religious/Charity', 'Temple/Gurudwara',
-        'Donations', 'Investment', 'SIP/Mutual Fund', 'Fixed Deposit', 'Other'].map(name => ({ type: 'expense_categories', name, userId: currentUserId, isActive: true })),
-        ...['Salary', 'Freelance', 'Business Income', 'Investment Returns', 'Rental Income',
-        'Interest', 'Dividends', 'Capital Gains', 'Bonus', 'Commission', 'Gifts', 'Other'].map(name => ({ type: 'income_categories', name, userId: currentUserId, isActive: true })),
-        ...['Cash', 'UPI', 'Credit Card', 'Debit Card', 'Bank Transfer', 'Net Banking', 'Other'].map(name => ({ type: 'payment_methods', name, userId: currentUserId, isActive: true })),
-        ...['Primary Job', 'Secondary Job', 'Freelance Work', 'Business', 'Investments',
-        'Rental Property', 'Side Hustle', 'Consulting', 'Other'].map(name => ({ type: 'income_sources', name, userId: currentUserId, isActive: true })),
-        ...['Personal', 'Business', 'Family', 'Medical', 'Emergency', 'Investment',
-        'Education', 'Travel', 'Entertainment', 'Gift', 'Charity', 'Other'].map(name => ({ type: 'expense_purposes', name, userId: currentUserId, isActive: true }))
+        ...[
+          'Food & Dining',
+          'Groceries',
+          'Transportation',
+          'Shopping',
+          'Bills & Utilities',
+          'Entertainment',
+          'Healthcare',
+          'Other'
+        ].map(name => ({ type: 'expense_categories', name, userId: currentUserId, isActive: true })),
+        ...[
+          'Salary',
+          'Freelance',
+          'Business Income',
+          'Other'
+        ].map(name => ({ type: 'income_categories', name, userId: currentUserId, isActive: true })),
+        ...[
+          'UPI',
+          'Cash',
+          'Credit Card',
+          'Debit Card',
+          'Net Banking'
+        ].map(name => ({ type: 'payment_methods', name, userId: currentUserId, isActive: true })),
+        ...[
+          'Primary Job',
+          'Freelance',
+          'Business',
+          'Other'
+        ].map(name => ({ type: 'income_sources', name, userId: currentUserId, isActive: true })),
+        ...[
+          'Personal',
+          'Family',
+          'Business',
+          'Other'
+        ].map(name => ({ type: 'expense_purposes', name, userId: currentUserId, isActive: true }))
       ];
 
       await prisma.staticDataCategory.createMany({
@@ -76,17 +106,23 @@ export async function GET(request: NextRequest) {
       })
     ])
 
+    const normalizeType = (t: string) => t.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '')
+
     const groupedData = categories.reduce((acc: Record<string, StaticDataItem[]>, category) => {
-      if (!acc[category.type]) {
-        acc[category.type] = []
+      const typeKey = normalizeType(category.type)
+      if (!acc[typeKey]) {
+        acc[typeKey] = []
       }
-      acc[category.type].push({
-        id: category.id,
-        name: category.name,
-        isActive: category.isActive,
-        createdAt: category.createdAt.toISOString(),
-        updatedAt: category.updatedAt.toISOString()
-      })
+      if (!acc[typeKey].some(item => item.name.toLowerCase() === category.name.toLowerCase())) {
+        acc[typeKey].push({
+          id: category.id,
+          name: category.name,
+          isActive: category.isActive,
+          isSystem: Boolean(category.isSystem) || ['Fuel', 'Subscriptions', 'Goals'].includes(category.name),
+          createdAt: category.createdAt.toISOString(),
+          updatedAt: category.updatedAt.toISOString()
+        })
+      }
       return acc
     }, {})
     
@@ -118,7 +154,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(staticData, {
       headers: {
-        'Cache-Control': 'private, max-age=300, stale-while-revalidate=600',
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
       }
     })
   } catch (error) {
@@ -188,6 +226,25 @@ export async function POST(request: NextRequest) {
       })
     } else {
       const dbType = type.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '')
+
+      // Dynamic normalized duplicate check against user's actual categories
+      const cleanStem = normalizeStem(name)
+      const existingCategories = await prisma.staticDataCategory.findMany({
+        where: {
+          userId: currentUserId,
+          type: dbType
+        },
+        select: { id: true, name: true }
+      })
+
+      const duplicate = existingCategories.find(c =>
+        c.name.trim().toLowerCase() === name.trim().toLowerCase() ||
+        normalizeStem(c.name) === cleanStem
+      )
+
+      if (duplicate) {
+        return NextResponse.json({ error: `Category "${duplicate.name}" is already added.` }, { status: 409 })
+      }
       
       createdItem = await prisma.staticDataCategory.create({
         data: {
@@ -251,15 +308,45 @@ export async function PUT(request: NextRequest) {
         }
       }
 
-      const existing = await prisma.budgetAmount.findFirst({
+      // Try finding by id first, or by (name, category) if id was a client fallback
+      let existing = await prisma.budgetAmount.findFirst({
         where: { id, userId: currentUserId }
       })
+      if (!existing && name && category) {
+        existing = await prisma.budgetAmount.findFirst({
+          where: { name: name.trim(), category: category.trim(), userId: currentUserId }
+        })
+      }
+
       if (!existing) {
+        // If not found, create new budget amount entry
+        if (name && amount !== undefined && period && category) {
+          const created = await prisma.budgetAmount.create({
+            data: {
+              name: name.trim(),
+              amount: parseFloat(amount),
+              period,
+              category: category.trim(),
+              isActive: isActive !== undefined ? isActive : true,
+              userId: currentUserId
+            }
+          })
+          return NextResponse.json({
+            id: created.id,
+            name: created.name,
+            amount: created.amount,
+            period: created.period,
+            category: created.category,
+            isActive: created.isActive,
+            createdAt: created.createdAt.toISOString(),
+            updatedAt: created.updatedAt.toISOString()
+          })
+        }
         return NextResponse.json({ error: 'Budget amount not found or access denied' }, { status: 404 })
       }
 
       updatedItem = await prisma.budgetAmount.update({
-        where: { id },
+        where: { id: existing.id },
         data: {
           ...(name && { name: name.trim() }),
           ...(amount !== undefined && { amount: parseFloat(amount) }),
@@ -280,15 +367,81 @@ export async function PUT(request: NextRequest) {
         updatedAt: updatedItem.updatedAt.toISOString()
       })
     } else {
-      const existing = await prisma.staticDataCategory.findFirst({
+      const dbType = type.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '')
+
+      // 1. Try finding by ID first
+      let existing = await prisma.staticDataCategory.findFirst({
         where: { id, userId: currentUserId }
       })
+
+      // 2. If not found by ID (e.g. client fallback IDs like exp_1, inc_2), try matching by name & type
+      if (!existing && name) {
+        existing = await prisma.staticDataCategory.findFirst({
+          where: { type: dbType, name: name.trim(), userId: currentUserId }
+        })
+      }
+
+      // 3. If still not found and we have a name, upsert so the user action succeeds seamlessly
       if (!existing) {
+        if (name && name.trim().length > 0) {
+          const created = await prisma.staticDataCategory.upsert({
+            where: {
+              type_name_userId: {
+                type: dbType,
+                name: name.trim(),
+                userId: currentUserId
+              }
+            },
+            update: {
+              ...(isActive !== undefined && { isActive })
+            },
+            create: {
+              type: dbType,
+              name: name.trim(),
+              isActive: isActive !== undefined ? isActive : true,
+              userId: currentUserId
+            }
+          })
+
+          return NextResponse.json({
+            id: created.id,
+            name: created.name,
+            isActive: created.isActive,
+            createdAt: created.createdAt.toISOString(),
+            updatedAt: created.updatedAt.toISOString()
+          })
+        }
+
         return NextResponse.json({ error: 'Static data category not found or access denied' }, { status: 404 })
+      }
+
+      // 4. If name is being changed, check for duplicate item name and system category lock
+      if (name && name.trim() !== existing.name) {
+        if (existing.isSystem || ['Fuel', 'Subscriptions', 'Goals'].includes(existing.name)) {
+          return NextResponse.json({ error: 'System categories cannot be renamed' }, { status: 400 })
+        }
+        const cleanStem = normalizeStem(name)
+        const otherCategories = await prisma.staticDataCategory.findMany({
+          where: {
+            userId: currentUserId,
+            type: dbType,
+            id: { not: existing.id }
+          },
+          select: { id: true, name: true }
+        })
+
+        const duplicate = otherCategories.find(c =>
+          c.name.trim().toLowerCase() === name.trim().toLowerCase() ||
+          normalizeStem(c.name) === cleanStem
+        )
+
+        if (duplicate) {
+          return NextResponse.json({ error: `Category "${duplicate.name}" is already added.` }, { status: 409 })
+        }
       }
       
       updatedItem = await prisma.staticDataCategory.update({
-        where: { id },
+        where: { id: existing.id },
         data: {
           ...(name && { name: name.trim() }),
           ...(isActive !== undefined && { isActive })
@@ -322,6 +475,7 @@ export async function DELETE(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
     const type = searchParams.get('type')
+    const name = searchParams.get('name')
 
     if (!id || !type) {
       return NextResponse.json({ error: 'ID and type are required' }, { status: 400 })
@@ -332,34 +486,46 @@ export async function DELETE(request: NextRequest) {
     }
 
     if (type === 'budgetAmounts') {
-      const existing = await prisma.budgetAmount.findFirst({
+      let existing = await prisma.budgetAmount.findFirst({
         where: { id, userId: currentUserId }
       })
-      if (!existing) {
-        return NextResponse.json({ error: 'Budget amount not found or access denied' }, { status: 404 })
+      if (!existing && name) {
+        existing = await prisma.budgetAmount.findFirst({
+          where: { name: name.trim(), userId: currentUserId }
+        })
       }
 
-      await prisma.budgetAmount.delete({
-        where: { id }
-      })
+      if (existing) {
+        await prisma.budgetAmount.delete({
+          where: { id: existing.id }
+        })
+      }
     } else {
-      const existing = await prisma.staticDataCategory.findFirst({
+      const dbType = type.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '')
+      let existing = await prisma.staticDataCategory.findFirst({
         where: { id, userId: currentUserId }
       })
-      if (!existing) {
-        return NextResponse.json({ error: 'Category not found or access denied' }, { status: 404 })
+      if (!existing && name) {
+        existing = await prisma.staticDataCategory.findFirst({
+          where: { type: dbType, name: name.trim(), userId: currentUserId }
+        })
       }
 
-      await prisma.staticDataCategory.delete({
-        where: { id }
-      })
+      if (existing) {
+        if (existing.isSystem || ['Fuel', 'Subscriptions', 'Goals'].includes(existing.name)) {
+          return NextResponse.json({ error: 'System categories cannot be deleted' }, { status: 400 })
+        }
+        await prisma.staticDataCategory.delete({
+          where: { id: existing.id }
+        })
+      }
     }
 
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting static data:', error)
     if (error instanceof Error && 'code' in error && error.code === 'P2025') {
-      return NextResponse.json({ error: 'Item not found' }, { status: 404 })
+      return NextResponse.json({ success: true })
     }
     return NextResponse.json({ error: 'Failed to delete static data' }, { status: 500 })
   }

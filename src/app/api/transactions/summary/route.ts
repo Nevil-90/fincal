@@ -6,10 +6,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
 export async function GET(request: NextRequest) {
+  const startTime = performance.now()
   try {
     const currentUserId = request.headers.get('x-user-id')
     if (!currentUserId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' },
+        { status: 401 }
+      )
     }
 
     const { searchParams } = new URL(request.url)
@@ -85,6 +89,7 @@ export async function GET(request: NextRequest) {
 
     let periodInfo = null
     const categorySpend: Record<string, number> = {}
+    const categoryIncome: Record<string, number> = {}
 
     if (yearParam) {
       const year = parseInt(yearParam, 10)
@@ -111,7 +116,7 @@ export async function GET(request: NextRequest) {
             return new Date(prevYear, prevMonth, 0, 23, 59, 59, 999)
           })()
 
-      const [periodGrouped, prevExpenseAgg, categoryAgg] = await Promise.all([
+      const [periodGrouped, prevExpenseAgg, categoryAgg, categoryIncomeAgg] = await Promise.all([
         prisma.transaction.groupBy({
           by: ['type'],
           where: {
@@ -139,6 +144,16 @@ export async function GET(request: NextRequest) {
             date: { gte: startDate, lte: endDate }
           },
           _sum: { amount: true }
+        }),
+        prisma.transaction.groupBy({
+          by: ['category'],
+          where: {
+            userId: currentUserId,
+            deletedAt: null,
+            type: 'income',
+            date: { gte: startDate, lte: endDate }
+          },
+          _sum: { amount: true }
         })
       ])
 
@@ -159,23 +174,41 @@ export async function GET(request: NextRequest) {
       categoryAgg.forEach(item => {
         categorySpend[item.category || 'Other'] = Number(item._sum.amount || 0)
       })
+
+      categoryIncomeAgg.forEach(item => {
+        categoryIncome[item.category || 'Other'] = Number(item._sum.amount || 0)
+      })
     }
 
-    return NextResponse.json({
-      global: {
-        income: globalIncome,
-        expense: globalExpense,
-        balance: globalBalance,
-        count: globalCount
+    const durationMs = Math.round(performance.now() - startTime)
+
+    return NextResponse.json(
+      {
+        success: true,
+        global: {
+          income: globalIncome,
+          expense: globalExpense,
+          balance: globalBalance,
+          count: globalCount
+        },
+        availableYears,
+        year: yearInfo,
+        period: periodInfo,
+        categorySpend,
+        categoryIncome
       },
-      availableYears,
-      year:   yearInfo,
-      period: periodInfo,
-      categorySpend
-    })
+      {
+        status: 200,
+        headers: {
+          'Server-Timing': `db;dur=${durationMs}`,
+          'X-Response-Time': `${durationMs}ms`,
+          'Cache-Control': 'private, no-cache, no-store, must-revalidate'
+        }
+      }
+    )
 
   } catch (error) {
     console.error('Error in /api/transactions/summary:', error)
-    return NextResponse.json({ error: 'Failed to fetch summary' }, { status: 500 })
+    return NextResponse.json({ success: false, error: 'Failed to fetch summary', code: 'FETCH_SUMMARY_ERROR' }, { status: 500 })
   }
 }

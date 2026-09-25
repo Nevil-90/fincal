@@ -1,6 +1,7 @@
 'use client'
 
 import { formatCurrency } from '@/lib/financial-utils'
+import { formatDateForDisplay } from '@/lib/dateUtils'
 import { ArrowUpRight, ArrowDownLeft, ClipboardList } from 'lucide-react'
 
 interface Transaction {
@@ -54,8 +55,8 @@ export default function RecentTransactions({ transactions, onViewAll }: RecentTr
                 <p className="truncate text-base font-semibold text-slate-950 dark:text-white">
                   {transaction.description || transaction.category}
                 </p>
-                <p className="mt-0.5 truncate text-sm text-slate-500 dark:text-neutral-400">
-                  {transaction.category} • {new Date(transaction.date).toLocaleDateString()}
+                <p className="mt-0.5 truncate text-xs text-slate-500 dark:text-neutral-400 tabular-nums">
+                  {transaction.category} • {formatDateForDisplay(transaction.date)}
                 </p>
               </div>
 

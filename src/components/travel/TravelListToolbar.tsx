@@ -72,7 +72,7 @@ export default function TravelListToolbar({
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
-            <span className="px-2 font-bold font-mono text-[11px] text-slate-700 dark:text-neutral-200">
+            <span className="px-2 font-bold tabular-nums text-[11px] text-slate-700 dark:text-neutral-200">
               {currentPage} / {pagination.totalPages}
             </span>
             <button

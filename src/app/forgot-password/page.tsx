@@ -4,7 +4,7 @@
 import React, { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Mail, ArrowLeft, ShieldAlert, ShieldCheck, KeyRound } from 'lucide-react'
+import { Mail, ArrowLeft, ShieldAlert, ShieldCheck, KeyRound, Loader2, Sparkles } from 'lucide-react'
 
 function ForgotPasswordForm() {
   const searchParams = useSearchParams()
@@ -59,41 +59,44 @@ function ForgotPasswordForm() {
   }
 
   return (
-    <div className="w-full max-w-md space-y-8 relative z-10">
-      <div className="text-center">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg">
-          <KeyRound className="h-6 w-6" />
+    <div className="w-full max-w-sm space-y-6 relative z-10">
+      {/* Brand Header */}
+      <div className="text-center space-y-2">
+        <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-white dark:bg-[#16161a] border border-slate-200/80 dark:border-white/[0.1] text-blue-600 dark:text-blue-400 shadow-sm">
+          <KeyRound className="h-5 w-5" />
         </div>
-        <h2 className="mt-6 text-3xl font-black tracking-tight text-white animate-fade-in">
-          Reset Password
-        </h2>
-        <p className="mt-2 text-sm text-slate-400">
-          Provide your email to receive a secure password reset link
-        </p>
+        <div>
+          <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+            Reset Password
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
+            Provide your email to receive a recovery reset link
+          </p>
+        </div>
       </div>
 
-      <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-8 shadow-2xl backdrop-blur-xl transition-all duration-300">
+      <div className="rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-white dark:bg-[#121215] p-6 shadow-xl dark:shadow-2xl backdrop-blur-xl">
         {error && (
-          <div className="mb-6 flex items-start gap-3 rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400 animate-slide-in">
-            <ShieldAlert className="h-5 w-5 shrink-0 mt-0.5" />
+          <div className="mb-5 flex items-start gap-2.5 rounded-xl border border-rose-200 dark:border-rose-500/20 bg-rose-50 dark:bg-rose-500/10 p-3 text-xs text-rose-700 dark:text-rose-300">
+            <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5" />
             <span>{error}</span>
           </div>
         )}
 
         {successMessage && (
-          <div className="mb-6 flex items-start gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-400 animate-slide-in">
-            <ShieldCheck className="h-5 w-5 shrink-0 mt-0.5" />
+          <div className="mb-5 flex items-start gap-2.5 rounded-xl border border-emerald-200 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/10 p-3 text-xs text-emerald-700 dark:text-emerald-300">
+            <ShieldCheck className="h-4 w-4 shrink-0 mt-0.5" />
             <span>{successMessage}</span>
           </div>
         )}
 
-        <form className="space-y-6" onSubmit={handleSubmit} method="POST">
+        <form className="space-y-4" onSubmit={handleSubmit} method="POST">
           <div>
-            <label htmlFor="email" className="block text-sm font-semibold text-slate-300">
+            <label htmlFor="email" className="block text-xs font-medium text-slate-700 dark:text-zinc-300 mb-1.5">
               Email Address
             </label>
-            <div className="relative mt-2">
-              <Mail className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
+            <div className="relative">
+              <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-zinc-500" />
               <input
                 id="email"
                 name="email"
@@ -102,7 +105,7 @@ function ForgotPasswordForm() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="block w-full rounded-2xl border border-slate-800 bg-slate-950 pl-12 pr-4 py-3.5 text-white placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm transition-all focus:outline-none"
+                className="block w-full rounded-xl border border-slate-200/90 dark:border-white/[0.08] bg-slate-50 dark:bg-[#16161a] pl-10 pr-3.5 py-2.5 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 text-xs transition-colors"
                 placeholder="you@example.com"
                 autoFocus
                 disabled={loading}
@@ -113,15 +116,22 @@ function ForgotPasswordForm() {
           <button
             type="submit"
             disabled={loading}
-            className="group relative flex w-full justify-center rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3.5 text-sm font-bold text-white hover:from-blue-500 hover:to-indigo-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900 disabled:opacity-50 transition-all shadow-lg active:scale-[0.98]"
+            className="flex w-full justify-center items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-500 px-4 py-2.5 text-xs font-semibold text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-40 transition-all shadow-sm cursor-pointer"
           >
-            {loading ? 'Sending Request...' : 'Send Reset Link'}
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Dispatching link...
+              </span>
+            ) : (
+              'Send Reset Link'
+            )}
           </button>
 
-          <div className="text-center mt-6">
+          <div className="text-center pt-2">
             <Link
               href="/login"
-              className="inline-flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-white transition-colors"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
               Back to Sign In
@@ -135,15 +145,14 @@ function ForgotPasswordForm() {
 
 export default function ForgotPasswordPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-12 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl" />
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-[#09090b] px-4 py-12 sm:px-6 lg:px-8 relative overflow-hidden select-none">
+      {/* Subtle ambient illumination */}
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-blue-500/[0.04] dark:bg-blue-500/[0.03] rounded-full blur-[100px] pointer-events-none" />
 
       <Suspense fallback={
-        <div className="text-center text-slate-400 relative z-10 animate-pulse">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-sm font-semibold">Loading security validator...</p>
+        <div className="text-center text-slate-500 dark:text-zinc-400 relative z-10">
+          <Loader2 className="h-6 w-6 animate-spin text-blue-500 mx-auto mb-3" />
+          <p className="text-xs font-medium text-slate-500 dark:text-zinc-400">Loading validator...</p>
         </div>
       }>
         <ForgotPasswordForm />

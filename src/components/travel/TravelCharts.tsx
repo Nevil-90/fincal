@@ -245,15 +245,15 @@ export default function TravelCharts({
             <div className="flex items-center gap-1.5 sm:gap-2 bg-slate-50 dark:bg-neutral-800/80 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200/60 dark:border-neutral-700/60 text-[11px] sm:text-xs overflow-x-auto">
               <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
                 <span className="h-2 w-2 rounded-full" style={{ backgroundColor: activeConfig.colorCurrent }} />
-                <span className="font-bold font-mono text-slate-900 dark:text-white">{activeConfig.formatVal(activeTotals.sumCur)}</span>
+                <span className="font-bold tabular-nums text-slate-900 dark:text-white">{activeConfig.formatVal(activeTotals.sumCur)}</span>
               </div>
               <span className="text-slate-300 dark:text-neutral-600">vs</span>
               <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
                 <span className="h-2 w-2 rounded-full" style={{ backgroundColor: activeConfig.colorCompare }} />
-                <span className="font-bold font-mono text-slate-700 dark:text-neutral-300">{activeConfig.formatVal(activeTotals.sumComp)}</span>
+                <span className="font-bold tabular-nums text-slate-700 dark:text-neutral-300">{activeConfig.formatVal(activeTotals.sumComp)}</span>
               </div>
               <span className="text-slate-300 dark:text-neutral-600">|</span>
-              <span className={`font-bold font-mono px-1.5 py-0.5 rounded-md shrink-0 ${
+              <span className={`font-bold tabular-nums px-1.5 py-0.5 rounded-md shrink-0 ${
                 isPositiveTotal
                   ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400'
                   : 'bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400'

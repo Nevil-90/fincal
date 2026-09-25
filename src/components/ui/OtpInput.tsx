@@ -71,20 +71,19 @@ export default function OtpInput({ value, onChange }: OtpInputProps) {
   }
 
   return (
-    <div className="flex justify-between gap-3 mt-4 max-w-sm mx-auto">
+    <div className="flex justify-between gap-2.5 mt-3 max-w-sm mx-auto">
       {otpArray.map((digit, index) => (
         <motion.div
           key={index}
-          initial={{ opacity: 0, scale: 0.8, y: 12 }}
+          initial={{ opacity: 0, scale: 0.9, y: 8 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{
             type: "spring",
-            stiffness: 350,
-            damping: 22,
-            delay: index * 0.04
+            stiffness: 400,
+            damping: 25,
+            delay: index * 0.03
           }}
-          whileHover={{ scale: 1.05 }}
-          className="relative flex-1 aspect-square max-w-[50px] xs:max-w-[56px]"
+          className="relative flex-1 aspect-square max-w-[48px] sm:max-w-[52px]"
         >
           <input
             ref={(el) => {
@@ -98,7 +97,7 @@ export default function OtpInput({ value, onChange }: OtpInputProps) {
             onChange={(e) => handleChange(index, e.target.value)}
             onKeyDown={(e) => handleKeyDown(index, e)}
             onPaste={handlePaste}
-            className="w-full h-full rounded-2xl border border-slate-800 bg-slate-950 text-center text-lg font-bold text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all duration-200 shadow-inner"
+            className="w-full h-full rounded-xl border border-slate-200/90 dark:border-white/[0.08] bg-slate-50 dark:bg-[#16161a] text-center text-base font-semibold tabular-nums text-slate-900 dark:text-white focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/60 outline-none transition-all shadow-xs"
           />
         </motion.div>
       ))}

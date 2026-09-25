@@ -3,14 +3,16 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { X, Sparkles, Calendar } from 'lucide-react'
+import { X, Sparkles, Calendar, ArrowLeft, Receipt } from 'lucide-react'
 import { useEnhancedStaticData } from '@/lib/enhanced-static-data-manager'
+import { useGoals } from '@/hooks/useApi'
 import CustomDateField from '@/components/ui/CustomDateField'
 import CustomSelect from '@/components/ui/CustomSelect'
 
 interface AddTransactionFormProps {
   onClose: () => void
   onTransactionAdded: () => void
+  onBack?: () => void
   initialData?: {
     id: string
     type: 'income' | 'expense'
@@ -22,6 +24,7 @@ interface AddTransactionFormProps {
     paymentMethod: string | null
     source: string | null
     date: string
+    goalContribution?: { goalId: string } | null
   }
 }
 
@@ -45,11 +48,13 @@ function saveLocalRule(keyword: string, category: string, type: string) {
   }
 }
 
-export default function AddTransactionForm({ onClose, onTransactionAdded, initialData }: AddTransactionFormProps) {
+export default function AddTransactionForm({ onClose, onTransactionAdded, onBack, initialData }: AddTransactionFormProps) {
   const { data: staticData } = useEnhancedStaticData()
+  const { goals } = useGoals()
   const [type, setType] = useState<'income' | 'expense'>(initialData?.type || 'expense')
   const [amount, setAmount] = useState(initialData?.amount ? String(initialData.amount) : '')
   const [category, setCategory] = useState(initialData?.category || '')
+  const [goalId, setGoalId] = useState(initialData?.goalContribution?.goalId || '')
   const [title, setTitle] = useState(initialData?.title || initialData?.description || '')
   const [notes, setNotes] = useState(initialData?.notes || '')
   const [paymentMethod, setPaymentMethod] = useState(initialData?.paymentMethod || '')
@@ -85,7 +90,11 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
     const rules = getLocalRules()
     const match = rules[key] || Object.entries(rules).find(([k]) => key.startsWith(k) || k.startsWith(key))?.[1]
     if (match) {
-      setSuggestion(match as { category: string; type: 'income' | 'expense' })
+      if (['Subscriptions', 'Fuel'].includes(match.category) && match.type === 'expense') {
+        setSuggestion(null)
+      } else {
+        setSuggestion(match as { category: string; type: 'income' | 'expense' })
+      }
     } else {
       setSuggestion(null)
     }
@@ -99,9 +108,16 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
     }
   }
 
+  const DEDICATED_MODULE_CATEGORIES = new Set(['Subscriptions', 'Fuel'])
+
   const categories = Array.from(new Set(type === 'income'
     ? staticData.incomeCategories.filter(c => c.isActive).map(c => c.name)
-    : staticData.expenseCategories.filter(c => c.isActive).map(c => c.name)))
+    : [
+        ...staticData.expenseCategories
+          .filter(c => c.isActive && (!DEDICATED_MODULE_CATEGORIES.has(c.name) || c.name === initialData?.category))
+          .map(c => c.name),
+        'Goals'
+      ]))
 
   const sourcesOrPurposes = Array.from(new Set(type === 'income'
     ? staticData.incomeSources.filter(c => c.isActive).map(c => c.name)
@@ -128,6 +144,7 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
           paymentMethod: paymentMethod || null,
           source: source || null,
           date,
+          ...(category === 'Goals' && goalId ? { goalId } : {})
         }),
       })
 
@@ -151,18 +168,49 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
   }
 
   return (
-    <div className="flex flex-col w-full h-full overflow-hidden bg-white dark:bg-neutral-900">
-      <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-neutral-800 shrink-0">
-        <h3 className="text-base font-bold text-slate-900 dark:text-white">{initialData ? 'Edit Transaction' : 'Add Transaction'}</h3>
+    <div className="flex flex-col w-full h-full overflow-hidden bg-white dark:bg-[#121215]">
+      {/* Mobile handle pull bar */}
+      <div className="flex sm:hidden justify-center pt-2.5 pb-1 shrink-0">
+        <div className="w-9 h-1 rounded-full bg-slate-300 dark:bg-white/20" />
+      </div>
+
+      {/* Modal Header */}
+      <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-3.5 border-b border-slate-200/80 dark:border-white/[0.08] bg-slate-50/70 dark:bg-[#16161a]/60 shrink-0">
+        <div className="flex items-center gap-2 min-w-0">
+          {onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              className="p-1.5 -ml-1 rounded-lg text-slate-600 hover:text-slate-900 dark:text-zinc-300 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.08] border border-slate-200/80 dark:border-white/10 transition-colors cursor-pointer shrink-0"
+              title="Back"
+              aria-label="Back"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+          )}
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center border shrink-0 shadow-xs bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20">
+            <Receipt className="w-4 h-4" />
+          </div>
+          <div className="min-w-0">
+            <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight">
+              {initialData ? 'Edit Transaction' : 'Add Transaction'}
+            </h3>
+            <p className="text-[11px] text-slate-500 dark:text-zinc-400 truncate">
+              Record standard income or expense entry
+            </p>
+          </div>
+        </div>
         <button
+          type="button"
           onClick={onClose}
-          className="rounded-lg p-1.5 text-slate-400 dark:text-neutral-500 transition-all duration-200 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-500 dark:hover:text-rose-400 hover:shadow-[0_0_12px_rgba(244,63,94,0.4)]"
+          className="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] flex items-center justify-center transition-colors cursor-pointer"
+          title="Close dialog"
         >
-          <X className="h-5 w-5" />
+          <X className="h-4 w-4" />
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 bg-white dark:bg-neutral-900">
+      <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 bg-white dark:bg-[#121215]">
         <div className="flex-1 overflow-y-auto px-5 py-3.5 no-scrollbar">
           <div className="grid grid-cols-2 gap-x-4 gap-y-3">
         <div className="col-span-2">
@@ -274,7 +322,13 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
           id="category"
           label="Category"
           value={category}
-          onChange={(e) => setCategory(e.target.value)}
+          onChange={(e) => {
+            const nextCat = e.target.value
+            setCategory(nextCat)
+            if (nextCat !== 'Goals') {
+              setGoalId('')
+            }
+          }}
           required
         >
           <option value="">Select a category</option>
@@ -282,6 +336,25 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
             <option key={cat} value={cat}>{cat}</option>
           ))}
         </CustomSelect>
+
+        {category === 'Goals' && (
+          <div className="col-span-2 sm:col-span-1 animate-in fade-in duration-150">
+            <CustomSelect
+              id="goalId"
+              label="Savings Goal"
+              value={goalId}
+              onChange={(e) => setGoalId(e.target.value)}
+              required
+            >
+              <option value="">Select a goal</option>
+              {(goals || []).map((g: any) => (
+                <option key={g.id} value={g.id}>
+                  {g.name} ({g.category || 'General'})
+                </option>
+              ))}
+            </CustomSelect>
+          </div>
+        )}
 
         <CustomSelect
           id="source"
@@ -322,18 +395,18 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, initia
           </div>
         </div>
 
-        <div className="flex gap-3 p-4 border-t border-slate-100 dark:border-neutral-800 shrink-0 bg-white dark:bg-neutral-900">
+        <div className="flex items-center justify-end gap-2.5 px-4 sm:px-5 py-3 border-t border-slate-200/80 dark:border-white/[0.08] bg-slate-50/70 dark:bg-[#16161a]/40 shrink-0">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2 px-4 border border-slate-200 dark:border-neutral-700 rounded-xl text-slate-700 dark:text-neutral-300 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors"
+            className="px-4 py-2 border border-slate-200 dark:border-white/10 rounded-xl text-slate-700 dark:text-neutral-300 text-sm font-semibold hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={loading || !amount || !category || !date}
-            className="flex-1 py-2 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-sm font-bold shadow-md hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="px-5 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-sm font-bold shadow-md hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {loading ? (initialData ? 'Saving...' : 'Adding...') : (initialData ? 'Save Changes' : 'Add Transaction')}
           </button>

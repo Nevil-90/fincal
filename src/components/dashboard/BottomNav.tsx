@@ -45,15 +45,17 @@ export default React.memo(function BottomNav({
       <button
         data-tour="add-transaction"
         onClick={onAddTransaction}
-        className="fixed bottom-20 right-4 z-50 md:hidden w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30 active:scale-95 transition-transform"
+        aria-label="Log new transaction"
+        style={{ bottom: 'calc(68px + max(env(safe-area-inset-bottom, 0px), 8px))' }}
+        className="fixed right-4 z-40 md:hidden h-12 w-12 bg-blue-600 hover:bg-blue-700 active:scale-90 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-blue-600/30 transition-all duration-150"
       >
-        <Plus className="h-6 w-6 text-white" />
+        <Plus className="h-6 w-6 stroke-[2.5]" />
       </button>
 
-      {/* Bottom Navigation Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
-        <div className="bg-white dark:bg-neutral-900 border-t border-slate-200 dark:border-neutral-800 shadow-[0_-4px_24px_-4px_rgba(15,23,42,0.12)] dark:shadow-none">
-          <div className={`grid ${gridColsClass} items-end`} style={{ paddingBottom: 'env(safe-area-inset-bottom, 8px)' }}>
+      {/* Bottom Navigation Dock */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden select-none">
+        <div className="bg-white/90 dark:bg-[#09090b]/90 backdrop-blur-xl border-t border-slate-200/80 dark:border-neutral-800/80 shadow-[0_-8px_30px_rgba(0,0,0,0.06)] dark:shadow-none">
+          <div className={`grid ${gridColsClass} items-center`} style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 6px)' }}>
             {slots.map((tabStr, index) => {
               const tabDef = TAB_MAPPING[tabStr]
               if (!tabDef) return null
@@ -61,31 +63,34 @@ export default React.memo(function BottomNav({
               const tab = tabStr as DashboardTab
               const Icon = tabDef.icon
               const label = tabDef.label
+              const isActive = activeTab === tab
 
               return (
                 <button
                   key={`${tab}-${index}`}
                   data-tour={`bottomnav-${tab}`}
                   onClick={() => onTabChange(tab)}
-                  className={`flex flex-col items-center justify-end gap-1 pt-2 pb-2 w-full transition-colors ${
-                    activeTab === tab ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-neutral-500'
+                  className={`flex flex-col items-center justify-center gap-0.5 pt-2 pb-1 w-full transition-colors active:scale-95 ${
+                    isActive ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-neutral-500'
                   }`}
                 >
                   <div className={`relative flex items-center justify-center w-8 h-8 rounded-xl transition-all ${
-                    activeTab === tab ? 'bg-blue-50 dark:bg-blue-900/30' : ''
+                    isActive ? 'bg-slate-100 dark:bg-neutral-800 text-blue-600 dark:text-blue-400 font-bold' : ''
                   }`}>
-                    <Icon className="h-5 w-5" />
-                    {activeTab === tab && (
-                      <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-blue-600 dark:bg-blue-400" />
+                    <Icon className="h-4 w-4" />
+                    {isActive && (
+                      <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1 rounded-full bg-blue-600 dark:bg-blue-400" />
                     )}
                   </div>
-                  <span className="text-[9px] font-bold leading-none truncate w-full px-0.5">{label}</span>
+                  <span className={`text-[10px] font-semibold leading-tight truncate w-full px-0.5 text-center ${
+                    isActive ? 'font-bold text-slate-900 dark:text-white' : ''
+                  }`}>{label}</span>
                 </button>
               )
             })}
           </div>
         </div>
-      </div>
+      </nav>
     </>
   )
 })

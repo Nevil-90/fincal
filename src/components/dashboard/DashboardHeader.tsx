@@ -45,9 +45,11 @@ export default React.memo(function DashboardHeader({
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [showProfileModal, setShowProfileModal] = useState(false)
   const { slots } = useNavPreferences()
-  const { theme, setTheme } = useTheme()
+  const { theme, resolvedTheme, setTheme } = useTheme()
   const [mounted, setMounted] = React.useState(false)
   React.useEffect(() => { setMounted(true) }, [])
+
+  const isDark = (theme === 'system' ? resolvedTheme : theme) === 'dark'
 
   useScrollLock(showMobileMenu)
 
@@ -74,83 +76,82 @@ export default React.memo(function DashboardHeader({
 
   return (
     <>
-      <header className="bg-white dark:bg-[#09090b] border-b border-slate-200 dark:border-neutral-800/40 px-4 sm:px-6 h-[60px] sm:h-[68px] flex flex-col justify-center transition-colors duration-200 shrink-0">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-            <button
-              onClick={onToggleSidebar}
-              className="hidden md:flex p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors shrink-0"
-              aria-label="Toggle Sidebar"
-            >
-              <Menu className="h-5 w-5 text-slate-600 dark:text-neutral-400" />
-            </button>
-            <div className="min-w-0">
-              <h1 className="text-base sm:text-xl font-black text-slate-800 dark:text-slate-100 truncate">
-                {getGreeting()}
-              </h1>
-              {activeTab === 'overview' && (
-                <p className="text-xs text-slate-500 dark:text-neutral-400 mt-0.5 hidden sm:block">
-                  {getHeaderSubtitle()}
-                </p>
-              )}
-            </div>
+      <header className="bg-white/80 dark:bg-[#09090b]/80 backdrop-blur-xl border-b border-slate-200/80 dark:border-neutral-800/80 px-4 sm:px-6 h-16 flex items-center justify-between shrink-0">
+        {/* Left: Rail toggle & contextual breadcrumb */}
+        <div className="flex items-center gap-3 min-w-0">
+          <button
+            onClick={onToggleSidebar}
+            className="hidden md:flex p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-neutral-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors shrink-0"
+            aria-label="Toggle Navigation Rail"
+            title="Toggle Navigation Rail"
+          >
+            <Menu className="h-4 w-4" />
+          </button>
+
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="hidden sm:inline-block text-xs font-semibold text-slate-400 dark:text-neutral-500">
+              Finacal
+            </span>
+            <span className="hidden sm:inline-block text-xs text-slate-300 dark:text-neutral-600">/</span>
+            <h1 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white truncate capitalize">
+              {activeTab === 'overview' ? 'Overview' : activeTab === 'transactions' ? 'Transactions' : activeTab === 'recurring' ? 'Recurring Bills' : activeTab === 'goals' ? 'Goals' : activeTab === 'calendar' ? 'Calendar' : activeTab === 'traveling' ? 'Travel & Fuel' : activeTab}
+            </h1>
+            <span className="hidden lg:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-400 border border-slate-200 dark:border-neutral-700 ml-1.5 tabular-nums">
+              {new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+            </span>
           </div>
+        </div>
 
-          <div className="flex items-center gap-3 shrink-0">
-            {/* Desktop Add Transaction Button */}
-            <button
-              data-tour="add-transaction"
-              onClick={onShowAddTransaction}
-              className="hidden md:flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 shadow-sm text-sm font-bold whitespace-nowrap"
-            >
-              <Plus className="h-4 w-4" />
-              Add Transaction
-            </button>
+        {/* Right: Actions */}
+        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+          {/* Quick Add Transaction Button */}
+          <button
+            data-tour="add-transaction"
+            onClick={onShowAddTransaction}
+            className="flex items-center gap-1.5 py-1.5 px-3 sm:px-3.5 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white rounded-xl text-xs font-bold shadow-sm transition-all whitespace-nowrap"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Log Entry</span>
+            <span className="sm:hidden">Log</span>
+          </button>
 
-            {/* Desktop Profile Icon */}
+          {/* Theme Quick Toggle (Desktop) */}
+          {mounted && (
             <button
-              onClick={() => setShowProfileModal(true)}
-              className="hidden md:flex items-center justify-center w-9 h-9 rounded-xl bg-slate-100 dark:bg-neutral-850 dark:bg-neutral-800 text-slate-600 dark:text-neutral-300 border border-slate-200 dark:border-neutral-800 shadow-sm hover:bg-slate-200 dark:hover:bg-neutral-700 transition-all"
-              title="Edit Profile"
+              onClick={() => setTheme(isDark ? 'light' : 'dark')}
+              className="hidden md:flex items-center justify-center h-8 w-8 rounded-xl text-slate-500 hover:text-slate-900 dark:text-neutral-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors"
+              title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
             >
-              {user?.firstName ? (
-                <span className="text-sm font-black uppercase">{user.firstName[0]}</span>
-              ) : (
-                <User className="h-4 w-4" />
-              )}
+              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
+          )}
 
-            {/* Desktop Settings Icon */}
-            <button
-              onClick={onOpenSettings}
-              className="hidden md:flex items-center justify-center w-9 h-9 rounded-xl bg-slate-100 dark:bg-neutral-850 dark:bg-neutral-800 text-slate-600 dark:text-neutral-300 border border-slate-200 dark:border-neutral-800 shadow-sm hover:bg-slate-200 dark:hover:bg-neutral-700 transition-all"
-              title="Settings"
-            >
-              <Settings className="h-4 w-4" />
-            </button>
+          {/* Settings Trigger */}
+          <button
+            onClick={onOpenSettings}
+            className="flex items-center justify-center h-8 w-8 rounded-xl text-slate-500 hover:text-slate-900 dark:text-neutral-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors"
+            title="System Settings"
+          >
+            <Settings className="h-4 w-4" />
+          </button>
 
-            {/* Mobile Settings Icon */}
-            <button
-              onClick={onOpenSettings}
-              className="md:hidden flex items-center justify-center w-8 h-8 rounded-xl bg-slate-100 dark:bg-neutral-850 dark:bg-neutral-800 text-slate-600 dark:text-neutral-300 border border-slate-200 dark:border-neutral-800 shadow-sm hover:bg-slate-200 dark:hover:bg-neutral-700 transition-all"
-              title="Settings"
-            >
-              <Settings className="h-4 w-4" />
-            </button>
+          {/* Profile Avatar */}
+          <button
+            onClick={() => setShowProfileModal(true)}
+            className="hidden md:flex items-center justify-center h-8 w-8 rounded-xl bg-slate-100 dark:bg-neutral-800 text-slate-700 dark:text-neutral-200 border border-slate-200 dark:border-neutral-700 hover:border-slate-300 dark:hover:border-neutral-600 transition-all font-bold text-xs uppercase"
+            title="Profile & Identity"
+          >
+            {user?.firstName ? user.firstName[0] : <User className="h-3.5 w-3.5" />}
+          </button>
 
-            {/* Mobile Profile Icon */}
-            <button
-              data-tour="mobile-more-menu"
-              onClick={() => setShowMobileMenu(true)}
-              className="md:hidden flex items-center justify-center w-8 h-8 rounded-xl bg-slate-100 dark:bg-neutral-850 dark:bg-neutral-800 text-slate-600 dark:text-neutral-300 border border-slate-200 dark:border-neutral-800 shadow-sm hover:bg-slate-200 dark:hover:bg-neutral-700 transition-all"
-            >
-              {user?.firstName ? (
-                <span className="text-xs font-black uppercase">{user.firstName[0]}</span>
-              ) : (
-                <User className="h-4 w-4" />
-              )}
-            </button>
-          </div>
+          {/* Mobile Profile Trigger (opens bottom sheet) */}
+          <button
+            data-tour="mobile-more-menu"
+            onClick={() => setShowMobileMenu(true)}
+            className="md:hidden flex items-center justify-center h-8 w-8 rounded-xl bg-slate-100 dark:bg-neutral-800 text-slate-700 dark:text-neutral-200 border border-slate-200 dark:border-neutral-700 font-bold text-xs uppercase"
+          >
+            {user?.firstName ? user.firstName[0] : <User className="h-3.5 w-3.5" />}
+          </button>
         </div>
       </header>
 
@@ -190,11 +191,11 @@ export default React.memo(function DashboardHeader({
               {/* Theme Toggle */}
               {mounted && (
                 <button
-                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  onClick={() => setTheme(isDark ? 'light' : 'dark')}
                   className="p-2.5 rounded-xl bg-slate-100 dark:bg-neutral-800 text-slate-500 dark:text-neutral-400 hover:bg-slate-200 dark:hover:bg-neutral-700 transition-colors shrink-0"
-                  title="Toggle Theme"
+                  title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
                 >
-                  {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                  {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                 </button>
               )}
             </div>

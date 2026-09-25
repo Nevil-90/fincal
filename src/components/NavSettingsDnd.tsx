@@ -67,20 +67,20 @@ function SortableItem({ id, tab, isFull, isActive, moveSlot, removeSlot, addSlot
         style={style} 
         {...attributes} 
         {...listeners}
-        className="shrink-0 flex flex-col items-center justify-center gap-1 w-12 h-12 md:w-14 md:h-14 bg-white dark:bg-neutral-800 border-2 border-indigo-100 dark:border-indigo-700 rounded-xl shadow-sm cursor-grab active:cursor-grabbing hover:border-indigo-300 dark:hover:border-indigo-500 transition-colors relative group touch-none"
+        className="shrink-0 flex flex-col items-center justify-center gap-1 w-12 h-12 md:w-14 md:h-14 bg-white dark:bg-[#121215] border border-blue-500/40 rounded-xl shadow-sm cursor-grab active:cursor-grabbing hover:border-blue-500 dark:hover:border-blue-400 transition-colors relative group touch-none"
       >
         <div className="absolute -top-1.5 -right-1.5 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity z-10">
           <button 
             type="button" 
             onPointerDown={(e) => { e.stopPropagation(); removeSlot(index); }}
-            className="p-1 bg-rose-100 hover:bg-rose-200 text-rose-600 rounded-full shadow-sm"
+            className="p-1 bg-rose-50 dark:bg-rose-500/20 hover:bg-rose-100 dark:hover:bg-rose-500/30 text-rose-600 dark:text-rose-300 rounded-full border border-rose-200 dark:border-rose-500/30 shadow-sm"
           >
             <X className="h-2.5 w-2.5 md:h-3 md:w-3" />
           </button>
         </div>
         
-        <Icon className="h-4 w-4 md:h-5 md:w-5 text-indigo-600 dark:text-indigo-400 mt-0.5 md:mt-1" />
-        <span className="text-[7px] md:text-[8px] font-bold text-slate-700 dark:text-neutral-300 truncate w-full text-center px-0.5">{tab.label}</span>
+        <Icon className="h-4 w-4 md:h-5 md:w-5 text-blue-500 dark:text-blue-400 mt-0.5 md:mt-1" />
+        <span className="text-[7px] md:text-[8px] font-medium text-slate-700 dark:text-zinc-300 truncate w-full text-center px-0.5">{tab.label}</span>
       </div>
     );
   }
@@ -93,18 +93,18 @@ function SortableItem({ id, tab, isFull, isActive, moveSlot, removeSlot, addSlot
       {...listeners}
       className={`relative flex items-center gap-2 px-3 py-2 rounded-xl border transition-all touch-none group ${
         isFull 
-          ? 'bg-slate-50 dark:bg-neutral-800/50 border-slate-200 dark:border-neutral-700 opacity-50 cursor-not-allowed' 
-          : 'bg-white dark:bg-neutral-800 border-slate-200 dark:border-neutral-700 shadow-sm cursor-grab active:cursor-grabbing hover:border-slate-300 dark:hover:border-neutral-500 active:scale-95'
+          ? 'bg-slate-100/60 dark:bg-white/[0.02] border-slate-200/60 dark:border-white/[0.04] opacity-40 cursor-not-allowed' 
+          : 'bg-white dark:bg-[#16161a] border-slate-200/80 dark:border-white/[0.08] shadow-sm cursor-grab active:cursor-grabbing hover:border-slate-300 dark:hover:border-white/[0.16] active:scale-95'
       }`}
     >
-      <Icon className={`h-4 w-4 ${isFull ? 'text-slate-400 dark:text-neutral-600' : 'text-slate-600 dark:text-neutral-300'}`} />
-      <span className={`text-xs font-bold ${isFull ? 'text-slate-400 dark:text-neutral-600' : 'text-slate-700 dark:text-neutral-200'} pr-5`}>{tab.label}</span>
+      <Icon className={`h-4 w-4 ${isFull ? 'text-slate-400 dark:text-zinc-600' : 'text-slate-500 dark:text-zinc-400'}`} />
+      <span className={`text-xs font-medium ${isFull ? 'text-slate-400 dark:text-zinc-600' : 'text-slate-800 dark:text-zinc-200'} pr-5`}>{tab.label}</span>
       
       {!isFull && (
         <button
           type="button"
           onPointerDown={(e) => { e.stopPropagation(); addSlot(tab.id); }}
-          className="absolute right-1.5 p-1 text-slate-400 hover:text-indigo-600 bg-slate-50/80 rounded-md cursor-pointer opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity touch-none z-10"
+          className="absolute right-1.5 p-1 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-white/[0.06] rounded-md cursor-pointer opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity touch-none z-10"
         >
           <Plus className="h-3 w-3" />
         </button>
@@ -245,9 +245,9 @@ export function NavSettingsDnd({ slots, updateSlots, isAdmin }: { slots: string[
 
   return (
     <>
-      <div className="border-b border-slate-100 dark:border-neutral-800 pb-5 mb-5">
-        <h2 className="text-lg font-bold text-slate-900 dark:text-white">Bottom Navigation</h2>
-        <p className="text-xs text-slate-500 dark:text-neutral-400 mt-1">Design your mobile bottom app bar using drag and drop.</p>
+      <div className="border-b border-slate-200/80 dark:border-white/[0.06] pb-4 mb-4">
+        <h2 className="text-sm font-semibold tracking-tight text-slate-900 dark:text-white">Bottom Navigation</h2>
+        <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">Design your mobile bottom app bar using drag and drop.</p>
       </div>
 
       <DndContext
@@ -257,15 +257,15 @@ export function NavSettingsDnd({ slots, updateSlots, isAdmin }: { slots: string[
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className="space-y-8">
+        <div className="space-y-6">
           <div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-neutral-300">Active Navigation <span className="text-slate-400 dark:text-neutral-500 font-medium">({activeIds.length}/6 max)</span></h3>
-              {activeIds.length <= 4 && <span className="text-[10px] font-semibold text-rose-500 bg-rose-50 dark:bg-rose-900/20 px-2 py-0.5 rounded-md">Minimum Reached</span>}
+            <div className="flex items-center justify-between mb-2.5">
+              <h3 className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400">Active Navigation <span className="text-slate-400 dark:text-zinc-500 font-medium">({activeIds.length}/6 max)</span></h3>
+              {activeIds.length <= 4 && <span className="text-[10px] font-medium text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 px-2 py-0.5 rounded">Minimum Reached</span>}
             </div>
             
             <SortableContext id="active" items={activeIds} strategy={horizontalListSortingStrategy}>
-              <DroppableZone id="active" className="flex flex-wrap md:flex-nowrap gap-2 md:gap-3 overflow-x-auto pb-4 custom-scrollbar items-center bg-slate-50 dark:bg-neutral-800/50 p-4 rounded-2xl border border-slate-200 dark:border-neutral-700 border-dashed min-h-[110px]">
+              <DroppableZone id="active" className="flex flex-wrap md:flex-nowrap gap-2 md:gap-3 overflow-x-auto pb-3 custom-scrollbar items-center bg-slate-50/70 dark:bg-[#16161a] p-3.5 rounded-xl border border-slate-200/80 dark:border-white/[0.08] border-dashed min-h-[90px]">
                 {activeIds.map((id, index) => {
                   const tab = availableTabs.find(t => t.id === id);
                   if (!tab) return null;
@@ -287,10 +287,10 @@ export function NavSettingsDnd({ slots, updateSlots, isAdmin }: { slots: string[
           </div>
 
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-neutral-300 mb-3">Available Tabs</h3>
+            <h3 className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400 mb-2.5">Available Tabs</h3>
             
             <SortableContext id="inactive" items={inactiveIds} strategy={rectSortingStrategy}>
-              <DroppableZone id="inactive" className="flex flex-row flex-wrap gap-3 bg-white dark:bg-neutral-800/30 p-4 rounded-2xl border border-slate-200 dark:border-neutral-700 min-h-[80px]">
+              <DroppableZone id="inactive" className="flex flex-row flex-wrap gap-2.5 bg-slate-50/40 dark:bg-[#121215] p-3.5 rounded-xl border border-slate-200/80 dark:border-white/[0.08] min-h-[70px]">
                 {inactiveIds.map((id) => {
                   const tab = availableTabs.find(t => t.id === id);
                   if (!tab) return null;
@@ -306,7 +306,7 @@ export function NavSettingsDnd({ slots, updateSlots, isAdmin }: { slots: string[
                   );
                 })}
                 {inactiveIds.length === 0 && (
-                  <p className="text-xs text-slate-400 font-medium py-2">All tabs are currently in use.</p>
+                  <p className="text-xs text-slate-500 dark:text-zinc-500 font-medium py-2">All tabs are currently in use.</p>
                 )}
               </DroppableZone>
             </SortableContext>
@@ -316,14 +316,14 @@ export function NavSettingsDnd({ slots, updateSlots, isAdmin }: { slots: string[
         <DragOverlay dropAnimation={{ duration: 250, easing: 'ease' }}>
           {activeItemData ? (
             isDraggingActive ? (
-              <div className="shrink-0 flex flex-col items-center justify-center gap-2 w-20 h-20 bg-white border-2 border-indigo-400 rounded-xl shadow-lg cursor-grabbing relative">
-                <activeItemData.icon className="h-6 w-6 text-indigo-600 mt-2" />
-                <span className="text-[10px] font-bold text-slate-700 truncate w-full text-center px-1">{activeItemData.label}</span>
+              <div className="shrink-0 flex flex-col items-center justify-center gap-2 w-16 h-16 bg-white dark:bg-[#16161a] border-2 border-blue-500 rounded-xl shadow-2xl cursor-grabbing relative">
+                <activeItemData.icon className="h-5 w-5 text-blue-500 dark:text-blue-400 mt-1" />
+                <span className="text-[9px] font-medium text-slate-900 dark:text-white truncate w-full text-center px-1">{activeItemData.label}</span>
               </div>
             ) : (
-              <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border bg-white border-indigo-400 shadow-lg cursor-grabbing">
-                <activeItemData.icon className="h-4 w-4 text-indigo-600" />
-                <span className="text-xs font-bold text-slate-700">{activeItemData.label}</span>
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl border bg-white dark:bg-[#16161a] border-blue-500 shadow-2xl cursor-grabbing">
+                <activeItemData.icon className="h-4 w-4 text-blue-500 dark:text-blue-400" />
+                <span className="text-xs font-medium text-slate-900 dark:text-white">{activeItemData.label}</span>
               </div>
             )
           ) : null}

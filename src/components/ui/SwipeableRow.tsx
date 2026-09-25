@@ -11,6 +11,7 @@ interface SwipeableRowProps {
   leftContent?: React.ReactNode
   rightContent?: React.ReactNode
   swipeThreshold?: number
+  className?: string
 }
 
 export default function SwipeableRow({
@@ -19,7 +20,8 @@ export default function SwipeableRow({
   onSwipeRight,
   leftContent,
   rightContent,
-  swipeThreshold = 75
+  swipeThreshold = 75,
+  className = ''
 }: SwipeableRowProps) {
   const [offset, setOffset] = useState(0)
   const [isSwiping, setIsSwiping] = useState(false)
@@ -41,10 +43,8 @@ export default function SwipeableRow({
     if (diff > 0 && !onSwipeRight) return
     if (diff < 0 && !onSwipeLeft) return
 
-    const resistance = diff > 0 ? 0.6 : 0.6
-    const visualOffset = diff * resistance
-    
-    setOffset(Math.max(-100, Math.min(100, visualOffset)))
+    const visualOffset = diff * 0.55
+    setOffset(Math.max(-90, Math.min(90, visualOffset)))
   }
 
   const handleTouchEnd = () => {
@@ -69,21 +69,23 @@ export default function SwipeableRow({
   }
 
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl group">
-      <div className="absolute inset-0 flex items-center justify-between px-0 text-white">
-        <div className={`flex items-center justify-start w-1/2 h-full rounded-l-2xl transition-opacity duration-200 ${offset > 10 ? 'opacity-100' : 'opacity-0'}`}>
+    <div className={`relative w-full overflow-hidden rounded-xl group ${className}`}>
+      {/* Action Underlays */}
+      <div className="absolute inset-0 flex items-center justify-between px-2 text-white pointer-events-none">
+        <div className={`flex items-center justify-start w-1/2 h-full rounded-l-xl transition-opacity duration-150 ${offset > 10 ? 'opacity-100' : 'opacity-0'}`}>
           {leftContent}
         </div>
-        <div className={`flex items-center justify-end w-1/2 h-full rounded-r-2xl transition-opacity duration-200 ${offset < -10 ? 'opacity-100' : 'opacity-0'}`}>
+        <div className={`flex items-center justify-end w-1/2 h-full rounded-r-xl transition-opacity duration-150 ${offset < -10 ? 'opacity-100' : 'opacity-0'}`}>
           {rightContent}
         </div>
       </div>
 
+      {/* Row Foreground */}
       <div
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        className={`relative w-full bg-white rounded-2xl touch-pan-y ${isSwiping ? '' : 'transition-transform duration-300'}`}
+        className={`relative w-full bg-white dark:bg-[#121215] rounded-xl touch-pan-y ${isSwiping ? '' : 'transition-transform duration-200'}`}
         style={{ transform: `translateX(${offset}px)` }}
       >
         {children}

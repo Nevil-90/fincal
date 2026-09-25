@@ -133,38 +133,38 @@ export default function ProfileModal({ onClose, user, onUserUpdate }: ProfileMod
     <div className="fixed inset-0 z-[500] flex justify-end">
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-slate-950/45 dark:bg-neutral-950/80 backdrop-blur-sm transition-opacity animate-fade-in" 
+        className="absolute inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-sm transition-opacity animate-fade-in" 
         onClick={onClose} 
       />
       
       {/* Slide-over panel */}
       <div 
-        className="relative w-full max-w-md bg-white dark:bg-neutral-900 shadow-2xl h-full flex flex-col animate-slide-left sm:rounded-l-2xl"
+        className="relative w-full max-w-md bg-white dark:bg-[#121215] border-l border-slate-200/80 dark:border-white/[0.08] shadow-2xl h-full flex flex-col animate-slide-left sm:rounded-l-2xl"
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex justify-between items-center px-5 py-3 border-b border-slate-100 dark:border-neutral-800 bg-slate-50/50 dark:bg-neutral-800/50 shrink-0">
-          <h2 className="text-lg font-bold text-slate-900 dark:text-white">My Profile</h2>
+        <div className="flex justify-between items-center px-6 py-4 border-b border-slate-200/80 dark:border-white/[0.06] bg-slate-50/80 dark:bg-[#16161a]/60 shrink-0">
+          <h2 className="text-sm font-semibold tracking-tight text-slate-900 dark:text-white">My Profile</h2>
           <button 
             onClick={onClose}
-            className="rounded-lg p-1.5 text-slate-400 dark:text-neutral-500 transition-all duration-200 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-500 dark:hover:text-rose-400 hover:shadow-[0_0_12px_rgba(244,63,94,0.4)]"
+            className="rounded-lg p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
-        <div className="flex border-b border-slate-100 dark:border-neutral-800 px-6 pt-2">
+        <div className="flex border-b border-slate-200/80 dark:border-white/[0.06] px-6 pt-2">
           <button
             onClick={() => { setActiveTab('profile'); setMessage({type:'', text:''}); }}
-            className={`pb-3 px-1 mr-6 text-sm font-semibold transition-colors border-b-2 ${
-              activeTab === 'profile' ? 'border-indigo-600 dark:border-indigo-400 text-indigo-600 dark:text-indigo-400' : 'border-transparent text-slate-500 dark:text-neutral-400 hover:text-slate-700 dark:hover:text-neutral-300'
+            className={`pb-3 px-1 mr-6 text-xs font-semibold transition-colors border-b-2 ${
+              activeTab === 'profile' ? 'border-blue-600 text-slate-900 dark:text-white' : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-zinc-200'
             }`}
           >
             Personal Info
           </button>
           <button
             onClick={() => { setActiveTab('password'); setMessage({type:'', text:''}); }}
-            className={`pb-3 px-1 text-sm font-semibold transition-colors border-b-2 ${
-              activeTab === 'password' ? 'border-indigo-600 dark:border-indigo-400 text-indigo-600 dark:text-indigo-400' : 'border-transparent text-slate-500 dark:text-neutral-400 hover:text-slate-700 dark:hover:text-neutral-300'
+            className={`pb-3 px-1 text-xs font-semibold transition-colors border-b-2 ${
+              activeTab === 'password' ? 'border-blue-600 text-slate-900 dark:text-white' : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-zinc-200'
             }`}
           >
             Security
@@ -173,7 +173,7 @@ export default function ProfileModal({ onClose, user, onUserUpdate }: ProfileMod
 
         <div className="p-6 overflow-y-auto">
           {message.text && (
-            <div className={`mb-5 p-3 rounded-xl text-sm font-medium ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}`}>
+            <div className={`mb-5 p-3 rounded-xl text-xs font-medium ${message.type === 'success' ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/20' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/20'}`}>
               {message.text}
             </div>
           )}
@@ -181,45 +181,45 @@ export default function ProfileModal({ onClose, user, onUserUpdate }: ProfileMod
           {activeTab === 'profile' ? (
             <form onSubmit={handleProfileSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400 mb-2">Email Address</label>
+                <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-600 dark:text-zinc-400 mb-1.5">Email Address</label>
                 <input
                   type="email"
                   value={profileForm.email}
                   disabled
-                  className="w-full px-4 py-2.5 bg-slate-100 dark:bg-neutral-800/50 border border-slate-200 dark:border-neutral-700 rounded-xl text-slate-500 dark:text-neutral-500 cursor-not-allowed text-sm"
+                  className="w-full px-3.5 py-2.5 bg-slate-100 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.04] rounded-xl text-slate-500 dark:text-zinc-500 cursor-not-allowed text-xs"
                 />
               </div>
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400 mb-2">First Name</label>
+                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-600 dark:text-zinc-400 mb-1.5">First Name</label>
                   <input
                     type="text"
                     value={profileForm.firstName}
                     onChange={e => setProfileForm({...profileForm, firstName: e.target.value})}
                     required
-                    className="w-full px-4 py-2.5 bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-900 dark:text-white transition-all text-sm"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#16161a] border border-slate-200/90 dark:border-white/[0.08] rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/40 transition-colors text-xs"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400 mb-2">Last Name</label>
+                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-600 dark:text-zinc-400 mb-1.5">Last Name</label>
                   <input
                     type="text"
                     value={profileForm.lastName}
                     onChange={e => setProfileForm({...profileForm, lastName: e.target.value})}
                     required
-                    className="w-full px-4 py-2.5 bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-900 dark:text-white transition-all text-sm"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#16161a] border border-slate-200/90 dark:border-white/[0.08] rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/40 transition-colors text-xs"
                   />
                 </div>
               </div>
               
-              <div className="pt-4">
+              <div className="pt-3">
                 <button
                   type="submit"
                   disabled={saving}
-                  className="w-full flex justify-center items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition-colors shadow-sm"
+                  className="w-full flex justify-center items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl disabled:opacity-50 transition-all shadow-sm"
                 >
-                  <Save className="h-4 w-4" />
+                  <Save className="h-3.5 w-3.5" />
                   {saving ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
@@ -228,69 +228,69 @@ export default function ProfileModal({ onClose, user, onUserUpdate }: ProfileMod
             <>
             <form onSubmit={handlePasswordSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400 mb-2">Current Password</label>
+                <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-600 dark:text-zinc-400 mb-1.5">Current Password</label>
                 <input
                   type="password"
                   value={passwordForm.currentPassword}
                   onChange={e => setPasswordForm({...passwordForm, currentPassword: e.target.value})}
                   required
-                  className="w-full px-4 py-2.5 bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-900 dark:text-white transition-all text-sm"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#16161a] border border-slate-200/90 dark:border-white/[0.08] rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/40 transition-colors text-xs"
                 />
               </div>
               
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400 mb-2">New Password</label>
+                <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-600 dark:text-zinc-400 mb-1.5">New Password</label>
                 <input
                   type="password"
                   value={passwordForm.newPassword}
                   onChange={e => setPasswordForm({...passwordForm, newPassword: e.target.value})}
                   required
                   minLength={8}
-                  className="w-full px-4 py-2.5 bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-900 dark:text-white transition-all text-sm"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#16161a] border border-slate-200/90 dark:border-white/[0.08] rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/40 transition-colors text-xs"
                 />
               </div>
               
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400 mb-2">Confirm New Password</label>
+                <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-600 dark:text-zinc-400 mb-1.5">Confirm New Password</label>
                 <input
                   type="password"
                   value={passwordForm.confirmPassword}
                   onChange={e => setPasswordForm({...passwordForm, confirmPassword: e.target.value})}
                   required
                   minLength={8}
-                  className="w-full px-4 py-2.5 bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-900 dark:text-white transition-all text-sm"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-[#16161a] border border-slate-200/90 dark:border-white/[0.08] rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/40 transition-colors text-xs"
                 />
               </div>
               
-              <div className="pt-4">
+              <div className="pt-3">
                 <button
                   type="submit"
                   disabled={saving}
-                  className="w-full flex justify-center items-center gap-2 px-4 py-2.5 bg-slate-900 text-white font-semibold rounded-xl hover:bg-slate-800 disabled:opacity-50 transition-colors shadow-sm"
+                  className="w-full flex justify-center items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl disabled:opacity-50 transition-all shadow-sm"
                 >
-                  <Lock className="h-4 w-4" />
+                  <Lock className="h-3.5 w-3.5" />
                   {saving ? 'Updating...' : 'Update Password'}
                 </button>
               </div>
             </form>
             
             {/* Danger Zone */}
-            <div className="mt-8 pt-6 border-t border-slate-200 dark:border-neutral-800">
-              <h3 className="text-sm font-bold text-red-600 dark:text-red-500 mb-2 flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4" /> Danger Zone
+            <div className="mt-8 pt-6 border-t border-slate-200/80 dark:border-white/[0.06]">
+              <h3 className="text-xs font-semibold text-rose-500 dark:text-rose-400 mb-1 flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-rose-500 dark:text-rose-400" /> Danger Zone
               </h3>
-              <p className="text-xs text-slate-500 dark:text-neutral-400 mb-4">
+              <p className="text-[11px] text-slate-500 dark:text-zinc-400 mb-4">
                 Permanently delete your account and all associated data including transactions, goals, and recurring setups. This action cannot be undone.
               </p>
               
               {showDeleteConfirm ? (
-                <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-500/30 rounded-xl p-4">
-                  <p className="text-sm font-bold text-red-700 dark:text-red-400 mb-3">Are you absolutely sure?</p>
+                <div className="bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 rounded-xl p-4">
+                  <p className="text-xs font-semibold text-rose-700 dark:text-rose-300 mb-3">Are you absolutely sure?</p>
                   <div className="flex gap-2">
                     <button
                       type="button"
                       onClick={() => setShowDeleteConfirm(false)}
-                      className="flex-1 px-3 py-2 bg-white dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 text-slate-700 dark:text-neutral-300 text-xs font-bold rounded-lg hover:bg-slate-50 dark:hover:bg-neutral-700 transition-colors"
+                      className="flex-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] border border-slate-200 dark:border-white/[0.08] text-slate-700 dark:text-zinc-300 text-xs font-medium rounded-lg transition-colors"
                       disabled={saving}
                     >
                       Cancel
@@ -298,7 +298,7 @@ export default function ProfileModal({ onClose, user, onUserUpdate }: ProfileMod
                     <button
                       type="button"
                       onClick={handleDeleteAccount}
-                      className="flex-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition-colors"
+                      className="flex-1 px-3 py-2 bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold rounded-lg transition-colors"
                       disabled={saving}
                     >
                       {saving ? 'Deleting...' : 'Yes, Delete Account'}
@@ -309,9 +309,9 @@ export default function ProfileModal({ onClose, user, onUserUpdate }: ProfileMod
                 <button
                   type="button"
                   onClick={() => setShowDeleteConfirm(true)}
-                  className="w-full flex justify-center items-center gap-2 px-4 py-2.5 bg-white dark:bg-neutral-900 border border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-400 font-semibold rounded-xl hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors shadow-sm"
+                  className="w-full flex justify-center items-center gap-2 px-4 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-semibold rounded-xl transition-all shadow-sm"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-3.5 w-3.5" />
                   Delete Account
                 </button>
               )}

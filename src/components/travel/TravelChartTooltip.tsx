@@ -68,7 +68,7 @@ export default function SingleChartTooltip({
               {selectedYear}
             </span>
           </div>
-          <span className="text-xs font-bold font-mono text-slate-900 dark:text-white">
+          <span className="text-xs font-bold tabular-nums text-slate-900 dark:text-white">
             {metricConfig.formatVal(valCurrent)}
           </span>
         </div>
@@ -84,7 +84,7 @@ export default function SingleChartTooltip({
               {compareYear}
             </span>
           </div>
-          <span className="text-xs font-bold font-mono text-slate-600 dark:text-neutral-400">
+          <span className="text-xs font-bold tabular-nums text-slate-600 dark:text-neutral-400">
             {metricConfig.formatVal(valCompare)}
           </span>
         </div>
@@ -93,7 +93,7 @@ export default function SingleChartTooltip({
         <div className="border-t border-dashed border-slate-200 dark:border-neutral-800 pt-2 flex items-center justify-between text-[11px]">
           <span className="text-slate-400 dark:text-neutral-500 font-medium">Difference</span>
           <span
-            className={`font-mono font-bold ${
+            className={`tabular-nums font-bold ${
               isNeutral
                 ? 'text-slate-500 dark:text-neutral-400'
                 : isPositiveChange

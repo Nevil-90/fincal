@@ -27,19 +27,19 @@ export default function TravelLineChartCanvas({
       <ResponsiveContainer width="100%" height="100%">
         {chartMode === 'difference' ? (
           <LineChart data={chartData} margin={{ top: 15, right: 10, left: -10, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="4 4" stroke="currentColor" className="text-slate-200 dark:text-neutral-800" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.2)" vertical={false} />
             <XAxis
               dataKey="monthName"
               tickLine={false}
               axisLine={false}
-              tick={{ fontSize: 11, fill: '#737373', fontWeight: 600 }}
+              tick={{ fontSize: 11, fill: '#71717a', fontWeight: 500 }}
               dy={10}
             />
             <YAxis
               width={55}
               tickLine={false}
               axisLine={false}
-              tick={{ fontSize: 11, fill: '#737373', fontFamily: 'var(--font-sans), sans-serif', fontWeight: 500 }}
+              tick={{ fontSize: 11, fill: '#71717a', fontFamily: 'var(--font-sans), sans-serif', fontWeight: 500 }}
               tickFormatter={value => {
                 try {
                   return activeConfig.formatCompact(Number(value) || 0)
@@ -60,34 +60,34 @@ export default function TravelLineChartCanvas({
                 />
               }
             />
-            <ReferenceLine y={0} stroke="#737373" strokeDasharray="4 4" opacity={0.5} />
+            <ReferenceLine y={0} stroke="#71717a" strokeDasharray="3 3" opacity={0.3} />
             <Line
               type="linear"
               dataKey={activeConfig.diffKey}
               name="Net Difference"
               stroke={activeConfig.colorDiff}
               strokeWidth={2.5}
-              dot={{ r: 4.5, fill: activeConfig.colorDiff, stroke: '#ffffff', strokeWidth: 2 }}
-              activeDot={{ r: 6.5, fill: activeConfig.colorDiff, stroke: '#ffffff', strokeWidth: 2 }}
+              dot={{ r: 4, fill: activeConfig.colorDiff, stroke: '#94a3b8', strokeWidth: 1.5 }}
+              activeDot={{ r: 6, fill: activeConfig.colorDiff, stroke: '#94a3b8', strokeWidth: 2 }}
               isAnimationActive={false}
               connectNulls={true}
             />
           </LineChart>
         ) : (
           <LineChart data={chartData} margin={{ top: 15, right: 10, left: -10, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="4 4" stroke="currentColor" className="text-slate-200 dark:text-neutral-800" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.2)" vertical={false} />
             <XAxis
               dataKey="monthName"
               tickLine={false}
               axisLine={false}
-              tick={{ fontSize: 11, fill: '#737373', fontWeight: 600 }}
+              tick={{ fontSize: 11, fill: '#71717a', fontWeight: 500 }}
               dy={10}
             />
             <YAxis
               width={55}
               tickLine={false}
               axisLine={false}
-              tick={{ fontSize: 11, fill: '#737373', fontFamily: 'var(--font-sans), sans-serif', fontWeight: 500 }}
+              tick={{ fontSize: 11, fill: '#71717a', fontFamily: 'var(--font-sans), sans-serif', fontWeight: 500 }}
               tickFormatter={value => {
                 try {
                   return activeConfig.formatCompact(Number(value) || 0)
@@ -114,8 +114,8 @@ export default function TravelLineChartCanvas({
               name={`${selectedYear}`}
               stroke={activeConfig.colorCurrent}
               strokeWidth={3}
-              dot={{ r: 4.5, fill: activeConfig.colorCurrent, stroke: '#ffffff', strokeWidth: 2 }}
-              activeDot={{ r: 6.5, fill: activeConfig.colorCurrent, stroke: '#ffffff', strokeWidth: 2 }}
+              dot={{ r: 4, fill: activeConfig.colorCurrent, stroke: '#94a3b8', strokeWidth: 1.5 }}
+              activeDot={{ r: 6, fill: activeConfig.colorCurrent, stroke: '#94a3b8', strokeWidth: 2 }}
               isAnimationActive={false}
               connectNulls={true}
             />
@@ -126,8 +126,8 @@ export default function TravelLineChartCanvas({
               stroke={activeConfig.colorCompare}
               strokeWidth={2.5}
               strokeDasharray="5 5"
-              dot={{ r: 4, fill: activeConfig.colorCompare, stroke: '#ffffff', strokeWidth: 1.5 }}
-              activeDot={{ r: 6, fill: activeConfig.colorCompare, stroke: '#ffffff', strokeWidth: 2 }}
+              dot={{ r: 4, fill: activeConfig.colorCompare, stroke: '#94a3b8', strokeWidth: 1.5 }}
+              activeDot={{ r: 6, fill: activeConfig.colorCompare, stroke: '#94a3b8', strokeWidth: 2 }}
               isAnimationActive={false}
               connectNulls={true}
             />

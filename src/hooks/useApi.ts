@@ -62,8 +62,8 @@ export function useTransactions(page: number = 1, limit: number = 50, filters: R
 
   let url = `/api/transactions?page=${page}&limit=${limit}`
   for (const [key, value] of Object.entries(filters)) {
-    if (value !== undefined) {
-      url += `&${key}=${value}`
+    if (value !== undefined && value !== '') {
+      url += `&${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`
     }
   }
   const { data, error, isLoading, mutate } = useSWR(isTourActive ? null : url, fetcher, {

@@ -14,10 +14,14 @@ export async function GET(request: NextRequest) {
     const completedGoals = await prisma.savingsGoal.findMany({
       where: {
         isCompleted: true,
-        userId: currentUserId
+        userId: currentUserId,
+        deletedAt: null
       },
       include: {
         contributions: {
+          where: {
+            deletedAt: null
+          },
           include: {
             transaction: {
               select: {

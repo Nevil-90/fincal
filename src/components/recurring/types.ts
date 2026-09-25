@@ -88,6 +88,7 @@ export interface RecurringFormData {
   frequency: string
   startDate: string
   splitType: 'personal' | 'split'
+  notes?: string
 }
 
 export interface PriceChange {

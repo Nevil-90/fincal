@@ -26,18 +26,13 @@ function useTargetRect(selector?: string, active?: boolean) {
         const elements = Array.from(document.querySelectorAll(part))
         el = elements.find(e => {
           const r = e.getBoundingClientRect()
-          // We only check horizontal visibility to filter out off-screen sidebars.
-          // We DO NOT check vertical visibility, because we want to find elements that are 
-          // scrolled out of view so we can automatically scroll the user down to them!
           const isVisibleHorizontally = r.right > 1 && r.left < window.innerWidth - 1
-          
           return r.width > 0 && r.height > 0 && isVisibleHorizontally
         })
         if (el) break
       }
 
       if (el) {
-        // Auto scroll into view with some padding
         const elRect = el.getBoundingClientRect()
         const isOutOfViewport = 
           elRect.top < 100 || 
@@ -47,8 +42,6 @@ function useTargetRect(selector?: string, active?: boolean) {
           el.scrollIntoView({ behavior: 'smooth', block: 'center' })
         }
         
-        // Wait a tick for smooth scroll to start, then update rect repeatedly for a short duration
-        // to track the scrolling element.
         setRect(el.getBoundingClientRect())
       } else {
         setRect(null)
@@ -57,7 +50,6 @@ function useTargetRect(selector?: string, active?: boolean) {
 
     updateRect()
     
-    // Poll position while active (to handle scrolling/resizing)
     const interval = setInterval(updateRect, 50)
     window.addEventListener('resize', updateRect)
     window.addEventListener('scroll', updateRect, true)
@@ -128,7 +120,7 @@ function TourRenderer({ step, totalSteps, currentIndex, onNext, onPrev, onEnd }:
 
   if (rect) {
     const tooltipWidth = Math.min(320, window.innerWidth - 32)
-    const tooltipHeightEst = 250 // Rough estimate of tooltip height
+    const tooltipHeightEst = 250
     
     // Safe boundary flips
     if (finalPlacement === 'top' && rect.top < tooltipHeightEst) {
@@ -144,13 +136,10 @@ function TourRenderer({ step, totalSteps, currentIndex, onNext, onPrev, onEnd }:
       finalPlacement = 'left'
     }
     
-    // Force top placement if element is at the very bottom of the screen (e.g. bottom nav)
     if ((finalPlacement === 'left' || finalPlacement === 'right') && rect.bottom > window.innerHeight - 150) {
       finalPlacement = 'top'
     }
 
-    // Ultimate fallback: If the target is simply massive and neither top nor bottom works,
-    // place the tooltip in the dead center of the screen so it overlays the large target.
     if (finalPlacement === 'top' && rect.top < tooltipHeightEst) {
       finalPlacement = 'center'
     }
@@ -169,7 +158,6 @@ function TourRenderer({ step, totalSteps, currentIndex, onNext, onPrev, onEnd }:
       tooltipY = '-50%'
     }
 
-    // Clamp horizontal position so it never overflows the screen (16px padding)
     tooltipLeft = Math.max(16, Math.min(window.innerWidth - tooltipWidth - 16, tooltipLeft))
   }
 
@@ -183,47 +171,46 @@ function TourRenderer({ step, totalSteps, currentIndex, onNext, onPrev, onEnd }:
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-slate-900/60 dark:bg-neutral-950/80 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/75 backdrop-blur-sm"
           />
         ) : (
           <>
             <motion.div 
-              className="absolute top-0 left-0 right-0 bg-slate-900/60 dark:bg-neutral-950/80 backdrop-blur-sm"
+              className="absolute top-0 left-0 right-0 bg-black/75 backdrop-blur-sm"
               animate={{ height: rect.top }}
-              transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
+              transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
             />
             <motion.div 
-              className="absolute left-0 bg-slate-900/60 dark:bg-neutral-950/80 backdrop-blur-sm"
+              className="absolute left-0 bg-black/75 backdrop-blur-sm"
               animate={{ top: rect.top, height: rect.height, width: rect.left }}
-              transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
+              transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
             />
             <motion.div 
-              className="absolute right-0 bg-slate-900/60 dark:bg-neutral-950/80 backdrop-blur-sm"
+              className="absolute right-0 bg-black/75 backdrop-blur-sm"
               animate={{ top: rect.top, height: rect.height, width: window.innerWidth - rect.right }}
-              transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
+              transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
             />
             <motion.div 
-              className="absolute bottom-0 left-0 right-0 bg-slate-900/60 dark:bg-neutral-950/80 backdrop-blur-sm"
+              className="absolute bottom-0 left-0 right-0 bg-black/75 backdrop-blur-sm"
               animate={{ top: rect.bottom, height: window.innerHeight - rect.bottom }}
-              transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
+              transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
             />
             
             {/* Glowing border around cutout */}
             <motion.div
-              className="absolute border-2 border-blue-500 rounded-xl shadow-[0_0_20px_rgba(59,130,246,0.5)] pointer-events-none"
+              className="absolute border-2 border-blue-500/80 rounded-xl shadow-[0_0_15px_rgba(59,130,246,0.4)] pointer-events-none"
               animate={{ 
                 top: rect.top, 
                 left: rect.left, 
                 width: rect.width, 
                 height: rect.height 
               }}
-              transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
+              transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
             />
           </>
         )}
       </AnimatePresence>
 
-      {/* Invisible overlay to block clicks on the highlighted element if needed, we just let the main container be pointer-events-auto */}
       <div className="absolute inset-0 z-10" />
 
       {/* Tooltip Positioning */}
@@ -237,45 +224,45 @@ function TourRenderer({ step, totalSteps, currentIndex, onNext, onPrev, onEnd }:
             y: '-50%'
           } : {
             top: finalPlacement === 'center' ? window.innerHeight / 2 :
-                 finalPlacement === 'bottom' ? rect.bottom + 16 : 
-                 finalPlacement === 'top' ? rect.top - 16 : 
+                 finalPlacement === 'bottom' ? rect.bottom + 14 : 
+                 finalPlacement === 'top' ? rect.top - 14 : 
                  rect.top + rect.height / 2,
             left: tooltipLeft,
             x: '0%',
             y: tooltipY
           }}
-          transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
+          transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
         >
           {/* Tooltip Card */}
-          <motion.div layout className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-neutral-800 w-80 max-w-[calc(100vw-32px)] overflow-hidden flex flex-col">
+          <motion.div layout className="bg-white dark:bg-[#121215] rounded-2xl shadow-2xl border border-slate-200/80 dark:border-white/[0.08] w-80 max-w-[calc(100vw-32px)] overflow-hidden flex flex-col">
             <AnimatePresence mode="wait">
               <motion.div 
                 key={currentIndex}
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.18 }}
                 className="px-5 py-4"
               >
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   {step.title}
                 </h3>
-                <div className="mt-2 text-sm text-slate-600 dark:text-neutral-300 leading-relaxed">
+                <div className="mt-1.5 text-xs text-slate-500 dark:text-zinc-400 leading-relaxed">
                   {step.content}
                 </div>
                 
                 {/* Inputs rendering for setup steps */}
                 {step.inputs && step.inputs.length > 0 && (
-                  <div className="mt-4 space-y-3">
+                  <div className="mt-3.5 space-y-2.5">
                     {step.inputs.map(input => (
                       <div key={input.id}>
-                        <label className="block text-xs font-bold text-slate-500 dark:text-neutral-400 mb-1">{input.label}</label>
+                        <label className="block text-[11px] font-semibold text-slate-600 dark:text-zinc-400 mb-1">{input.label}</label>
                         <input
                           type={input.type}
                           placeholder={input.placeholder}
                           value={formData[input.id] || ''}
                           onChange={e => setFormData(prev => ({ ...prev, [input.id]: e.target.value }))}
-                          className="w-full bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                          className="w-full bg-slate-50 dark:bg-[#16161a] border border-slate-200/90 dark:border-white/[0.08] rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-colors"
                         />
                       </div>
                     ))}
@@ -284,42 +271,44 @@ function TourRenderer({ step, totalSteps, currentIndex, onNext, onPrev, onEnd }:
               </motion.div>
             </AnimatePresence>
             
-            <div className="bg-slate-50 dark:bg-neutral-800/50 px-5 py-3 border-t border-slate-100 dark:border-neutral-800 flex items-center justify-between shrink-0">
+            <div className="bg-slate-50 dark:bg-[#16161a] px-4 py-2.5 border-t border-slate-200/80 dark:border-white/[0.06] flex items-center justify-between shrink-0">
               {/* Progress Dots */}
               <div className="flex items-center gap-1.5">
                 {Array.from({ length: totalSteps }).map((_, i) => (
                   <div 
                     key={i} 
-                    className={`h-1.5 rounded-full transition-all ${i === currentIndex ? 'w-4 bg-blue-600' : 'w-1.5 bg-slate-300 dark:bg-neutral-700'}`}
+                    className={`h-1.5 rounded-full transition-all ${i === currentIndex ? 'w-4 bg-blue-500' : 'w-1.5 bg-slate-200 dark:bg-white/[0.12]'}`}
                   />
                 ))}
               </div>
               
               {/* Actions */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 {currentIndex > 0 && (
                   <button 
+                    type="button"
                     onClick={onPrev}
                     disabled={isSubmitting}
-                    className="p-1.5 text-slate-500 hover:text-slate-700 dark:text-neutral-400 dark:hover:text-neutral-200 transition-colors disabled:opacity-50"
+                    className="p-1 text-slate-400 hover:text-slate-700 dark:text-zinc-400 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.04] transition-colors disabled:opacity-40"
                   >
-                    <ChevronLeft className="h-5 w-5" />
+                    <ChevronLeft className="h-4 w-4" />
                   </button>
                 )}
                 {currentIndex < totalSteps - 1 ? (
                   <button 
+                    type="button"
                     onClick={onNext}
-                    className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm transition-colors"
+                    className="flex items-center gap-1 bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-xl text-xs font-semibold shadow-sm transition-colors cursor-pointer"
                   >
-                    Next <ChevronRight className="h-4 w-4" />
+                    Next <ChevronRight className="h-3.5 w-3.5" />
                   </button>
                 ) : (
                   <button 
+                    type="button"
                     disabled={isSubmitting}
                     onClick={async () => {
                       setIsSubmitting(true)
                       try {
-                        // Process formData if available
                         if (formData['openingBalance'] && parseFloat(formData['openingBalance']) > 0) {
                           await fetch('/api/transactions', {
                             method: 'POST',
@@ -352,9 +341,9 @@ function TourRenderer({ step, totalSteps, currentIndex, onNext, onPrev, onEnd }:
                         onEnd()
                       }
                     }}
-                    className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm transition-colors disabled:opacity-70"
+                    className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-xs font-semibold shadow-sm transition-colors disabled:opacity-60 cursor-pointer"
                   >
-                    {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Finish <Check className="h-4 w-4" /></>}
+                    {isSubmitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <>Finish <Check className="h-3.5 w-3.5" /></>}
                   </button>
                 )}
               </div>
@@ -362,6 +351,7 @@ function TourRenderer({ step, totalSteps, currentIndex, onNext, onPrev, onEnd }:
             
             {/* Close Button */}
             <button 
+              type="button"
               onClick={async () => {
                 setIsSubmitting(true)
                 try {
@@ -372,7 +362,7 @@ function TourRenderer({ step, totalSteps, currentIndex, onNext, onPrev, onEnd }:
                   onEnd()
                 }
               }}
-              className="absolute top-3 right-3 p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-neutral-200 hover:bg-slate-100 dark:hover:bg-neutral-800 rounded-lg transition-colors z-30"
+              className="absolute top-3 right-3 p-1 text-zinc-400 hover:text-white rounded-lg hover:bg-white/[0.06] transition-colors z-30"
             >
               <X className="h-4 w-4" />
             </button>

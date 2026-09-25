@@ -3,14 +3,20 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom'
-import { Search, Filter, Plus, RefreshCw, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Repeat, X, ArrowDownLeft, ArrowUpRight, History, Pause, Play, Trash2, FileText, BarChart2 } from 'lucide-react'
+import { Search, Filter, Plus, RefreshCw, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Repeat, X, ArrowDownLeft, ArrowUpRight, History, Pause, Play, Trash2, FileText, BarChart2, CalendarDays, Utensils, ShoppingBag, Car, Film, HeartPulse, Home, Zap, Tag, Edit2 } from 'lucide-react'
 import RecurringForm from './RecurringForm'
 import PriceHistoryModal from './PriceHistoryModal'
+import RecurringDetailDrawer from './RecurringDetailDrawer'
 import { formatCurrency, formatCompactCurrency } from '@/lib/financial-utils'
 import { useUser } from '@/hooks/useApi'
 import useSWR from 'swr'
 import type { RecurringTransaction, RecurringFormData } from './types'
 import CustomSelect from '@/components/ui/CustomSelect'
+import { getCategoryVisual } from '@/lib/category-icons'
+import { useEnhancedStaticData } from '@/lib/enhanced-static-data-manager'
+import { formatDateForDisplay } from '@/lib/dateUtils'
+import { SkeletonRecurring } from '@/components/ui/SkeletonCard'
+import CustomDateField from '@/components/ui/CustomDateField'
 
 interface PaginatedRecurringResponse {
   data: (RecurringTransaction & {
@@ -98,6 +104,8 @@ export default function PaginatedRecurringTransactions() {
   })
 
   const [analyticsRecurring, setAnalyticsRecurring] = useState<PaginatedRecurringResponse['data'][0] | null>(null)
+  const [selectedRecurringForDrawer, setSelectedRecurringForDrawer] = useState<PaginatedRecurringResponse['data'][0] | null>(null)
+  const [editingRecurringId, setEditingRecurringId] = useState<string | null>(null)
 
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
@@ -135,6 +143,102 @@ export default function PaginatedRecurringTransactions() {
     (url: string) => fetch(url).then(res => res.json()),
     { keepPreviousData: true }
   )
+
+  // One-time subscription costs state & query
+  const [subscriptionView, setSubscriptionView] = useState<'recurring' | 'one-time'>('recurring')
+  const [showAddOneTimeModal, setShowAddOneTimeModal] = useState(false)
+  const [oneTimeLoading, setOneTimeLoading] = useState(false)
+  const [oneTimeForm, setOneTimeForm] = useState({
+    title: '',
+    amount: '',
+    date: new Date().toISOString().split('T')[0],
+    paymentMethod: '',
+    notes: ''
+  })
+
+  const { data: oneTimeData, mutate: mutateOneTime, isLoading: loadingOneTime } = useSWR<{
+    transactions: Array<{
+      id: string
+      title: string
+      description?: string
+      notes?: string
+      amount: number
+      paymentMethod: string | null
+      date: string
+      category: string
+      isOneTimeSubscription?: boolean
+    }>
+  }>(
+    isTourActive ? null : '/api/transactions?category=Subscriptions&recurring=non-recurring&limit=100',
+    (url: string) => fetch(url).then(res => res.json())
+  )
+
+  const oneTimeTransactions = useMemo(() => {
+    return oneTimeData?.transactions || []
+  }, [oneTimeData])
+
+  const totalOneTimeSpent = useMemo(() => {
+    return oneTimeTransactions.reduce((acc: number, t: any) => acc + (Number(t.amount) || 0), 0)
+  }, [oneTimeTransactions])
+
+  const handleAddOneTimeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!oneTimeForm.title.trim() || !oneTimeForm.amount) {
+      showToast('Please provide a title and amount', 'error')
+      return
+    }
+    setOneTimeLoading(true)
+    try {
+      const res = await fetch('/api/transactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'expense',
+          category: 'Subscriptions',
+          title: oneTimeForm.title.trim(),
+          amount: parseFloat(oneTimeForm.amount),
+          date: oneTimeForm.date,
+          paymentMethod: oneTimeForm.paymentMethod || null,
+          notes: oneTimeForm.notes.trim() || null,
+          isOneTimeSubscription: true
+        })
+      })
+      if (res.ok) {
+        showToast('One-time subscription cost recorded!', 'success')
+        setShowAddOneTimeModal(false)
+        setOneTimeForm({
+          title: '',
+          amount: '',
+          date: new Date().toISOString().split('T')[0],
+          paymentMethod: '',
+          notes: ''
+        })
+        mutateOneTime()
+      } else {
+        const err = await res.json()
+        showToast(err.error || 'Failed to save one-time cost', 'error')
+      }
+    } catch {
+      showToast('Network error saving one-time cost', 'error')
+    } finally {
+      setOneTimeLoading(false)
+    }
+  }
+
+  const handleDeleteOneTime = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this one-time subscription cost?')) return
+    try {
+      const res = await fetch(`/api/transactions?id=${id}`, { method: 'DELETE' })
+      if (res.ok) {
+        showToast('One-time cost deleted', 'success')
+        mutateOneTime()
+      } else {
+        showToast('Failed to delete transaction', 'error')
+      }
+    } catch {
+      showToast('Network error deleting transaction', 'error')
+    }
+  }
 
   const fetchRecurringTransactions = useCallback((page?: number) => {
     if (page) setCurrentPage(page)
@@ -341,6 +445,22 @@ export default function PaginatedRecurringTransactions() {
     }
   }
 
+  const handleStartEdit = (recurring: PaginatedRecurringResponse['data'][0]) => {
+    setEditingRecurringId(recurring.id)
+    setFormData({
+      type: recurring.type as any,
+      amount: recurring.amount.toString(),
+      category: recurring.category,
+      description: recurring.description || '',
+      paymentMethod: recurring.paymentMethod || '',
+      source: recurring.source || '',
+      frequency: recurring.frequency,
+      startDate: new Date(recurring.startDate || recurring.nextDue).toISOString().split('T')[0],
+      splitType: (recurring as any).splitType || 'personal',
+    })
+    setShowAddForm(true)
+  }
+
   const handleAddRecurring = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -360,16 +480,65 @@ export default function PaginatedRecurringTransactions() {
       return
     }
 
+    if (formData.frequency === 'one-time') {
+      setFormLoading(true)
+      try {
+        const response = await fetch('/api/transactions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: formData.type,
+            category: formData.category || 'Subscriptions',
+            title: formData.description.trim() || 'One-Time Subscription',
+            amount,
+            date: formData.startDate,
+            paymentMethod: formData.paymentMethod || null,
+            source: formData.source || null,
+            notes: formData.notes || null,
+            isOneTimeSubscription: true
+          }),
+        })
+
+        if (response.ok) {
+          showToast('One-time subscription cost recorded!', 'success')
+          setFormData({
+            type: 'expense',
+            amount: '',
+            category: '',
+            description: '',
+            paymentMethod: '',
+            source: '',
+            frequency: 'monthly',
+            startDate: new Date().toISOString().split('T')[0],
+            splitType: 'personal',
+          })
+          setShowAddForm(false)
+          mutateOneTime()
+          fetchRecurringTransactions(1)
+        } else {
+          const result = await response.json()
+          showToast(`Failed to record one-time cost: ${result.error || 'Unknown error occurred'}`, 'error')
+        }
+      } catch (error) {
+        console.error('Error saving one-time transaction:', error)
+        showToast('Error saving one-time transaction. Please try again.', 'error')
+      } finally {
+        setFormLoading(false)
+      }
+      return
+    }
+
     setFormLoading(true)
     try {
+      const isEditing = Boolean(editingRecurringId)
       const response = await fetch('/api/recurring', {
-        method: 'POST',
+        method: isEditing ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(isEditing ? { id: editingRecurringId, ...formData } : formData),
       })
 
       if (response.ok) {
-        showToast('Recurring transaction created successfully', 'success')
+        showToast(isEditing ? 'Recurring item updated successfully' : 'Recurring item created successfully', 'success')
 
         // Reset form
         setFormData({
@@ -383,16 +552,16 @@ export default function PaginatedRecurringTransactions() {
           startDate: new Date().toISOString().split('T')[0],
           splitType: 'personal',
         })
-
+        setEditingRecurringId(null)
         setShowAddForm(false)
-        fetchRecurringTransactions(1) // Go to first page to see new transaction
+        fetchRecurringTransactions(isEditing ? currentPage : 1)
       } else {
         const result = await response.json()
-        showToast(`Failed to create recurring transaction\n\n${result.error || 'Unknown error occurred'}`, 'error')
+        showToast(`Failed to ${isEditing ? 'update' : 'create'} recurring transaction\n\n${result.error || 'Unknown error occurred'}`, 'error')
       }
     } catch (error) {
-      console.error('Error creating recurring transaction:', error)
-      showToast('Error creating recurring transaction. Please try again.', 'error')
+      console.error('Error saving recurring transaction:', error)
+      showToast('Error saving recurring transaction. Please try again.', 'error')
     } finally {
       setFormLoading(false)
     }
@@ -440,54 +609,291 @@ export default function PaginatedRecurringTransactions() {
     return { activeSubscriptions: active, inactiveCount: inactive, monthlyCost: totalMonthlyCost, monthlyIncome: totalMonthlyIncome, totalSpent: totalSpentAmount }
   }, [recurringData])
 
-  if (loading && !recurringData) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    )
+  const { data: staticData } = useEnhancedStaticData()
+  const customIcons = useMemo(() => {
+    try {
+      return JSON.parse(staticData?.userSettings?.custom_category_icons || '{}')
+    } catch {
+      return {}
+    }
+  }, [staticData?.userSettings?.custom_category_icons])
+
+  // 14-day upcoming schedule horizon
+  const upcomingSchedule = useMemo(() => {
+    if (!recurringData?.data) return []
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    const days = []
+    for (let i = 0; i < 14; i++) {
+      const d = new Date(today)
+      d.setDate(today.getDate() + i)
+
+      const itemsOnDay = recurringData.data.filter(item => {
+        if (!item.isActive || item.isPaused) return false
+        const itemDue = new Date(item.nextDue)
+        return itemDue.getFullYear() === d.getFullYear() &&
+               itemDue.getMonth() === d.getMonth() &&
+               itemDue.getDate() === d.getDate()
+      })
+
+      const totalDayCost = itemsOnDay.reduce((acc, curr) => curr.type === 'expense' ? acc + curr.amount : acc - curr.amount, 0)
+
+      days.push({
+        date: d,
+        dayNum: d.getDate(),
+        dayLabel: i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : d.toLocaleDateString('en-US', { weekday: 'short' }),
+        items: itemsOnDay,
+        hasBills: itemsOnDay.length > 0,
+        totalCost: totalDayCost
+      })
+    }
+    return days
+  }, [recurringData?.data])
+
+  const groupedSubscriptions = useMemo(() => {
+    if (!recurringData?.data) return []
+    const now = new Date()
+    now.setHours(0, 0, 0, 0)
+
+    const groups: {
+      id: string
+      title: string
+      badge: string
+      items: typeof recurringData.data
+    }[] = [
+      { id: 'week', title: 'Due in Next 7 Days', badge: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20', items: [] },
+      { id: 'month', title: 'Due Later This Month', badge: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20', items: [] },
+      { id: 'upcoming', title: 'Upcoming Subscriptions', badge: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20', items: [] },
+      { id: 'overdue', title: 'Action Required (Past Due)', badge: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20', items: [] },
+      { id: 'paused', title: 'Paused Subscriptions', badge: 'bg-neutral-500/10 text-neutral-500 border border-neutral-500/20', items: [] },
+    ]
+
+    recurringData.data.forEach(item => {
+      if (!item.isActive || item.isPaused) {
+        groups[4].items.push(item)
+        return
+      }
+      const due = new Date(item.nextDue)
+      due.setHours(0, 0, 0, 0)
+      const diffDays = Math.round((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+
+      if (diffDays < 0) {
+        groups[3].items.push(item)
+      } else if (diffDays <= 7) {
+        groups[0].items.push(item)
+      } else if (diffDays <= 30) {
+        groups[1].items.push(item)
+      } else {
+        groups[2].items.push(item)
+      }
+    })
+
+    return groups.filter(g => g.items.length > 0)
+  }, [recurringData?.data])
+
+  const getDueBadge = (nextDueDateStr: string, isActive: boolean, isPaused?: boolean) => {
+    if (!isActive || isPaused) {
+      return { text: 'Paused', className: 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700' }
+    }
+    const now = new Date()
+    now.setHours(0, 0, 0, 0)
+    const due = new Date(nextDueDateStr)
+    due.setHours(0, 0, 0, 0)
+    const diffDays = Math.round((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+
+    if (diffDays === 0) {
+      return { text: 'Due Today', className: 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40 font-bold' }
+    }
+    if (diffDays === 1) {
+      return { text: 'Due Tomorrow', className: 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-900/40 font-bold' }
+    }
+    if (diffDays > 1 && diffDays <= 7) {
+      return { text: `In ${diffDays} days`, className: 'bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-900/30' }
+    }
+    if (diffDays < 0) {
+      return { text: `${Math.abs(diffDays)}d Overdue`, className: 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40 font-bold' }
+    }
+    return { text: `In ${diffDays} days`, className: 'bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-neutral-400 border border-slate-200 dark:border-neutral-700' }
   }
 
+  if (loading && !recurringData) {
+    return <SkeletonRecurring />
+  }
+
+  const netRemaining = monthlyIncome - monthlyCost
+  const isDeficit = netRemaining < 0
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div className="flex items-center gap-4">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Recurring Transactions</h2>
+    <div className="space-y-4">
+      {/* Header with Title and Executive Actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+            Recurring Bills & Subscriptions
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-neutral-400 mt-0.5">
+            Track scheduled commitments, upcoming bills, and monthly cashflow predictability.
+          </p>
         </div>
 
-        <div className="flex flex-nowrap items-center justify-between sm:justify-end gap-1.5 sm:gap-2 w-full sm:w-auto">
+        <div className="flex items-center gap-2 self-start sm:self-auto">
           <button
+            type="button"
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center justify-center flex-1 sm:flex-none gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 text-[11px] sm:text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-700 rounded-md hover:bg-gray-50 dark:hover:bg-neutral-800 whitespace-nowrap"
+            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl border transition-all cursor-pointer ${
+              showFilters || Object.values(filters).some(v => v && v !== 'all')
+                ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900/50'
+                : 'bg-white dark:bg-neutral-900 text-slate-700 dark:text-neutral-300 border-slate-200 dark:border-white/[0.08] hover:bg-slate-50 dark:hover:bg-neutral-800'
+            }`}
           >
-            <Filter className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            Filters
+            <Filter className="w-3.5 h-3.5" />
+            <span>Filters</span>
+            {Object.values(filters).some(v => v && v !== 'all') && (
+              <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />
+            )}
           </button>
 
           <button
-            onClick={() => {
-              fetchRecurringTransactions()
-            }}
+            type="button"
+            onClick={() => fetchRecurringTransactions()}
             disabled={loading}
-            className="flex items-center justify-center flex-1 sm:flex-none gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 text-[11px] sm:text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-700 rounded-md hover:bg-gray-50 dark:hover:bg-neutral-800 disabled:opacity-50 whitespace-nowrap"
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-neutral-900 text-slate-700 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors cursor-pointer disabled:opacity-50"
           >
-            <RefreshCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <span>Refresh</span>
           </button>
 
           <button
-            onClick={() => setShowAddForm(true)}
-            className="flex items-center justify-center flex-1 sm:flex-none gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 text-[11px] sm:text-sm font-medium text-white bg-blue-600 dark:bg-blue-500 rounded-md hover:bg-blue-700 dark:hover:bg-blue-600 whitespace-nowrap"
+            type="button"
+            onClick={() => {
+              if (subscriptionView === 'one-time') {
+                setShowAddOneTimeModal(true)
+              } else {
+                setEditingRecurringId(null)
+                setShowAddForm(true)
+              }
+            }}
+            className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl text-white bg-blue-600 hover:bg-blue-500 transition-all shadow-sm cursor-pointer"
           >
-            <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            Add
+            <Plus className="w-4 h-4" />
+            <span>{subscriptionView === 'one-time' ? 'New One-Time Cost' : 'New Bill'}</span>
           </button>
         </div>
       </div>
 
+      {/* 14-Day Calendar Forecast Horizon */}
+      {upcomingSchedule.some(d => d.hasBills) && (
+        <div className="p-3.5 rounded-xl border border-slate-200/80 dark:border-white/[0.08] bg-white dark:bg-neutral-900/80 backdrop-blur-sm shadow-sm space-y-2.5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CalendarDays className="h-4 w-4 text-blue-500" />
+              <span className="text-xs font-bold text-slate-900 dark:text-white">Upcoming 14-Day Schedule</span>
+            </div>
+            <span className="text-[11px] text-slate-400 dark:text-neutral-500">
+              {upcomingSchedule.reduce((acc, d) => acc + d.items.length, 0)} bills due next 2 weeks
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+            {upcomingSchedule.map((day, idx) => (
+              <div
+                key={`forecast-${idx}`}
+                className={`flex-shrink-0 flex flex-col items-center justify-center p-2 rounded-xl min-w-[70px] border transition-all ${
+                  day.hasBills
+                    ? 'bg-blue-50/70 dark:bg-blue-950/30 border-blue-200/70 dark:border-blue-900/50 text-blue-950 dark:text-blue-100 shadow-sm'
+                    : 'bg-slate-50/50 dark:bg-neutral-900/40 border-slate-100 dark:border-white/[0.04] text-slate-400 dark:text-neutral-500'
+                }`}
+              >
+                <span className="text-[10px] font-medium uppercase tracking-wider">{day.dayLabel}</span>
+                <span className={`text-base font-bold tabular-nums mt-0.5 ${day.hasBills ? 'text-blue-600 dark:text-blue-400' : ''}`}>
+                  {day.dayNum}
+                </span>
+                {day.hasBills ? (
+                  <span className="text-[10px] font-bold tabular-nums text-blue-700 dark:text-blue-300 mt-0.5 truncate max-w-[65px]">
+                    {formatCompactCurrency(day.totalCost)}
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-slate-300 dark:text-neutral-600 mt-0.5">—</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Cash Flow Projection Strip */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+        <div className="p-3 sm:p-3.5 rounded-xl border border-slate-200/80 dark:border-white/[0.08] bg-white dark:bg-[#121215] shadow-xs">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-rose-500 dark:text-rose-400 block truncate">
+            Monthly Commitments
+          </span>
+          <div className="flex items-baseline gap-1.5 mt-1">
+            <span className="text-base sm:text-lg font-bold tabular-nums text-slate-900 dark:text-white">
+              {formatCurrency(monthlyCost)}
+            </span>
+            <span className="text-[10px] text-slate-400 dark:text-neutral-500 font-medium">/ mo</span>
+          </div>
+          <div className="text-[10px] text-slate-400 dark:text-neutral-500 mt-0.5 tabular-nums">
+            {activeSubscriptions.filter(s => s.type === 'expense').length} scheduled outflows
+          </div>
+        </div>
+
+        <div className="p-3 sm:p-3.5 rounded-xl border border-slate-200/80 dark:border-white/[0.08] bg-white dark:bg-[#121215] shadow-xs">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 block truncate">
+            Monthly Inflow
+          </span>
+          <div className="flex items-baseline gap-1.5 mt-1">
+            <span className="text-base sm:text-lg font-bold tabular-nums text-slate-900 dark:text-white">
+              {formatCurrency(monthlyIncome)}
+            </span>
+            <span className="text-[10px] text-slate-400 dark:text-neutral-500 font-medium">/ mo</span>
+          </div>
+          <div className="text-[10px] text-slate-400 dark:text-neutral-500 mt-0.5 tabular-nums">
+            {activeSubscriptions.filter(s => s.type === 'income').length} scheduled inflows
+          </div>
+        </div>
+
+        <div className="p-3 sm:p-3.5 rounded-xl border border-slate-200/80 dark:border-white/[0.08] bg-white dark:bg-[#121215] shadow-xs">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-400 block truncate">
+            Net Monthly Buffer
+          </span>
+          <div className="flex items-center gap-1.5 mt-1">
+            <span className={`text-base sm:text-lg font-bold tabular-nums ${isDeficit ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+              {isDeficit ? '-' : '+'}{formatCurrency(Math.abs(netRemaining))}
+            </span>
+            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${
+              isDeficit
+                ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-900/40'
+                : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-900/40'
+            }`}>
+              {isDeficit ? 'Deficit' : 'Surplus'}
+            </span>
+          </div>
+          <div className="text-[10px] text-slate-400 dark:text-neutral-500 mt-0.5 tabular-nums">
+            {monthlyIncome > 0 ? `${((monthlyCost / monthlyIncome) * 100).toFixed(0)}% committed` : 'No periodic income'}
+          </div>
+        </div>
+
+        <div className="p-3 sm:p-3.5 rounded-xl border border-slate-200/80 dark:border-white/[0.08] bg-white dark:bg-[#121215] shadow-xs">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-500 dark:text-indigo-400 block truncate">
+            Lifetime Spent
+          </span>
+          <div className="flex items-baseline gap-1.5 mt-1">
+            <span className="text-base sm:text-lg font-bold tabular-nums text-slate-900 dark:text-white">
+              {formatCurrency(totalSpent + totalOneTimeSpent)}
+            </span>
+          </div>
+          <div className="text-[10px] text-slate-400 dark:text-neutral-500 mt-0.5 tabular-nums">
+            {activeSubscriptions.length} recurring • {oneTimeTransactions.length} one-time
+          </div>
+        </div>
+      </div>
+
+      {/* Filter Panel */}
       {showFilters && (
-        <div className="bg-white dark:bg-neutral-900 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-neutral-800">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="bg-white dark:bg-[#121215] p-3.5 rounded-2xl shadow-xs border border-slate-200/80 dark:border-white/[0.08] space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <CustomSelect
               selectSize="sm"
               value={filters.status}
@@ -531,10 +937,11 @@ export default function PaginatedRecurringTransactions() {
             </CustomSelect>
           </div>
 
-          <div className="mt-4 flex justify-end">
+          <div className="flex justify-end pt-1">
             <button
+              type="button"
               onClick={clearFilters}
-              className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+              className="text-xs font-semibold text-slate-500 dark:text-neutral-400 hover:text-slate-800 dark:hover:text-neutral-200 transition-colors cursor-pointer"
             >
               Clear all filters
             </button>
@@ -542,349 +949,441 @@ export default function PaginatedRecurringTransactions() {
         </div>
       )}
 
-      {recurringData && recurringData.data.length > 0 && (
-        (() => {
-          const expensePercentage = monthlyIncome > 0 ? Math.min(100, (monthlyCost / monthlyIncome) * 100) : (monthlyCost > 0 ? 100 : 0);
-          const incomePercentage = Math.max(0, 100 - expensePercentage);
-          const netRemaining = monthlyIncome - monthlyCost;
-          const isNegative = netRemaining < 0;
+      {/* View Switcher: Recurring Bills vs. One-Time Costs */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-[#121215] p-2 sm:p-2.5 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] shadow-xs">
+        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100/80 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/[0.08]">
+          <button
+            type="button"
+            onClick={() => setSubscriptionView('recurring')}
+            className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              subscriptionView === 'recurring'
+                ? 'bg-white dark:bg-[#16161a] text-blue-600 dark:text-blue-400 border border-slate-200/80 dark:border-blue-500/30 shadow-xs'
+                : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white border border-transparent'
+            }`}
+          >
+            <Repeat className="w-3.5 h-3.5" />
+            <span>Recurring Subscriptions</span>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+              subscriptionView === 'recurring'
+                ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
+                : 'bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-zinc-300'
+            }`}>
+              {recurringData?.data?.length || 0}
+            </span>
+          </button>
 
-          return (
-            <div className="bg-white dark:bg-neutral-900 rounded-2xl px-3 py-2.5 mb-4 ring-1 ring-gray-100 dark:ring-neutral-800">
+          <button
+            type="button"
+            onClick={() => setSubscriptionView('one-time')}
+            className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              subscriptionView === 'one-time'
+                ? 'bg-white dark:bg-[#16161a] text-amber-600 dark:text-amber-400 border border-slate-200/80 dark:border-amber-500/30 shadow-xs'
+                : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white border border-transparent'
+            }`}
+          >
+            <Tag className="w-3.5 h-3.5" />
+            <span>One-Time Costs</span>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+              subscriptionView === 'one-time'
+                ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300'
+                : 'bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-zinc-300'
+            }`}>
+              {oneTimeTransactions.length}
+            </span>
+          </button>
+        </div>
 
-              <div className="flex items-center gap-0 pb-2 mb-2 border-b border-gray-100 dark:border-neutral-800">
+        {subscriptionView === 'one-time' && (
+          <button
+            type="button"
+            onClick={() => setShowAddOneTimeModal(true)}
+            className="flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl text-white bg-amber-600 hover:bg-amber-500 transition-all shadow-xs cursor-pointer self-start sm:self-auto"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add One-Time Cost</span>
+          </button>
+        )}
+      </div>
 
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-0.5">
-                    Net cashflow
-                  </p>
-                  <div className="flex items-center gap-1.5">
-                    <span
-                      className="text-lg font-bold tracking-tight text-gray-900 dark:text-white whitespace-nowrap"
-                      title={formatCurrency(Math.abs(netRemaining))}
-                    >
-                      {isNegative ? '-' : ''}{formatCompactCurrency(Math.abs(netRemaining))}
-                    </span>
-                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded shrink-0 ${isNegative
-                      ? 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400'
-                      : 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400'
-                      }`}>
-                      {isNegative ? 'Deficit' : 'Surplus'}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="w-px h-7 bg-gray-200 dark:bg-neutral-700 mx-2.5 shrink-0" />
-
-                <div className="shrink-0 text-right">
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-0.5">
-                    Subs
-                  </p>
-                  <p className="text-sm font-bold text-gray-900 dark:text-white flex items-center justify-end gap-1">
-                    {activeSubscriptions.length}
-                    <Repeat className="w-3 h-3 text-blue-500 shrink-0" />
-                  </p>
-                </div>
-
-                <div className="w-px h-7 bg-gray-200 dark:bg-neutral-700 mx-2.5 shrink-0" />
-
-                <div className="shrink-0 text-right">
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-0.5">
-                    Spent
-                  </p>
-                  <p
-                    className="text-sm font-bold text-gray-900 dark:text-white whitespace-nowrap"
-                    title={formatCurrency(totalSpent)}
-                  >
-                    {formatCompactCurrency(totalSpent)}
-                  </p>
-                </div>
+      {subscriptionView === 'one-time' ? (
+        <div className="space-y-4">
+          {/* Quick Metrics Bar for One-Time Costs */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="p-3 sm:p-3.5 rounded-xl border border-slate-200/80 dark:border-white/[0.08] bg-white dark:bg-[#121215] shadow-xs">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-500 dark:text-amber-400 block truncate">
+                Total One-Time Spend
+              </span>
+              <div className="text-base sm:text-lg font-bold tabular-nums text-slate-900 dark:text-white mt-1">
+                {formatCurrency(totalOneTimeSpent)}
               </div>
-
-              <div className="flex items-center gap-2.5">
-
-                <div className="shrink-0">
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mb-0.5">
-                    Income
-                  </p>
-                  <p className="text-xs font-bold text-gray-900 dark:text-white leading-none" title={formatCurrency(monthlyIncome)}>
-                    {formatCompactCurrency(monthlyIncome)}
-                  </p>
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <div className="h-1.5 w-full bg-gray-200 dark:bg-neutral-700 rounded-full overflow-hidden flex">
-                    <div className="h-full bg-emerald-500 transition-all duration-700" style={{ width: `${incomePercentage}%` }} />
-                    <div className="h-full bg-rose-500 transition-all duration-700" style={{ width: `${expensePercentage}%` }} />
-                  </div>
-                  <div className="flex justify-between items-center mt-0.5">
-                    <p className="text-[10px] text-gray-400 dark:text-gray-500">
-                      {expensePercentage.toFixed(1)}% utilized
-                    </p>
-                    {expensePercentage > 50 && monthlyIncome > 0 && (
-                      <span className={`text-[10px] font-semibold ${expensePercentage > 80
-                        ? 'text-rose-600 dark:text-rose-400'
-                        : 'text-amber-500 dark:text-amber-400'
-                        }`}>
-                        {expensePercentage > 80 ? 'Critical' : 'High'}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="shrink-0 text-right">
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-rose-600 dark:text-rose-400 mb-0.5">
-                    Cost
-                  </p>
-                  <p className="text-xs font-bold text-gray-900 dark:text-white leading-none" title={formatCurrency(monthlyCost)}>
-                    {formatCompactCurrency(monthlyCost)}
-                  </p>
-                </div>
-
+              <div className="text-[10px] text-slate-400 dark:text-neutral-500 mt-0.5 tabular-nums">
+                Lifetime one-off purchases
               </div>
             </div>
-          )
-        })()
-      )}
 
-      <div className="space-y-4">
-        {recurringData?.data.length === 0 ? (
-          <div className="text-center py-16 bg-white dark:bg-neutral-900 rounded-2xl shadow-sm ring-1 ring-gray-100 dark:ring-neutral-800">
-            <RefreshCw className="h-12 w-12 text-slate-300 dark:text-neutral-700 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No Recurring Transactions</h3>
-            <p className="text-gray-600 dark:text-gray-400">Add your first recurring transaction to get started</p>
+            <div className="p-3 sm:p-3.5 rounded-xl border border-slate-200/80 dark:border-white/[0.08] bg-white dark:bg-[#121215] shadow-xs">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-blue-500 dark:text-blue-400 block truncate">
+                Total Items Logged
+              </span>
+              <div className="text-base sm:text-lg font-bold tabular-nums text-slate-900 dark:text-white mt-1">
+                {oneTimeTransactions.length}
+              </div>
+              <div className="text-[10px] text-slate-400 dark:text-neutral-500 mt-0.5 tabular-nums">
+                Licenses, domains & software
+              </div>
+            </div>
+
+            <div className="col-span-2 sm:col-span-1 p-3 sm:p-3.5 rounded-xl border border-slate-200/80 dark:border-white/[0.08] bg-white dark:bg-[#121215] shadow-xs">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-500 dark:text-emerald-400 block truncate">
+                Average Cost
+              </span>
+              <div className="text-base sm:text-lg font-bold tabular-nums text-slate-900 dark:text-white mt-1">
+                {oneTimeTransactions.length > 0
+                  ? formatCurrency(totalOneTimeSpent / oneTimeTransactions.length)
+                  : '₹0'}
+              </div>
+              <div className="text-[10px] text-slate-400 dark:text-neutral-500 mt-0.5 tabular-nums">
+                Per one-time purchase
+              </div>
+            </div>
           </div>
-        ) : (
-          recurringData?.data.map((recurring) => (
-            <div key={recurring.id} className="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm ring-1 ring-gray-100 dark:ring-neutral-800 overflow-hidden">
-              <div className="flex flex-col">
-                <div className="p-4 sm:p-5 bg-slate-50/70 dark:bg-neutral-800/50">
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <span className={`inline-flex px-2.5 py-1.5 text-xs font-medium rounded-full shrink-0 ${recurring.type === 'income'
-                        ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200/50 dark:border-green-900/50'
-                        : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200/50 dark:border-red-900/50'
-                        }`}>
-                        {recurring.type === 'income' ? <ArrowDownLeft className="h-4 w-4 text-emerald-600 dark:text-emerald-400" /> : <ArrowUpRight className="h-4 w-4 text-rose-600 dark:text-rose-400" />}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setAnalyticsRecurring(recurring)}
-                        className="flex-1 text-left group min-w-0 cursor-pointer"
-                      >
-                        <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
-                          {recurring.description || recurring.category}
-                        </h3>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{recurring.category}</p>
-                      </button>
-                    </div>
 
-                    <div className="flex items-center justify-between md:justify-end gap-4 border-t border-slate-200/60 dark:border-neutral-700 pt-3 md:border-t-0 md:pt-0">
-                      <div className="text-left md:text-right">
-                        <div className="text-base sm:text-lg font-black text-gray-900 dark:text-white">
-                          {formatCurrency(recurring.amount)}
-                        </div>
-                        <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 capitalize font-medium">
-                          {recurring.frequency}
-                        </div>
+          {/* List of One-Time Costs */}
+          {oneTimeTransactions.length === 0 ? (
+            <div className="text-center py-16 bg-white dark:bg-[#121215] rounded-2xl shadow-xs border border-slate-200/80 dark:border-white/[0.08]">
+              <Tag className="h-10 w-10 text-slate-300 dark:text-neutral-700 mx-auto mb-3 opacity-60" />
+              <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white mb-1">
+                No One-Time Costs Logged
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-neutral-400 max-w-sm mx-auto mb-4">
+                Record one-off software licenses, lifetime deals, domains, or non-recurring subscription expenses.
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowAddOneTimeModal(true)}
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl text-white bg-amber-600 hover:bg-amber-500 transition-all shadow-xs cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add One-Time Cost</span>
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {oneTimeTransactions.map((tx: any) => {
+                const visual = getCategoryVisual('Subscriptions', 'expense', undefined, customIcons)
+                const Icon = visual.icon
+
+                return (
+                  <div
+                    key={tx.id}
+                    className="flex items-center justify-between p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-white dark:bg-[#121215] shadow-xs hover:border-slate-300 dark:hover:border-white/15 transition-all gap-3"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border shadow-xs bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20">
+                        <Icon className="w-4 h-4" />
                       </div>
-
-                      <div className="text-left md:text-right border-l border-gray-200 dark:border-neutral-700 pl-4">
-                        <span className={`text-sm font-semibold mt-1 ${recurring.type === 'income' ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-900 dark:text-neutral-100'}`}>
-                          {formatCurrency(recurring.totalSpent || 0)}
-                        </span>
-                        <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-medium">
-                          Total Spent
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
+                            {tx.title || tx.description || 'Subscription Cost'}
+                          </h4>
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 uppercase">
+                            One-Time
+                          </span>
                         </div>
-                      </div>
-
-                      <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-full ${(recurring.isActive && !recurring.isPaused)
-                        ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200/30 dark:border-emerald-900/30'
-                        : 'bg-slate-50 dark:bg-neutral-800/50 text-slate-600 dark:text-neutral-400 border border-slate-200/50 dark:border-neutral-700'
-                        }`}>
-                        {(recurring.isActive && !recurring.isPaused) ? 'Active' : 'Paused'}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 pt-3 border-t border-slate-200/60 dark:border-neutral-700 md:border-t-0 md:pt-0 md:mt-3.5 flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between text-xs text-gray-500 dark:text-gray-400 font-medium">
-                    <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-                      <span>Start: {new Date(recurring.startDate || recurring.nextDue).toLocaleDateString()}</span>
-                      <span className="hidden sm:inline text-gray-300 dark:text-gray-600">•</span>
-                      <span>Next: {new Date(recurring.nextDue).toLocaleDateString()}</span>
-                    </div>
-
-                    <div className="flex items-center justify-between sm:justify-end gap-1 sm:gap-1.5 mt-3 sm:mt-0 w-full sm:w-auto">
-                      <button
-                        onClick={() => showPriceHistory(recurring)}
-                        className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 px-1.5 sm:px-2.5 py-1.5 sm:py-1 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-900/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 rounded-lg text-[11px] sm:text-xs transition-colors"
-                        title="Price History"
-                      >
-                        <span className="flex items-center justify-center gap-1 sm:gap-1.5 whitespace-nowrap"><BarChart2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> History</span>
-                      </button>
-                      <button
-                        onClick={() => toggleRecurringStatus(recurring.id, recurring.isActive && !recurring.isPaused)}
-                        className={`px-1.5 sm:px-2.5 py-1.5 sm:py-1 rounded-lg text-[11px] sm:text-xs transition-colors border ${(recurring.isActive && !recurring.isPaused)
-                          ? 'text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-900/50 hover:bg-amber-100 dark:hover:bg-amber-900/40'
-                          : 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-900/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/40'
-                          }`}
-                      >
-                        {(recurring.isActive && !recurring.isPaused) ? <span className="flex items-center justify-center gap-1 sm:gap-1.5 whitespace-nowrap"><Pause className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Pause</span> : <span className="flex items-center justify-center gap-1 sm:gap-1.5 whitespace-nowrap"><Play className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Resume</span>}
-                      </button>
-                      <button
-                        onClick={() => deleteRecurring(recurring.id)}
-                        className="text-rose-600 dark:text-rose-400 hover:text-rose-900 dark:hover:text-rose-300 px-1.5 sm:px-2.5 py-1.5 sm:py-1 bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-900/50 hover:bg-rose-100 dark:hover:bg-rose-900/40 rounded-lg text-[11px] sm:text-xs transition-colors"
-                        title="Delete"
-                      >
-                        <span className="flex items-center justify-center gap-1 sm:gap-1.5 whitespace-nowrap"><Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Del</span>
-                      </button>
-                      <button
-                        onClick={() => toggleRowExpansion(recurring.id)}
-                        className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 px-1.5 sm:px-2.5 py-1.5 sm:py-1 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/50 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-lg text-[11px] sm:text-xs font-semibold transition-colors flex items-center justify-center gap-1 sm:gap-1.5 whitespace-nowrap"
-                      >
-                        {expandedRows.has(recurring.id) ? (
-                          <><ChevronUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Hide ({recurring._count?.transactions || 0})</>
-                        ) : (
-                          <><ChevronDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> View ({recurring._count?.transactions || 0})</>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {expandedRows.has(recurring.id) && (
-                  <div className="p-4 border-t border-gray-100 dark:border-neutral-800 bg-white dark:bg-neutral-900">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Transaction History</h4>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                        {transactionHistory[recurring.id]?.transactions?.length || 0} transactions
-                      </div>
-                    </div>
-
-                    <div className="relative min-h-[100px]">
-                      {loadingHistory[recurring.id] && transactionHistory[recurring.id]?.transactions ? (
-                        <div className="absolute inset-0 bg-white/60 dark:bg-neutral-900/60 backdrop-blur-[2px] z-10 flex items-center justify-center rounded-xl">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                        </div>
-                      ) : null}
-
-                      {!transactionHistory[recurring.id] && loadingHistory[recurring.id] ? (
-                        <div className="flex items-center justify-center py-12">
-                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                        </div>
-                      ) : transactionHistory[recurring.id]?.transactions?.length > 0 ? (
-                        <div className="space-y-3">
-                          <div className="space-y-1 rounded-xl ring-1 ring-gray-100 dark:ring-neutral-800 overflow-hidden">
-                            {transactionHistory[recurring.id].transactions.map((transaction) => (
-                              <div key={`tx-${transaction.id}`} className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-neutral-800/50 border-b border-gray-100 dark:border-neutral-800 last:border-b-0 transition-colors">
-                                <div className="flex items-center gap-3">
-                                  <div className="text-sm font-semibold text-gray-900 dark:text-white">
-                                    {new Date(transaction.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-                                  </div>
-                                  <div className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-neutral-800 text-[10px] font-bold text-slate-600 dark:text-neutral-400 uppercase tracking-wider">
-                                    {transaction.paymentMethod || 'N/A'}
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-4">
-                                  <div className="text-sm font-black text-gray-900 dark:text-white">
-                                    {formatCurrency(transaction.amount)}
-                                  </div>
-                                  <button
-                                    onClick={() => deleteTransaction(transaction.id)}
-                                    className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 p-1.5 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-md transition-colors"
-                                    title="Delete transaction"
-                                  >
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  </button>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-
-                          {transactionHistory[recurring.id]?.pagination && transactionHistory[recurring.id].pagination!.totalPages > 1 && (
-                            <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-neutral-700">
-                              <div className="text-xs text-gray-500 dark:text-gray-400">
-                                Page {transactionHistory[recurring.id].pagination!.currentPage} of {transactionHistory[recurring.id].pagination!.totalPages}
-                              </div>
-                              <div className="flex gap-1">
-                                <button
-                                  onClick={() => fetchTransactionHistory(recurring.id, transactionHistory[recurring.id].pagination!.currentPage - 1)}
-                                  disabled={!transactionHistory[recurring.id].pagination!.hasPrevPage}
-                                  className="px-2 py-1 text-xs text-gray-700 dark:text-gray-300 bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-700 rounded hover:bg-gray-50 dark:hover:bg-neutral-800 disabled:opacity-50"
-                                >
-                                  ‹
-                                </button>
-                                <button
-                                  onClick={() => fetchTransactionHistory(recurring.id, transactionHistory[recurring.id].pagination!.currentPage + 1)}
-                                  disabled={!transactionHistory[recurring.id].pagination!.hasNextPage}
-                                  className="px-2 py-1 text-xs text-gray-700 dark:text-gray-300 bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-700 rounded hover:bg-gray-50 dark:hover:bg-neutral-800 disabled:opacity-50"
-                                >
-                                  ›
-                                </button>
-                              </div>
-                            </div>
+                        <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500 dark:text-zinc-400">
+                          <span className="tabular-nums">
+                            {formatDateForDisplay(tx.date)}
+                          </span>
+                          {tx.paymentMethod && (
+                            <>
+                              <span>•</span>
+                              <span>{tx.paymentMethod}</span>
+                            </>
+                          )}
+                          {tx.notes && (
+                            <>
+                              <span>•</span>
+                              <span className="truncate max-w-[200px] text-slate-400 dark:text-zinc-500">{tx.notes}</span>
+                            </>
                           )}
                         </div>
-                      ) : (
-                        <div className="text-center py-6 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-neutral-800/50 rounded">
-                          <FileText className="h-8 w-8 text-slate-300 dark:text-neutral-600 mx-auto mb-2" />
-                          <p className="text-sm">No transaction history yet</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 shrink-0">
+                      <div className="text-right">
+                        <div className="text-sm sm:text-base font-bold tabular-nums text-slate-900 dark:text-white">
+                          {formatCurrency(tx.amount)}
                         </div>
-                      )}
+                        <div className="text-[10px] text-slate-400 dark:text-neutral-500">
+                          One-off payment
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteOneTime(tx.id)}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors cursor-pointer"
+                        title="Delete entry"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </div>
-                )}
+                )
+              })}
+            </div>
+          )}
+        </div>
+      ) : (
+        <>
+          {/* Top Pagination */}
+      {recurringData && recurringData.pagination.totalPages > 1 && (
+        <div className="flex items-center justify-between bg-white dark:bg-[#121215] px-4 py-2.5 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] shadow-xs text-xs">
+          <div className="tabular-nums text-slate-500 dark:text-neutral-400">
+            Showing {((recurringData.pagination.currentPage - 1) * recurringData.pagination.limit) + 1} to{' '}
+            {Math.min(recurringData.pagination.currentPage * recurringData.pagination.limit, recurringData.pagination.totalCount)} of{' '}
+            {recurringData.pagination.totalCount} bills
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => goToPage(recurringData.pagination.currentPage - 1)}
+              disabled={!recurringData.pagination.hasPrevPage}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-neutral-900 text-slate-700 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+              <span>Previous</span>
+            </button>
+
+            <span className="tabular-nums font-semibold text-slate-700 dark:text-neutral-300 px-1">
+              {recurringData.pagination.currentPage} / {recurringData.pagination.totalPages}
+            </span>
+
+            <button
+              type="button"
+              onClick={() => goToPage(recurringData.pagination.currentPage + 1)}
+              disabled={!recurringData.pagination.hasNextPage}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-neutral-900 text-slate-700 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+            >
+              <span>Next</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Subscriptions Stream */}
+      <div className="space-y-6">
+        {recurringData?.data.length === 0 ? (
+          <div className="text-center py-20 bg-white dark:bg-[#121215] rounded-2xl shadow-xs border border-slate-200/80 dark:border-white/[0.08]">
+            <Repeat className="h-10 w-10 text-slate-300 dark:text-neutral-700 mx-auto mb-3 opacity-60" />
+            <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white mb-1">
+              No Recurring Bills Found
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-neutral-400 max-w-sm mx-auto">
+              Add your subscriptions, utility bills, or scheduled income to track cashflow predictability.
+            </p>
+          </div>
+        ) : (
+          groupedSubscriptions.map((group) => (
+            <div key={group.id} className="space-y-2.5">
+              {/* Group Horizon Header */}
+              <div className="flex items-center gap-2 px-1">
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${group.badge}`}>
+                  {group.title}
+                </span>
+                <span className="text-xs font-bold tabular-nums text-slate-400 dark:text-neutral-500">
+                  ({group.items.length})
+                </span>
+                <div className="h-px bg-slate-200/70 dark:bg-white/[0.06] flex-1 ml-2" />
+              </div>
+
+              {/* Group Items Feed */}
+              <div className="space-y-2">
+                {group.items.map((recurring) => {
+                  const dueInfo = getDueBadge(recurring.nextDue, recurring.isActive, recurring.isPaused)
+                  const isIncome = recurring.type === 'income'
+                  const visual = getCategoryVisual(recurring.category, recurring.type, undefined, customIcons)
+                  const Icon = visual.icon
+                  const isPaused = !recurring.isActive || recurring.isPaused
+
+                  return (
+                    <div
+                      key={recurring.id}
+                      onClick={() => setSelectedRecurringForDrawer(recurring)}
+                      className="group flex items-center justify-between p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-white dark:bg-[#121215] hover:bg-slate-50 dark:hover:bg-[#18181b] hover:border-slate-300 dark:hover:border-white/[0.15] transition-all cursor-pointer shadow-sm"
+                    >
+                      {/* Left: Avatar, Title, Metadata */}
+                      <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${visual.bg}`}>
+                          <Icon className="w-5 h-5" />
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-sm sm:text-base text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
+                              {recurring.description || recurring.category}
+                            </span>
+                            <span className={`text-[10px] px-2 py-0.5 rounded-md ${dueInfo.className} shrink-0`}>
+                              {dueInfo.text}
+                            </span>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-2 mt-1 text-[11px] text-slate-500 dark:text-neutral-400">
+                            <span className="font-semibold text-slate-700 dark:text-neutral-300">
+                              {recurring.category}
+                            </span>
+                            <span>·</span>
+                            <span className="capitalize">{recurring.frequency}</span>
+                            {recurring.paymentMethod && (
+                              <>
+                                <span>·</span>
+                                <span>{recurring.paymentMethod}</span>
+                              </>
+                            )}
+                            <span>·</span>
+                            <span className="tabular-nums">
+                              Next: {formatDateForDisplay(recurring.nextDue)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right: Amount & Quick Pause/Resume */}
+                      <div className="flex items-center gap-4 shrink-0 pl-2">
+                        <div className="text-right">
+                          <div className={`text-base sm:text-lg font-bold tabular-nums ${
+                            isIncome ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-900 dark:text-white'
+                          }`}>
+                            {isIncome ? '+' : ''}{formatCurrency(recurring.amount)}
+                          </div>
+                          <div className="text-[11px] tabular-nums text-slate-400 dark:text-neutral-500">
+                            {formatCurrency(recurring.totalSpent || 0)} spent
+                          </div>
+                        </div>
+
+                        {/* Inline Pause Button (stopPropagation) */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            toggleRecurringStatus(recurring.id, recurring.isActive && !recurring.isPaused)
+                          }}
+                          className={`p-2 rounded-xl border text-xs font-semibold transition-colors cursor-pointer ${
+                            isPaused
+                              ? 'border-emerald-200 dark:border-emerald-900/50 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100'
+                              : 'border-slate-200 dark:border-white/[0.08] text-slate-500 dark:text-neutral-400 hover:bg-slate-100 dark:hover:bg-neutral-800'
+                          }`}
+                          title={isPaused ? 'Resume subscription' : 'Pause subscription'}
+                        >
+                          {isPaused ? <Play className="h-3.5 w-3.5" /> : <Pause className="h-3.5 w-3.5" />}
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           ))
         )}
       </div>
 
+      {/* Pagination Footer */}
       {recurringData && recurringData.pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between bg-white dark:bg-neutral-900 px-4 py-3 rounded-xl shadow-sm ring-1 ring-gray-100 dark:ring-neutral-800">
-          <div className="flex items-center text-sm text-gray-700 dark:text-gray-300">
+        <div className="flex items-center justify-between bg-white dark:bg-[#121215] px-4 py-2.5 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] shadow-xs text-xs">
+          <div className="tabular-nums text-slate-500 dark:text-neutral-400">
             Showing {((recurringData.pagination.currentPage - 1) * recurringData.pagination.limit) + 1} to{' '}
             {Math.min(recurringData.pagination.currentPage * recurringData.pagination.limit, recurringData.pagination.totalCount)} of{' '}
-            {recurringData.pagination.totalCount} results
+            {recurringData.pagination.totalCount} bills
           </div>
 
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={() => goToPage(recurringData.pagination.currentPage - 1)}
               disabled={!recurringData.pagination.hasPrevPage}
-              className="flex items-center gap-1 px-3 py-1 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-700 rounded hover:bg-gray-50 dark:hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-neutral-900 text-slate-700 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
             >
-              <ChevronLeft className="w-4 h-4" />
-              Previous
+              <ChevronLeft className="w-3.5 h-3.5" />
+              <span>Previous</span>
             </button>
 
-            <span className="text-sm text-gray-700 dark:text-gray-300">
-              Page {recurringData.pagination.currentPage} of {recurringData.pagination.totalPages}
+            <span className="tabular-nums font-semibold text-slate-700 dark:text-neutral-300 px-1">
+              {recurringData.pagination.currentPage} / {recurringData.pagination.totalPages}
             </span>
 
             <button
+              type="button"
               onClick={() => goToPage(recurringData.pagination.currentPage + 1)}
               disabled={!recurringData.pagination.hasNextPage}
-              className="flex items-center gap-1 px-3 py-1 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-neutral-900 border border-gray-300 dark:border-neutral-700 rounded hover:bg-gray-50 dark:hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-neutral-900 text-slate-700 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
             >
-              Next
-              <ChevronRight className="w-4 h-4" />
+              <span>Next</span>
+              <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
       )}
+        </>
+      )}
 
+      {/* Slide-out Subscription Inspector Drawer */}
+      {selectedRecurringForDrawer && (
+        <RecurringDetailDrawer
+          recurring={{
+            id: selectedRecurringForDrawer.id,
+            type: selectedRecurringForDrawer.type,
+            amount: selectedRecurringForDrawer.amount,
+            category: selectedRecurringForDrawer.category,
+            description: selectedRecurringForDrawer.description,
+            paymentMethod: selectedRecurringForDrawer.paymentMethod,
+            frequency: selectedRecurringForDrawer.frequency,
+            startDate: selectedRecurringForDrawer.startDate || selectedRecurringForDrawer.nextDue,
+            nextDue: selectedRecurringForDrawer.nextDue,
+            isActive: selectedRecurringForDrawer.isActive,
+            isPaused: selectedRecurringForDrawer.isPaused || false,
+            totalSpent: selectedRecurringForDrawer.totalSpent || 0,
+            executionCount: selectedRecurringForDrawer._count?.transactions || 0,
+            priceHistory: selectedRecurringForDrawer.priceChanges?.map(pc => ({
+              id: pc.id,
+              amount: pc.newAmount,
+              effectiveDate: pc.effectiveDate,
+              reason: pc.reason
+            }))
+          }}
+          onClose={() => setSelectedRecurringForDrawer(null)}
+          onEdit={(item) => {
+            const original = recurringData?.data.find(r => r.id === item.id)
+            if (original) handleStartEdit(original)
+          }}
+          onDelete={(id) => deleteRecurring(id)}
+          onTogglePause={(id, currentPaused) => toggleRecurringStatus(id, !currentPaused)}
+          onShowPriceHistory={(item) => {
+            const original = recurringData?.data.find(r => r.id === item.id)
+            if (original) showPriceHistory(original)
+          }}
+        />
+      )}
+
+      {/* Add / Edit Form Modal */}
       {showAddForm && typeof document !== 'undefined' && createPortal(
         <RecurringForm
           formData={formData}
           setFormData={setFormData}
           onSubmit={handleAddRecurring}
-          onCancel={() => setShowAddForm(false)}
+          onCancel={() => {
+            setShowAddForm(false)
+            setEditingRecurringId(null)
+          }}
           formLoading={formLoading}
         />,
         document.body
       )}
 
+      {/* Price History Modal */}
       {priceHistoryModal.isOpen && priceHistoryModal.recurringTransaction && typeof document !== 'undefined' && createPortal(
         <PriceHistoryModal
           isOpen={priceHistoryModal.isOpen}
@@ -895,104 +1394,133 @@ export default function PaginatedRecurringTransactions() {
         document.body
       )}
 
-      {analyticsRecurring && recurringData && typeof document !== 'undefined' && createPortal(
-        (() => {
-          const totalSpent = analyticsRecurring.totalSpent || 0
-          const monthlyEquivalent = calculateMonthlyEquivalent(analyticsRecurring)
-          const yearlyEquivalent = calculateYearlyEquivalent(analyticsRecurring)
-          const allRecurringSpent = recurringData.data.reduce((sum, item) => sum + (item.totalSpent || 0), 0)
-          const shareOfRecurringSpend = allRecurringSpent > 0 ? (totalSpent / allRecurringSpent) * 100 : 0
-          const transactionCount = analyticsRecurring._count?.transactions || 0
-          const averageTransaction = transactionCount > 0 ? totalSpent / transactionCount : 0
-          const startDate = new Date(analyticsRecurring.startDate || analyticsRecurring.nextDue)
-          const nextDueDate = new Date(analyticsRecurring.nextDue)
-          const activeDays = Math.max(1, Math.ceil((Date.now() - startDate.getTime()) / (1000 * 60 * 60 * 24)))
-          const dailyAverage = totalSpent / activeDays
-
-          return (
-            <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/45 dark:bg-neutral-950/80 backdrop-blur-sm p-4">
-              <div className="w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white dark:bg-neutral-900 shadow-2xl ring-1 ring-gray-200 dark:ring-neutral-800">
-                <div className="sticky top-0 z-10 flex items-start justify-between border-b border-gray-100 dark:border-neutral-800 bg-white/95 dark:bg-neutral-900/95 p-6 backdrop-blur">
-                  <div>
-                    <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Recurring Analytics</p>
-                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{analyticsRecurring.description || analyticsRecurring.category}</h3>
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      {analyticsRecurring.category} · {analyticsRecurring.frequency} · Next due {nextDueDate.toLocaleDateString()}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setAnalyticsRecurring(null)}
-                    className="rounded-full p-2 text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-neutral-800 hover:text-gray-700 dark:hover:text-gray-300"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
+      {/* Add One-Time Cost Modal */}
+      {showAddOneTimeModal && typeof document !== 'undefined' && createPortal(
+        <div
+          onClick={() => setShowAddOneTimeModal(false)}
+          className="fixed inset-0 z-[300] flex items-end sm:items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-xs p-0 sm:p-4 overflow-hidden animate-in fade-in duration-150"
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            className="w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border-t sm:border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#121215] shadow-2xl flex flex-col max-h-[92vh] sm:max-h-[85vh] overflow-hidden"
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-3.5 border-b border-slate-200/80 dark:border-white/[0.08] bg-slate-50/70 dark:bg-[#16161a]/60 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center border shrink-0 shadow-xs bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20">
+                  <Tag className="w-4 h-4" />
                 </div>
-
-                <div className="space-y-6 p-6">
-                  <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-                    <div className="rounded-2xl bg-blue-50 dark:bg-blue-900/20 p-3 sm:p-4 ring-1 ring-blue-100 dark:ring-blue-900/50">
-                      <p className="text-xs sm:text-sm text-blue-700 dark:text-blue-400">Total Spent</p>
-                      <p className="mt-1 text-lg sm:text-2xl font-bold text-blue-900 dark:text-blue-100">{formatCurrency(totalSpent)}</p>
-                    </div>
-                    <div className="rounded-2xl bg-green-50 dark:bg-green-900/20 p-3 sm:p-4 ring-1 ring-green-100 dark:ring-green-900/50">
-                      <p className="text-xs sm:text-sm text-green-700 dark:text-green-400">Monthly Impact</p>
-                      <p className="mt-1 text-lg sm:text-2xl font-bold text-green-900 dark:text-green-100">{formatCurrency(monthlyEquivalent)}</p>
-                    </div>
-                    <div className="rounded-2xl bg-purple-50 dark:bg-purple-900/20 p-3 sm:p-4 ring-1 ring-purple-100 dark:ring-purple-900/50">
-                      <p className="text-xs sm:text-sm text-purple-700 dark:text-purple-400">Yearly Impact</p>
-                      <p className="mt-1 text-lg sm:text-2xl font-bold text-purple-900 dark:text-purple-100">{formatCurrency(yearlyEquivalent)}</p>
-                    </div>
-                    <div className="rounded-2xl bg-orange-50 dark:bg-orange-900/20 p-3 sm:p-4 ring-1 ring-orange-100 dark:ring-orange-900/50">
-                      <p className="text-xs sm:text-sm text-orange-700 dark:text-orange-400">Share of Recurring</p>
-                      <p className="mt-1 text-lg sm:text-2xl font-bold text-orange-900 dark:text-orange-100">{shareOfRecurringSpend.toFixed(1)}%</p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
-                    <div className="rounded-2xl bg-white dark:bg-neutral-800 p-3 sm:p-4 ring-1 ring-gray-100 dark:ring-neutral-700">
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Transactions Created</p>
-                      <p className="mt-1 text-base sm:text-xl font-semibold text-gray-900 dark:text-white">{transactionCount}</p>
-                    </div>
-                    <div className="rounded-2xl bg-white dark:bg-neutral-800 p-3 sm:p-4 ring-1 ring-gray-100 dark:ring-neutral-700">
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Average Transaction</p>
-                      <p className="mt-1 text-base sm:text-xl font-semibold text-gray-900 dark:text-white">{formatCurrency(averageTransaction)}</p>
-                    </div>
-                    <div className="rounded-2xl bg-white dark:bg-neutral-800 p-3 sm:p-4 ring-1 ring-gray-100 dark:ring-neutral-700 col-span-2 md:col-span-1">
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Daily Average Since Start</p>
-                      <p className="mt-1 text-base sm:text-xl font-semibold text-gray-900 dark:text-white">{formatCurrency(dailyAverage)}</p>
-                    </div>
-                  </div>
-
-                  <div className="rounded-2xl bg-white dark:bg-neutral-800 p-5 ring-1 ring-gray-100 dark:ring-neutral-700">
-                    <h4 className="text-base font-semibold text-gray-900 dark:text-white">Subscription Details</h4>
-                    <div className="mt-4 grid grid-cols-1 gap-3 text-sm md:grid-cols-2">
-                      <div className="flex justify-between rounded-xl bg-gray-50 dark:bg-neutral-700/50 p-3">
-                        <span className="text-gray-500 dark:text-gray-400">Current amount</span>
-                        <span className="font-medium text-gray-900 dark:text-white">{formatCurrency(analyticsRecurring.amount)}</span>
-                      </div>
-                      <div className="flex justify-between rounded-xl bg-gray-50 dark:bg-neutral-700/50 p-3">
-                        <span className="text-gray-500 dark:text-gray-400">Frequency</span>
-                        <span className="font-medium capitalize text-gray-900 dark:text-white">{analyticsRecurring.frequency}</span>
-                      </div>
-                      <div className="flex justify-between rounded-xl bg-gray-50 dark:bg-neutral-700/50 p-3">
-                        <span className="text-gray-500 dark:text-gray-400">Start date</span>
-                        <span className="font-medium text-gray-900 dark:text-white">{startDate.toLocaleDateString()}</span>
-                      </div>
-                      <div className="flex justify-between rounded-xl bg-gray-50 dark:bg-neutral-700/50 p-3">
-                        <span className="text-gray-500 dark:text-gray-400">Status</span>
-                        <span className="font-medium text-gray-900 dark:text-white">{analyticsRecurring.isActive && !analyticsRecurring.isPaused ? 'Active' : 'Paused'}</span>
-                      </div>
-                    </div>
-                  </div>
+                <div>
+                  <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight">
+                    Add One-Time Subscription Cost
+                  </h3>
+                  <p className="text-[11px] text-slate-500 dark:text-zinc-400 truncate">
+                    Record lifetime licenses, domain renewals, or one-off software fees
+                  </p>
                 </div>
               </div>
+              <button
+                type="button"
+                onClick={() => setShowAddOneTimeModal(false)}
+                className="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
-          )
-        })(),
+
+            <form onSubmit={handleAddOneTimeSubmit} className="flex flex-col flex-1 min-h-0 bg-white dark:bg-[#121215]">
+              <div className="flex-1 overflow-y-auto px-4 sm:px-5 py-3.5 sm:py-4 no-scrollbar space-y-3.5">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5">
+                    Service / Item Name <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={oneTimeForm.title}
+                    onChange={e => setOneTimeForm({ ...oneTimeForm, title: e.target.value })}
+                    className="w-full h-9 sm:h-9.5 px-3 sm:px-3.5 text-xs bg-slate-50/70 dark:bg-[#16161a] border border-slate-200/90 dark:border-white/[0.08] rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/40 transition-colors font-semibold"
+                    placeholder="e.g. Lifetime Notion License, Domain Registration"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5">
+                      Amount (₹) <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      required
+                      value={oneTimeForm.amount}
+                      onChange={e => setOneTimeForm({ ...oneTimeForm, amount: e.target.value })}
+                      className="w-full h-9 sm:h-9.5 px-3 sm:px-3.5 text-xs bg-slate-50/70 dark:bg-[#16161a] border border-slate-200/90 dark:border-white/[0.08] rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/40 transition-colors font-semibold tabular-nums"
+                      placeholder="0.00"
+                    />
+                  </div>
+
+                  <CustomDateField
+                    id="oneTimeDate"
+                    label="Date Paid"
+                    value={oneTimeForm.date}
+                    onChange={d => setOneTimeForm({ ...oneTimeForm, date: d })}
+                    max={new Date().toISOString().split('T')[0]}
+                    required
+                  />
+                </div>
+
+                <CustomSelect
+                  id="oneTimePaymentMethod"
+                  label="Payment Method"
+                  required
+                  value={oneTimeForm.paymentMethod}
+                  onChange={e => setOneTimeForm({ ...oneTimeForm, paymentMethod: e.target.value })}
+                >
+                  <option value="">Select payment method</option>
+                  {staticData.paymentMethods.filter(p => p.isActive).map(m => (
+                    <option key={m.id} value={m.name}>{m.name}</option>
+                  ))}
+                </CustomSelect>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5">
+                    Notes <span className="text-slate-400 dark:text-zinc-500 font-normal lowercase">(optional)</span>
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={oneTimeForm.notes}
+                    onChange={e => setOneTimeForm({ ...oneTimeForm, notes: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-slate-200/90 dark:border-white/[0.08] bg-slate-50/70 dark:bg-[#16161a] text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/40 transition-colors resize-none"
+                    placeholder="License key details, renewal term, or remarks..."
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5 px-4 sm:px-5 py-3 sm:py-3.5 border-t border-slate-200/80 dark:border-white/[0.08] bg-slate-50/70 dark:bg-[#16161a]/60 shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-3.5">
+                <button
+                  type="button"
+                  onClick={() => setShowAddOneTimeModal(false)}
+                  className="flex-1 h-9 sm:h-9.5 px-4 rounded-xl border border-slate-200/80 dark:border-white/[0.08] bg-white dark:bg-[#121215] hover:bg-slate-100 dark:hover:bg-white/[0.04] text-xs font-semibold text-slate-700 dark:text-neutral-300 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={oneTimeLoading}
+                  className="flex-1 h-9 sm:h-9.5 rounded-xl bg-amber-600 hover:bg-amber-500 active:scale-[0.99] text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>{oneTimeLoading ? 'Saving...' : 'Save One-Time Cost'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>,
         document.body
       )}
 
+      {/* Toast Notification */}
       {toast && (
         <div className="fixed bottom-24 md:bottom-6 left-1/2 -translate-x-1/2 z-[200] animate-slide-up">
           <div className={`flex items-center gap-2 px-4 py-3 rounded-2xl shadow-xl text-sm font-bold border ${toast.type === 'success'

@@ -15,12 +15,13 @@ type CatMonthRow = { category: string; month: string; sort_key: Date; total: num
 type PeriodAgg   = { type: string;  total: number; cnt: number; first_date?: Date; last_date?: Date }
 
 export async function GET(request: Request) {
+  const startTime = performance.now()
   try {
     const { searchParams } = new URL(request.url)
     const userId = request.headers.get('x-user-id')
 
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' }, { status: 401 })
     }
 
     const dateFilter    = searchParams.get('dateFilter') || 'this_month'
@@ -462,12 +463,19 @@ export async function GET(request: Request) {
         availableYears,
       },
       filteredTransactionsCount: detailedTransactions.length,
+    }, {
+      status: 200,
+      headers: {
+        'Server-Timing': `db;dur=${Math.round(performance.now() - startTime)}`,
+        'X-Response-Time': `${Math.round(performance.now() - startTime)}ms`,
+        'Cache-Control': 'private, no-cache, no-store, must-revalidate'
+      }
     })
 
   } catch (error: unknown) {
     console.error('Failed to fetch analytics:', error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : String(error) },
+      { success: false, error: error instanceof Error ? error.message : String(error), code: 'FETCH_ANALYTICS_ERROR' },
       { status: 500 }
     )
   }

@@ -1,8 +1,7 @@
 'use client'
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react'
-import { createPortal } from 'react-dom'
-import { BarChart3, X } from 'lucide-react'
+import { Layers, PieChart as PieChartIcon, Clock } from 'lucide-react'
 import { useEnhancedStaticData } from '@/lib/enhanced-static-data-manager'
 import MonthlyInsights from './MonthlyInsights'
 import OverviewHero from './overview/OverviewHero'
@@ -103,6 +102,9 @@ export default React.memo(function OverviewTab({
   const [budgetCatTxns, setBudgetCatTxns] = useState<Record<string, any[]>>({})
   const [loadingBudgetCat, setLoadingBudgetCat] = useState<string | null>(null)
 
+  // Mobile focused view tab: 'budgets' | 'breakdown' | 'activity'
+  const [mobileTab, setMobileTab] = useState<'budgets' | 'breakdown' | 'activity'>('budgets')
+
   const handleBudgetCatClick = useCallback(async (category: string) => {
     if (expandedBudgetCat === category) {
       setExpandedBudgetCat(null)
@@ -137,29 +139,81 @@ export default React.memo(function OverviewTab({
 
   const selectedCategoryRow = budgetRows.find(r => r.category === expandedBudgetCat)
 
-  return (
-    <div className="space-y-3 pb-16 md:pb-0 font-sans">
-      {/* Main Executive Grid: Begins immediately at the top with Hero Card */}
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-3">
-        {/* Left Column: Hero Balance Card + Spacious Category Budgets */}
-        <div className="space-y-3 sm:space-y-4 min-w-0">
-          <OverviewHero
-            balanceInfo={balanceInfo}
-            totalBudgeted={totalBudgeted}
-            totalSpentOnBudgeted={totalSpentOnBudgeted}
-            overallBudgetPct={overallBudgetPct}
-            savingsRate={savingsRate}
-            isAllYear={isAllYear}
-            monthProgress={monthProgress}
-            overviewPeriod={overviewPeriod}
-            activeYear={activeYear}
-            activeMonth={activeMonth}
-            availableYears={availableYears}
-            monthNames={MONTH_NAMES}
-            onPeriodChange={onPeriodChange}
-            onShowAddTransaction={onShowAddTransaction}
-          />
+  // Identify high-priority attention alerts (e.g. over budget items)
+  const overBudgetItems = useMemo(() => budgetRows.filter(r => r.status === 'over'), [budgetRows])
+  const overBudgetDelta = useMemo(() => overBudgetItems.reduce((s, i) => s + (i.spent - i.limit), 0), [overBudgetItems])
 
+  return (
+    <div className="space-y-2.5 pb-16 md:pb-0 font-sans">
+      {/* 1. Main Executive Command Center Hero (Ultra-Compact) */}
+      <OverviewHero
+        balanceInfo={balanceInfo}
+        totalBudgeted={totalBudgeted}
+        totalSpentOnBudgeted={totalSpentOnBudgeted}
+        overallBudgetPct={overallBudgetPct}
+        savingsRate={savingsRate}
+        isAllYear={isAllYear}
+        monthProgress={monthProgress}
+        overviewPeriod={overviewPeriod}
+        activeYear={activeYear}
+        activeMonth={activeMonth}
+        availableYears={availableYears}
+        monthNames={MONTH_NAMES}
+        onPeriodChange={onPeriodChange}
+        onShowAddTransaction={onShowAddTransaction}
+        overBudgetCount={overBudgetItems.length}
+        overBudgetDelta={overBudgetDelta}
+        onInspectAlert={() => {
+          if (overBudgetItems.length > 0) {
+            handleBudgetCatClick(overBudgetItems[0].category)
+          }
+        }}
+      />
+
+      {/* 2. Mobile View Switcher (Only visible below lg breakpoint) */}
+      <div className="flex lg:hidden items-center bg-slate-100 dark:bg-[#121215] border border-slate-200/80 dark:border-white/[0.08] p-1 rounded-xl gap-1">
+        <button
+          type="button"
+          onClick={() => setMobileTab('budgets')}
+          className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+            mobileTab === 'budgets'
+              ? 'bg-blue-600 text-white shadow-xs'
+              : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+          }`}
+        >
+          <Layers className="h-3.5 w-3.5" />
+          <span>Budgets</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setMobileTab('breakdown')}
+          className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+            mobileTab === 'breakdown'
+              ? 'bg-blue-600 text-white shadow-xs'
+              : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+          }`}
+        >
+          <PieChartIcon className="h-3.5 w-3.5" />
+          <span>Breakdown</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setMobileTab('activity')}
+          className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+            mobileTab === 'activity'
+              ? 'bg-blue-600 text-white shadow-xs'
+              : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+          }`}
+        >
+          <Clock className="h-3.5 w-3.5" />
+          <span>Activity</span>
+        </button>
+      </div>
+
+      {/* 3. Balanced Cockpit: Left 58% (Budgets) + Right 42% (Stacked Distribution & Activity) on Desktop (lg+) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-start">
+        {/* Left Wing: Category Budgets (lg:col-span-7) */}
+        <div className={`min-w-0 flex flex-col ${mobileTab !== 'budgets' ? 'hidden lg:flex' : 'flex'} lg:col-span-7`}>
           <CategoryBudgetList
             budgetRows={budgetRows}
             isAllYear={isAllYear}
@@ -168,98 +222,54 @@ export default React.memo(function OverviewTab({
           />
         </div>
 
-        {/* Right Column: Spending Breakdown Donut + Recent Activity + Insights Launcher */}
-        <div className="space-y-3 sm:space-y-4 min-w-0">
-          <CategoryDonutCard
-            budgetRows={budgetRows}
-            isAllYear={isAllYear}
-          />
+        {/* Right Wing: Stacked Expense Distribution & Recent Activity (lg:col-span-5) */}
+        <div className={`min-w-0 flex flex-col gap-3.5 lg:col-span-5 ${mobileTab === 'budgets' ? 'hidden lg:flex' : 'flex'}`}>
+          {/* Expense Distribution Donut */}
+          <div className={`min-w-0 flex flex-col ${mobileTab !== 'breakdown' ? 'hidden lg:flex' : 'flex'}`}>
+            <CategoryDonutCard
+              budgetRows={budgetRows}
+              isAllYear={isAllYear}
+            />
+          </div>
 
-          <RecentActivityCard
-            periodTxns={periodTxns}
-            onViewAll={() => onTabChange('transactions')}
-          />
-
-          {/* Insights Report Launcher */}
-          <div className="bg-white dark:bg-neutral-900 border border-slate-200/90 dark:border-neutral-800 rounded-2xl shadow-sm overflow-hidden">
-            <button
-              type="button"
-              onClick={() => setShowInsights(true)}
-              className="w-full flex items-center justify-between p-3.5 hover:bg-slate-50/80 dark:hover:bg-neutral-800/50 transition-colors text-left"
-            >
-              <div className="flex-1 min-w-0 pr-3">
-                <div className="flex items-center gap-2">
-                  <BarChart3 className="h-4 w-4 text-indigo-500 shrink-0" />
-                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
-                    {isAllYear ? `${activeYear} Annual Report` : `${MONTH_NAMES[activeMonth - 1]} ${activeYear} Report`}
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-500 dark:text-neutral-400 mt-0.5 truncate">
-                  View health score and spending patterns.
-                </p>
-              </div>
-              <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200/60 dark:border-indigo-900/40 px-3 py-1 rounded-xl shrink-0">
-                View →
-              </span>
-            </button>
+          {/* Recent Activity with Embedded Insights Trigger */}
+          <div className={`min-w-0 flex flex-col ${mobileTab !== 'activity' ? 'hidden lg:flex' : 'flex'}`}>
+            <RecentActivityCard
+              periodTxns={periodTxns}
+              onViewAll={() => onTabChange('transactions')}
+              onOpenInsights={() => setShowInsights(true)}
+              isAllYear={isAllYear}
+              activeYear={activeYear}
+              monthName={MONTH_NAMES[activeMonth - 1]}
+            />
           </div>
         </div>
       </div>
 
-      {/* Monthly Insights Slide-over Drawer */}
-      {mounted && showInsights && createPortal(
-        <div className="fixed inset-0 z-[500] flex justify-end">
-          <div
-            className="absolute inset-0 bg-slate-950/50 dark:bg-black/85 backdrop-blur-sm transition-opacity"
-            onClick={() => setShowInsights(false)}
-          />
-          <div
-            className="relative w-full max-w-md bg-white dark:bg-neutral-950 shadow-2xl h-full flex flex-col sm:rounded-l-2xl overflow-hidden border-l border-slate-200 dark:border-neutral-800"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center px-5 py-4 border-b border-slate-200/80 dark:border-neutral-800 bg-slate-50/80 dark:bg-neutral-900 shrink-0">
-              <div className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-indigo-500" />
-                <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
-                  {isAllYear ? `${activeYear} Annual Insights` : `${MONTH_NAMES[activeMonth - 1]} ${activeYear} Insights`}
-                </h2>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowInsights(false)}
-                className="rounded-lg p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-neutral-800 transition-colors"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <div className="p-5 overflow-y-auto flex-1">
-              <MonthlyInsights
-                periodTxns={periodTxns}
-                categorySpend={categorySpend}
-                prevExpense={summary?.period?.prevExpense || 0}
-                month={activeMonth}
-                year={activeYear}
-                isAllYear={isAllYear}
-              />
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
+      {/* Slide-over Detail Drawers (Slide from right without vertical page disruption) */}
+      <CategoryDetailDrawer
+        category={expandedBudgetCat}
+        row={selectedCategoryRow}
+        txns={expandedBudgetCat ? budgetCatTxns[expandedBudgetCat] || [] : []}
+        loading={Boolean(loadingBudgetCat)}
+        isAllYear={isAllYear}
+        activeYear={activeYear}
+        monthName={MONTH_NAMES[activeMonth - 1]}
+        onClose={() => setExpandedBudgetCat(null)}
+      />
 
-      {/* Category Drilldown Drawer */}
-      {mounted && expandedBudgetCat && (
-        <CategoryDetailDrawer
-          category={expandedBudgetCat}
-          row={selectedCategoryRow}
-          txns={budgetCatTxns[expandedBudgetCat] || []}
-          loading={loadingBudgetCat === expandedBudgetCat}
-          isAllYear={isAllYear}
-          activeYear={activeYear}
-          monthName={MONTH_NAMES[activeMonth - 1]}
-          onClose={() => setExpandedBudgetCat(null)}
-        />
-      )}
+      <MonthlyInsights
+        isOpen={showInsights}
+        onClose={() => setShowInsights(false)}
+        period={isAllYear ? 'year' : 'month'}
+        month={activeMonth}
+        year={activeYear}
+        isAllYear={isAllYear}
+        periodTxns={periodTxns}
+        categorySpend={categorySpend}
+        prevExpense={summary?.prevExpense || 0}
+        onOpenCategoryDetail={handleBudgetCatClick}
+      />
     </div>
   )
 })
