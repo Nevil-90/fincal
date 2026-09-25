@@ -105,30 +105,22 @@ export default React.memo(function OverviewHero({
 
       {/* 2. Unified Liquidity & Pacing Matrix (4 Columns Desktop, 2x2 Grid Mobile) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
-        {/* Metric 1: Net Cashflow */}
+        {/* Metric 1: Total Outflow */}
         <div className="bg-slate-50/80 dark:bg-[#16161a]/80 hover:bg-slate-100/90 dark:hover:bg-[#18181f] border border-slate-200/70 dark:border-white/[0.07] hover:border-slate-300 dark:hover:border-white/[0.14] rounded-xl p-3 flex flex-col justify-between transition-all shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
-              {isAllYear ? 'Net Saved' : 'Net Flow'}
+              Total Outflow
             </span>
-            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
-              savingsRate >= 20
-                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                : savingsRate > 0
-                ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
-                : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
-            }`}>
-              {savingsRate}% saved
-            </span>
+            <div className="w-4 h-4 rounded bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center">
+              <ArrowUpRight className="w-2.5 h-2.5" />
+            </div>
           </div>
           <div className="mt-1.5">
-            <h3 className={`text-base sm:text-lg font-bold tabular-nums tracking-tight ${
-              balanceInfo.periodBalance >= 0 ? 'text-slate-900 dark:text-white' : 'text-rose-600 dark:text-rose-400'
-            }`}>
-              {balanceInfo.periodBalance >= 0 ? '+' : ''}{formatCurrency(balanceInfo.periodBalance)}
+            <h3 className="text-base sm:text-lg font-bold tabular-nums tracking-tight text-rose-600 dark:text-rose-400">
+              -{formatCurrency(balanceInfo.periodExpenses)}
             </h3>
             <p className="text-[10px] text-slate-500 dark:text-zinc-500 truncate mt-0.5">
-              {balanceInfo.periodBalance >= 0 ? 'Retained in liquidity' : 'Deficit this period'}
+              Debited spend
             </p>
           </div>
         </div>
@@ -153,22 +145,30 @@ export default React.memo(function OverviewHero({
           </div>
         </div>
 
-        {/* Metric 3: Total Outflow */}
+        {/* Metric 3: Net Cashflow */}
         <div className="bg-slate-50/80 dark:bg-[#16161a]/80 hover:bg-slate-100/90 dark:hover:bg-[#18181f] border border-slate-200/70 dark:border-white/[0.07] hover:border-slate-300 dark:hover:border-white/[0.14] rounded-xl p-3 flex flex-col justify-between transition-all shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
-              Total Outflow
+              {isAllYear ? 'Net Saved' : 'Net Flow'}
             </span>
-            <div className="w-4 h-4 rounded bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center">
-              <ArrowUpRight className="w-2.5 h-2.5" />
-            </div>
+            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+              savingsRate >= 20
+                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                : savingsRate > 0
+                ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
+                : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
+            }`}>
+              {savingsRate}% saved
+            </span>
           </div>
           <div className="mt-1.5">
-            <h3 className="text-base sm:text-lg font-bold tabular-nums tracking-tight text-slate-900 dark:text-white">
-              -{formatCurrency(balanceInfo.periodExpenses)}
+            <h3 className={`text-base sm:text-lg font-bold tabular-nums tracking-tight ${
+              balanceInfo.periodBalance >= 0 ? 'text-slate-900 dark:text-white' : 'text-rose-600 dark:text-rose-400'
+            }`}>
+              {balanceInfo.periodBalance >= 0 ? '+' : ''}{formatCurrency(balanceInfo.periodBalance)}
             </h3>
             <p className="text-[10px] text-slate-500 dark:text-zinc-500 truncate mt-0.5">
-              Debited spend
+              {balanceInfo.periodBalance >= 0 ? 'Retained in liquidity' : 'Deficit this period'}
             </p>
           </div>
         </div>
