@@ -271,9 +271,9 @@ export default function TravelingTab() {
       <div className="rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-slate-100 dark:bg-[#121215] p-1 shadow-xs">
         <div className="flex flex-row items-center gap-1 w-full">
           {[
-            { id: 'overview', label: 'Telemetry & Pacing', icon: Navigation },
-            { id: 'entries', label: 'Trip Logbook', icon: ListFilter },
-            { id: 'charts', label: 'Efficiency Analytics', icon: BarChart3 }
+            { id: 'overview', label: 'Telemetry & Pacing', mobileLabel: 'Overview', icon: Navigation },
+            { id: 'entries', label: 'Trip Logbook', mobileLabel: 'Logbook', icon: ListFilter },
+            { id: 'charts', label: 'Efficiency Analytics', mobileLabel: 'Analytics', icon: BarChart3 }
           ].map(tab => {
             const Icon = tab.icon
             const isActive = activeSubTab === tab.id
@@ -282,14 +282,15 @@ export default function TravelingTab() {
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveSubTab(tab.id as 'overview' | 'charts' | 'entries')}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
+                className={`flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2 sm:py-1.5 px-1.5 sm:px-3 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
                   isActive
                     ? 'bg-white text-slate-900 dark:bg-white dark:text-black shadow-xs font-bold'
                     : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-white/[0.04]'
                 }`}
               >
-                <Icon className="w-3.5 h-3.5" />
-                <span>{tab.label}</span>
+                <Icon className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden sm:inline">{tab.label}</span>
+                <span className="sm:hidden text-xs">{tab.mobileLabel}</span>
               </button>
             )
           })}

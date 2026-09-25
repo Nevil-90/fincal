@@ -454,9 +454,8 @@ function ModernDashboardContent() {
   }
 
   return (
-    <div className={`flex w-full bg-white dark:bg-neutral-950 text-slate-900 dark:text-neutral-100 ${
-      activeTab === 'overview' ? 'h-screen overflow-hidden' : 'min-h-screen'
-    }`}>
+    <div className={`flex w-full bg-white dark:bg-neutral-950 text-slate-900 dark:text-neutral-100 ${activeTab === 'overview' ? 'h-screen overflow-hidden' : 'min-h-screen'
+      }`}>
 
       <Sidebar
         sidebarOpen={sidebarOpen}
@@ -469,9 +468,8 @@ function ModernDashboardContent() {
         onQuickAdd={handleShowAddTransaction}
       />
 
-      <div className={`flex min-w-0 flex-1 flex-col relative ${
-        activeTab === 'overview' ? 'h-[100dvh] md:h-screen overflow-hidden' : 'min-h-[100dvh]'
-      }`}>
+      <div className={`flex min-w-0 flex-1 flex-col relative overflow-x-hidden ${activeTab === 'overview' ? 'h-[100dvh] md:h-screen overflow-hidden' : 'min-h-[100dvh]'
+        }`}>
 
         <div className="sticky top-0 z-[60]">
           <DashboardHeader
@@ -487,9 +485,8 @@ function ModernDashboardContent() {
         </div>
 
         <main
-          className={`flex-1 bg-transparent relative px-3 py-3 sm:px-5 sm:py-4 lg:px-6 lg:py-4 pb-24 md:pb-5 overflow-y-auto ${
-            activeTab === 'overview' ? 'no-scrollbar' : 'custom-scrollbar'
-          }`}
+          className={`flex-1 bg-transparent relative px-3 py-3 sm:px-5 sm:py-4 lg:px-6 lg:py-4 pb-[calc(9.5rem+env(safe-area-inset-bottom,0px))] md:pb-6 overflow-y-auto overflow-x-hidden ${activeTab === 'overview' ? 'no-scrollbar' : 'custom-scrollbar'
+            }`}
         >
 
           <AnimatePresence mode="wait">
@@ -611,7 +608,7 @@ function ModernDashboardContent() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
-                className="w-full min-w-0"
+                className="w-full min-w-0 overflow-x-hidden"
               >
                 <AdminTab />
               </motion.div>

@@ -30,13 +30,15 @@ export default function TravelChartToolbar({
   return (
     <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-2xl p-3 sm:px-4 shadow-sm">
       {/* Left: Year Comparison Selectors */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between sm:justify-start gap-2 w-full lg:w-auto">
         {/* Base Year Pill */}
-        <div className="relative flex items-center gap-1.5 bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200/70 dark:hover:bg-neutral-750 px-3 py-1.5 rounded-xl border border-slate-200/80 dark:border-neutral-700/80 transition-colors cursor-pointer group">
-          <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: activeConfig.colorCurrent }} />
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400 shrink-0">
-            Base
-          </span>
+        <div className="relative flex-1 sm:flex-initial flex items-center justify-between sm:justify-start gap-1.5 bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200/70 dark:hover:bg-neutral-750 px-3 py-1.5 rounded-xl border border-slate-200/80 dark:border-neutral-700/80 transition-colors cursor-pointer group">
+          <div className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: activeConfig.colorCurrent }} />
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400 shrink-0">
+              Base
+            </span>
+          </div>
           <select
             value={selectedYear}
             onChange={e => onYearChange(Number(e.target.value))}
@@ -51,14 +53,16 @@ export default function TravelChartToolbar({
           <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 pointer-events-none transition-colors" />
         </div>
 
-        <span className="text-xs font-bold text-slate-400 dark:text-neutral-500">vs</span>
+        <span className="text-xs font-bold text-slate-400 dark:text-neutral-500 shrink-0">vs</span>
 
         {/* Compare Year Pill */}
-        <div className="relative flex items-center gap-1.5 bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200/70 dark:hover:bg-neutral-750 px-3 py-1.5 rounded-xl border border-slate-200/80 dark:border-neutral-700/80 transition-colors cursor-pointer group">
-          <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: activeConfig.colorCompare }} />
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400 shrink-0">
-            Compare
-          </span>
+        <div className="relative flex-1 sm:flex-initial flex items-center justify-between sm:justify-start gap-1.5 bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200/70 dark:hover:bg-neutral-750 px-3 py-1.5 rounded-xl border border-slate-200/80 dark:border-neutral-700/80 transition-colors cursor-pointer group">
+          <div className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: activeConfig.colorCompare }} />
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-neutral-400 shrink-0">
+              Compare
+            </span>
+          </div>
           <select
             value={compareYear}
             onChange={e => onCompareYearChange(Number(e.target.value))}

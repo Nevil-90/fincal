@@ -65,7 +65,7 @@ export default function TravelSummaryList({ analytics, selectedYear, onYearChang
           </div>
         </div>
 
-        <div className="space-y-2 max-h-80 overflow-y-auto pr-1 [scrollbar-width:thin] flex-1">
+        <div className="space-y-2 max-h-none sm:max-h-80 overflow-y-visible sm:overflow-y-auto pr-1 [scrollbar-width:thin] flex-1">
           {analytics.monthly.length > 0 ? (
             analytics.monthly.map((month) => (
               <div
@@ -106,7 +106,7 @@ export default function TravelSummaryList({ analytics, selectedYear, onYearChang
           <h3 className="text-sm font-bold text-slate-900 dark:text-white">Yearly Summary</h3>
         </div>
 
-        <div className="space-y-2 max-h-80 overflow-y-auto pr-1 [scrollbar-width:thin] flex-1">
+        <div className="space-y-2 max-h-none sm:max-h-80 overflow-y-visible sm:overflow-y-auto pr-1 [scrollbar-width:thin] flex-1">
           {analytics.yearly.length > 0 ? (
             analytics.yearly.map((year) => (
               <div

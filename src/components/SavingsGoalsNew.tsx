@@ -251,23 +251,24 @@ export default function SavingsGoalsNew({ goals: initialGoals, onRefresh }: Savi
       {/* 3. Workflow Control Toolbar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 bg-white dark:bg-[#121215] border border-slate-200/80 dark:border-white/[0.08] rounded-2xl p-2 sm:px-3 shadow-sm">
         {/* Status Filter */}
-        <div className="flex items-center bg-slate-100 dark:bg-[#18181b] border border-slate-200/80 dark:border-white/[0.06] p-0.5 rounded-xl shrink-0 overflow-x-auto no-scrollbar">
+        <div className="grid grid-cols-3 sm:flex items-center bg-slate-100 dark:bg-[#18181b] border border-slate-200/80 dark:border-white/[0.06] p-0.5 rounded-xl w-full sm:w-auto shrink-0">
           {[
-            { id: 'all', label: 'All Horizons', count: allGoalsPool.length },
-            { id: 'in_progress', label: 'Active', count: inProgressGoals.length },
-            { id: 'completed', label: 'Conquered', count: achievedGoals.length }
+            { id: 'all', label: 'All Horizons', mobileLabel: 'All', count: allGoalsPool.length },
+            { id: 'in_progress', label: 'Active', mobileLabel: 'Active', count: inProgressGoals.length },
+            { id: 'completed', label: 'Conquered', mobileLabel: 'Achieved', count: achievedGoals.length }
           ].map(tab => (
             <button
               key={`tab-${tab.id}`}
               type="button"
               onClick={() => setActiveTab(tab.id as any)}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+              className={`px-2 sm:px-3 py-1.5 sm:py-1 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer whitespace-nowrap ${
                 activeTab === tab.id
                   ? 'bg-white dark:bg-white text-slate-900 dark:text-black shadow-xs font-bold'
                   : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              <span>{tab.label}</span>
+              <span className="hidden sm:inline">{tab.label}</span>
+              <span className="sm:hidden">{tab.mobileLabel}</span>
               <span className={`text-[10px] px-1.5 py-0.5 rounded-full tabular-nums ${
                 activeTab === tab.id ? 'bg-slate-200 dark:bg-black/10 text-slate-900 dark:text-black font-bold' : 'bg-slate-200/60 dark:bg-white/[0.06] text-slate-600 dark:text-zinc-400'
               }`}>{tab.count}</span>
@@ -276,10 +277,10 @@ export default function SavingsGoalsNew({ goals: initialGoals, onRefresh }: Savi
         </div>
 
         {/* Right Controls: Category filter, Sort, and Segmented View Modes */}
-        <div className="flex items-center justify-between sm:justify-end gap-2 flex-wrap">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
           {/* Categories */}
           {activeFilterCategories.length > 0 && (
-            <div className="flex items-center gap-1 flex-wrap">
+            <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pb-0.5 sm:pb-0">
               <button
                 type="button"
                 onClick={() => setSelectedCategory('all')}
@@ -308,63 +309,65 @@ export default function SavingsGoalsNew({ goals: initialGoals, onRefresh }: Savi
             </div>
           )}
 
-          {/* Sort Menu */}
-          <div className="relative flex items-center gap-1.5 bg-slate-100 dark:bg-[#18181b] border border-slate-200/80 dark:border-white/[0.08] rounded-xl px-2.5 py-1 text-xs text-slate-700 dark:text-zinc-300 shrink-0">
-            <ArrowUpDown className="h-3.5 w-3.5 text-slate-500 dark:text-zinc-400 shrink-0" />
-            <select
-              value={sortBy}
-              onChange={e => setSortBy(e.target.value as any)}
-              className="appearance-none [-webkit-appearance:none] bg-transparent font-semibold outline-none cursor-pointer text-xs pr-5 pl-0.5 border-0 focus:ring-0 text-slate-800 dark:text-zinc-200"
-            >
-              <option value="deadline" className="bg-white dark:bg-[#18181b] text-slate-900 dark:text-white">Target Date</option>
-              <option value="progress" className="bg-white dark:bg-[#18181b] text-slate-900 dark:text-white">Progress %</option>
-              <option value="target" className="bg-white dark:bg-[#18181b] text-slate-900 dark:text-white">Target Amount</option>
-              <option value="name" className="bg-white dark:bg-[#18181b] text-slate-900 dark:text-white">Name</option>
-            </select>
-            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 dark:text-zinc-400 pointer-events-none" />
-          </div>
+          <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
+            {/* Sort Menu */}
+            <div className="relative flex-1 sm:flex-initial flex items-center justify-between sm:justify-start gap-1.5 bg-slate-100 dark:bg-[#18181b] border border-slate-200/80 dark:border-white/[0.08] rounded-xl px-2.5 py-1 text-xs text-slate-700 dark:text-zinc-300">
+              <ArrowUpDown className="h-3.5 w-3.5 text-slate-500 dark:text-zinc-400 shrink-0" />
+              <select
+                value={sortBy}
+                onChange={e => setSortBy(e.target.value as any)}
+                className="appearance-none [-webkit-appearance:none] bg-transparent font-semibold outline-none cursor-pointer text-xs pr-5 pl-0.5 border-0 focus:ring-0 text-slate-800 dark:text-zinc-200 w-full sm:w-auto"
+              >
+                <option value="deadline" className="bg-white dark:bg-[#18181b] text-slate-900 dark:text-white">Target Date</option>
+                <option value="progress" className="bg-white dark:bg-[#18181b] text-slate-900 dark:text-white">Progress %</option>
+                <option value="target" className="bg-white dark:bg-[#18181b] text-slate-900 dark:text-white">Target Amount</option>
+                <option value="name" className="bg-white dark:bg-[#18181b] text-slate-900 dark:text-white">Name</option>
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 dark:text-zinc-400 pointer-events-none" />
+            </div>
 
-          {/* View Switcher: Horizons vs Matrix Ledger vs Timeline */}
-          <div className="flex items-center bg-slate-100 dark:bg-[#18181b] border border-slate-200/80 dark:border-white/[0.08] p-0.5 rounded-xl shrink-0">
-            <button
-              type="button"
-              onClick={() => setViewMode('horizon')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
-                viewMode === 'horizon'
-                  ? 'bg-white dark:bg-white text-slate-900 dark:text-black shadow-xs font-bold'
-                  : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
-              title="Milestone Horizon Stages"
-            >
-              <Layers className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Horizons</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('matrix')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
-                viewMode === 'matrix'
-                  ? 'bg-white dark:bg-white text-slate-900 dark:text-black shadow-xs font-bold'
-                  : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
-              title="Ledger Matrix"
-            >
-              <LayoutList className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Ledger</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('timeline')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
-                viewMode === 'timeline'
-                  ? 'bg-white dark:bg-white text-slate-900 dark:text-black shadow-xs font-bold'
-                  : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
-              title="Chronological Agenda"
-            >
-              <Route className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Agenda</span>
-            </button>
+            {/* View Switcher: Horizons vs Matrix Ledger vs Timeline */}
+            <div className="flex items-center bg-slate-100 dark:bg-[#18181b] border border-slate-200/80 dark:border-white/[0.08] p-0.5 rounded-xl shrink-0">
+              <button
+                type="button"
+                onClick={() => setViewMode('horizon')}
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  viewMode === 'horizon'
+                    ? 'bg-white dark:bg-white text-slate-900 dark:text-black shadow-xs font-bold'
+                    : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+                title="Milestone Horizon Stages"
+              >
+                <Layers className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Horizons</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('matrix')}
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  viewMode === 'matrix'
+                    ? 'bg-white dark:bg-white text-slate-900 dark:text-black shadow-xs font-bold'
+                    : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+                title="Ledger Matrix"
+              >
+                <LayoutList className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Ledger</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('timeline')}
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  viewMode === 'timeline'
+                    ? 'bg-white dark:bg-white text-slate-900 dark:text-black shadow-xs font-bold'
+                    : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+                title="Chronological Agenda"
+              >
+                <Route className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Agenda</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>

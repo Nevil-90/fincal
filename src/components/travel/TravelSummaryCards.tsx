@@ -26,8 +26,8 @@ export default function TravelSummaryCards({ analytics }: TravelSummaryCardsProp
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <p className="text-[10px] sm:text-[11px] font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider truncate">Total Distance</p>
-            <p className="text-lg sm:text-2xl font-bold tabular-nums tracking-tight text-slate-900 dark:text-white mt-1 sm:mt-1.5 whitespace-nowrap">
-              {analytics.overall.totalKmTraveled.toLocaleString()} <span className="text-[11px] sm:text-xs font-semibold text-slate-400 dark:text-zinc-500">KM</span>
+            <p className="text-base sm:text-2xl font-bold tabular-nums tracking-tight text-slate-900 dark:text-white mt-1 sm:mt-1.5 truncate">
+              {analytics.overall.totalKmTraveled.toLocaleString()} <span className="text-[10px] sm:text-xs font-semibold text-slate-400 dark:text-zinc-500">KM</span>
             </p>
           </div>
           <div className="p-2 sm:p-2.5 bg-blue-500/10 rounded-xl border border-blue-500/20 shrink-0">
@@ -36,11 +36,11 @@ export default function TravelSummaryCards({ analytics }: TravelSummaryCardsProp
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-white dark:bg-[#121215] p-4 sm:p-5 shadow-sm transition-all duration-150 hover:border-slate-300 dark:hover:border-white/[0.15]">
+      <div className="rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-white dark:bg-[#121215] p-3.5 sm:p-5 shadow-sm transition-all duration-150 hover:border-slate-300 dark:hover:border-white/[0.15]">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <p className="text-[10px] sm:text-[11px] font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider truncate">Total Fuel Cost</p>
-            <p className="text-lg sm:text-2xl font-bold tabular-nums tracking-tight text-slate-900 dark:text-white mt-1 sm:mt-1.5 whitespace-nowrap">
+            <p className="text-base sm:text-2xl font-bold tabular-nums tracking-tight text-slate-900 dark:text-white mt-1 sm:mt-1.5 truncate">
               {formatCurrency(analytics.overall.totalAmount)}
             </p>
           </div>
@@ -50,12 +50,12 @@ export default function TravelSummaryCards({ analytics }: TravelSummaryCardsProp
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-white dark:bg-[#121215] p-4 sm:p-5 shadow-sm transition-all duration-150 hover:border-slate-300 dark:hover:border-white/[0.15]">
+      <div className="rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-white dark:bg-[#121215] p-3.5 sm:p-5 shadow-sm transition-all duration-150 hover:border-slate-300 dark:hover:border-white/[0.15]">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <p className="text-[10px] sm:text-[11px] font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider truncate">Avg Efficiency</p>
-            <p className="text-lg sm:text-2xl font-bold tabular-nums tracking-tight text-slate-900 dark:text-white mt-1 sm:mt-1.5 whitespace-nowrap">
-              {analytics.overall.averageEfficiency} <span className="text-[11px] sm:text-xs font-semibold text-slate-400 dark:text-zinc-500">KM/L</span>
+            <p className="text-base sm:text-2xl font-bold tabular-nums tracking-tight text-slate-900 dark:text-white mt-1 sm:mt-1.5 truncate">
+              {analytics.overall.averageEfficiency} <span className="text-[10px] sm:text-xs font-semibold text-slate-400 dark:text-zinc-500">KM/L</span>
             </p>
           </div>
           <div className="p-2 sm:p-2.5 bg-emerald-500/10 rounded-xl border border-emerald-500/20 shrink-0">
@@ -64,11 +64,11 @@ export default function TravelSummaryCards({ analytics }: TravelSummaryCardsProp
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-white dark:bg-[#121215] p-4 sm:p-5 shadow-sm transition-all duration-150 hover:border-slate-300 dark:hover:border-white/[0.15]">
+      <div className="rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-white dark:bg-[#121215] p-3.5 sm:p-5 shadow-sm transition-all duration-150 hover:border-slate-300 dark:hover:border-white/[0.15]">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <p className="text-[10px] sm:text-[11px] font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider truncate">Avg Fuel Price</p>
-            <p className="text-lg sm:text-2xl font-bold tabular-nums tracking-tight text-slate-900 dark:text-white mt-1 sm:mt-1.5 whitespace-nowrap">
+            <p className="text-base sm:text-2xl font-bold tabular-nums tracking-tight text-slate-900 dark:text-white mt-1 sm:mt-1.5 truncate">
               {formatCurrency(analytics.overall.averagePricePerLiter)}
             </p>
           </div>

@@ -294,13 +294,13 @@ export default function AnalyticsTab({}: AnalyticsTabProps) {
         </div>
 
         {/* Period Selector */}
-        <div className="inline-flex bg-slate-100/80 dark:bg-[#121215] p-1 rounded-xl border border-slate-200/80 dark:border-white/[0.08] gap-0.5 self-start sm:self-auto overflow-x-auto max-w-full [scrollbar-width:none]">
+        <div className="grid grid-cols-6 sm:inline-flex bg-slate-100/80 dark:bg-[#121215] p-1 rounded-xl border border-slate-200/80 dark:border-white/[0.08] gap-0.5 w-full sm:w-auto">
           {PERIODS.map(p => (
             <button
               key={p.v}
               type="button"
               onClick={() => setPeriod(p.v)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+              className={`flex items-center justify-center px-2 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
                 period === p.v
                   ? 'bg-white dark:bg-white text-slate-900 dark:text-black shadow-xs font-bold'
                   : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white'
@@ -362,13 +362,13 @@ export default function AnalyticsTab({}: AnalyticsTabProps) {
       </div>
 
       {/* 3. Analytics Lens Switcher (Solves the long vertical scrolling problem) */}
-      <div className="rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-slate-100/80 dark:bg-[#121215] p-1 shadow-xs overflow-x-auto [scrollbar-width:none]">
-        <div className="flex flex-row items-center gap-1 w-full min-w-max sm:min-w-0">
+      <div className="rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-slate-100/80 dark:bg-[#121215] p-1 shadow-xs">
+        <div className="grid grid-cols-4 sm:flex sm:flex-row items-center gap-1 w-full">
           {[
-            { id: 'cashflow', label: 'Cashflow Dynamics', icon: TrendingUp },
-            { id: 'categories', label: 'Category Pareto', icon: PieIcon },
-            { id: 'behavior', label: 'Behavioral Patterns', icon: Calendar },
-            { id: 'anomalies', label: 'Outliers & Audit', icon: ShieldAlert }
+            { id: 'cashflow', label: 'Cashflow Dynamics', mobileLabel: 'Cashflow', icon: TrendingUp },
+            { id: 'categories', label: 'Category Pareto', mobileLabel: 'Pareto', icon: PieIcon },
+            { id: 'behavior', label: 'Behavioral Patterns', mobileLabel: 'Habits', icon: Calendar },
+            { id: 'anomalies', label: 'Outliers & Audit', mobileLabel: 'Outliers', icon: ShieldAlert }
           ].map(lens => {
             const Icon = lens.icon
             const isActive = activeLens === lens.id
@@ -377,14 +377,15 @@ export default function AnalyticsTab({}: AnalyticsTabProps) {
                 key={lens.id}
                 type="button"
                 onClick={() => setActiveLens(lens.id as AnalyticsLens)}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 text-xs font-semibold rounded-xl transition-all cursor-pointer whitespace-nowrap ${
+                className={`flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-1.5 px-1.5 sm:px-3 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
                   isActive
                     ? 'bg-white dark:bg-white text-slate-900 dark:text-black shadow-xs font-bold'
                     : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/[0.04]'
                 }`}
               >
                 <Icon className="w-3.5 h-3.5 shrink-0" />
-                <span className="truncate">{lens.label}</span>
+                <span className="hidden sm:inline truncate">{lens.label}</span>
+                <span className="sm:hidden text-[11px] truncate">{lens.mobileLabel}</span>
               </button>
             )
           })}

@@ -46,10 +46,10 @@ export default React.memo(function BottomNav({
         data-tour="add-transaction"
         onClick={onAddTransaction}
         aria-label="Log new transaction"
-        style={{ bottom: 'calc(68px + max(env(safe-area-inset-bottom, 0px), 8px))' }}
-        className="fixed right-4 z-40 md:hidden h-12 w-12 bg-blue-600 hover:bg-blue-700 active:scale-90 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-blue-600/30 transition-all duration-150"
+        style={{ bottom: 'calc(62px + max(env(safe-area-inset-bottom, 0px), 8px))' }}
+        className="fixed right-3.5 sm:right-4 z-40 md:hidden h-11 w-11 bg-blue-600 hover:bg-blue-700 active:scale-90 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-blue-600/30 ring-1 ring-white/20 dark:ring-white/10 transition-all duration-150"
       >
-        <Plus className="h-6 w-6 stroke-[2.5]" />
+        <Plus className="h-5 w-5 stroke-[2.5]" />
       </button>
 
       {/* Bottom Navigation Dock */}

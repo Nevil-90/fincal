@@ -266,7 +266,7 @@ export function TransactionFilters({
         </div>
 
         {/* Right: Actions (Density, Filters, Reset, Export) */}
-        <div className="flex items-center gap-1.5 justify-end shrink-0">
+        <div className="flex items-center gap-1.5 w-full sm:w-auto justify-between sm:justify-end shrink-0">
           {/* Density Toggle (Comfortable vs Compact) */}
           <button
             type="button"
@@ -285,7 +285,7 @@ export function TransactionFilters({
           <button
             type="button"
             onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-            className={`flex items-center gap-1.5 h-8 px-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer shrink-0 ${
+            className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 h-8 px-3 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
               showAdvancedFilters || (activeFiltersCount > 0)
                 ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900/50'
                 : 'bg-slate-50 dark:bg-[#18181b] text-slate-600 dark:text-neutral-300 border-slate-200/90 dark:border-white/[0.08] hover:bg-slate-100 dark:hover:bg-[#202024]'
@@ -306,7 +306,7 @@ export function TransactionFilters({
               type="button"
               onClick={resetFilters}
               title="Reset all filters"
-              className="flex items-center gap-1 h-8 px-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-rose-500 transition-colors cursor-pointer shrink-0"
+              className="flex items-center justify-center gap-1 h-8 px-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-rose-500 transition-colors cursor-pointer shrink-0"
             >
               <RotateCcw className="h-3 w-3" />
               <span className="hidden sm:inline">Reset</span>
@@ -317,7 +317,7 @@ export function TransactionFilters({
           <button
             type="button"
             onClick={() => setShowDateRangePicker(true)}
-            className="flex items-center gap-1.5 h-8 px-2.5 rounded-xl border border-slate-200/90 dark:border-white/[0.08] bg-slate-50 dark:bg-[#18181b] hover:bg-slate-100 dark:hover:bg-[#202024] text-slate-700 dark:text-neutral-300 text-xs font-semibold transition-colors cursor-pointer shrink-0"
+            className="flex items-center justify-center gap-1.5 h-8 px-2.5 rounded-xl border border-slate-200/90 dark:border-white/[0.08] bg-slate-50 dark:bg-[#18181b] hover:bg-slate-100 dark:hover:bg-[#202024] text-slate-700 dark:text-neutral-300 text-xs font-semibold transition-colors cursor-pointer shrink-0"
           >
             <Download className="h-3 w-3" />
             <span className="hidden sm:inline">Export</span>

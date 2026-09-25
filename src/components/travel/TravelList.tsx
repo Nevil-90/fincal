@@ -209,34 +209,34 @@ export default function TravelList({
         </div>
 
         {/* 3. Pagination Footer */}
-        <div className="px-4 sm:px-5 py-3.5 border-t border-slate-200/80 dark:border-white/[0.06] flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50/60 dark:bg-[#16161a]/40 text-xs">
-          <div className="text-slate-600 dark:text-neutral-400">
-            Showing <span className="font-bold text-slate-900 dark:text-white tabular-nums">{processedEntries.length}</span> of{' '}
-            <span className="font-bold text-slate-900 dark:text-white tabular-nums">{pagination.totalCount}</span> entries (Page{' '}
-            <span className="font-bold text-slate-900 dark:text-white tabular-nums">{currentPage}</span> of{' '}
-            <span className="font-bold text-slate-900 dark:text-white tabular-nums">{pagination.totalPages}</span>)
+        <div className="px-3.5 sm:px-5 py-2.5 sm:py-3.5 border-t border-slate-200/80 dark:border-white/[0.06] flex items-center justify-between gap-2 bg-slate-50/60 dark:bg-[#16161a]/40 text-xs">
+          <div className="text-slate-600 dark:text-neutral-400 truncate">
+            <span className="hidden sm:inline">Showing </span>
+            <span className="font-bold text-slate-900 dark:text-white tabular-nums">{processedEntries.length}</span> of{' '}
+            <span className="font-bold text-slate-900 dark:text-white tabular-nums">{pagination.totalCount}</span>
+            <span className="hidden sm:inline"> entries</span>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
             <button
               type="button"
               onClick={() => fetchTravelEntries(currentPage - 1)}
               disabled={!pagination.hasPrevPage || loading}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#18181b] font-semibold text-slate-700 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-white/[0.06] hover:text-slate-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer shadow-xs"
+              className="flex items-center gap-1 p-1.5 sm:px-3 sm:py-1.5 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#18181b] font-semibold text-slate-700 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-white/[0.06] hover:text-slate-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer shadow-xs"
             >
               <ChevronLeft className="h-4 w-4" />
-              <span>Prev</span>
+              <span className="hidden sm:inline">Prev</span>
             </button>
-            <span className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/[0.04] tabular-nums font-semibold text-slate-900 dark:text-white">
+            <span className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-slate-100 dark:bg-white/[0.04] tabular-nums font-semibold text-slate-900 dark:text-white text-xs">
               {currentPage} / {pagination.totalPages}
             </span>
             <button
               type="button"
               onClick={() => fetchTravelEntries(currentPage + 1)}
               disabled={!pagination.hasNextPage || loading}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#18181b] font-semibold text-slate-700 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-white/[0.06] hover:text-slate-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer shadow-xs"
+              className="flex items-center gap-1 p-1.5 sm:px-3 sm:py-1.5 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#18181b] font-semibold text-slate-700 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-white/[0.06] hover:text-slate-900 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer shadow-xs"
             >
-              <span>Next</span>
+              <span className="hidden sm:inline">Next</span>
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>

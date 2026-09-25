@@ -41,42 +41,39 @@ export function TransactionPagination({
   const pageNumbers = getPageNumbers(safePage, totalPages)
 
   return (
-    <div className={`flex flex-col sm:flex-row items-center justify-between gap-2.5 ${borderClass} px-4 py-2.5 bg-slate-50/60 dark:bg-white/[0.02] w-full text-xs`}>
+    <div className={`flex items-center justify-between gap-2 ${borderClass} px-3 sm:px-4 py-2 sm:py-2.5 bg-slate-50/60 dark:bg-white/[0.02] w-full text-xs`}>
       {/* Left: Page Size Selector & Record Count */}
-      <div className="w-full sm:w-auto flex items-center justify-between sm:justify-start gap-2 shrink-0">
-        <div className="flex items-center gap-1.5">
-          <span className="hidden sm:inline text-slate-500 dark:text-neutral-400 font-medium">Show</span>
-          <div className="w-20">
-            <CustomSelect
-              selectSize="xs"
-              value={pageSize}
-              onChange={(e) => {
-                setPageSize(Number(e.target.value))
-                setCurrentPage(1)
-              }}
-            >
-              <option value="15">15</option>
-              <option value="25">25</option>
-              <option value="50">50</option>
-              <option value="100">100</option>
-            </CustomSelect>
-          </div>
-          <span className="hidden sm:inline text-slate-500 dark:text-neutral-400 font-medium">per page</span>
+      <div className="flex items-center gap-1.5 shrink-0">
+        <span className="hidden sm:inline text-slate-500 dark:text-neutral-400 font-medium">Show</span>
+        <div className="w-16 sm:w-20">
+          <CustomSelect
+            selectSize="xs"
+            value={pageSize}
+            onChange={(e) => {
+              setPageSize(Number(e.target.value))
+              setCurrentPage(1)
+            }}
+          >
+            <option value="15">15</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </CustomSelect>
         </div>
         <span className="text-slate-300 dark:text-neutral-700 hidden sm:inline">•</span>
-        <span className="text-slate-600 dark:text-neutral-300 font-semibold tabular-nums">
+        <span className="text-slate-600 dark:text-neutral-300 font-semibold tabular-nums text-[11px] sm:text-xs">
           {paginationLabel}
         </span>
       </div>
       
       {/* Right: Page Navigation Controls & Numbered Pills */}
-      <div className="w-full sm:w-auto flex items-center justify-between sm:justify-end gap-1.5 shrink-0">
+      <div className="flex items-center justify-end gap-1 sm:gap-1.5 shrink-0">
         {totalPages > 1 ? (
           <>
             <button
               type="button"
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              className="inline-flex items-center gap-1 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#18181b] px-2.5 py-1.5 font-semibold text-slate-700 dark:text-neutral-200 hover:bg-slate-100 dark:hover:bg-[#222226] disabled:opacity-35 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-[#18181b] transition-all cursor-pointer shadow-xs"
+              className="inline-flex items-center justify-center gap-1 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#18181b] h-7 w-7 sm:h-auto sm:w-auto sm:px-2.5 sm:py-1.5 font-semibold text-slate-700 dark:text-neutral-200 hover:bg-slate-100 dark:hover:bg-[#222226] disabled:opacity-35 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-[#18181b] transition-all cursor-pointer shadow-xs"
               disabled={safePage <= 1}
               aria-label="Previous page"
             >
@@ -85,8 +82,8 @@ export function TransactionPagination({
             </button>
 
             {/* Compact Mobile Page Indicator */}
-            <span className="sm:hidden px-2 font-semibold text-slate-600 dark:text-neutral-400 tabular-nums">
-              Page {safePage} of {totalPages}
+            <span className="sm:hidden px-1.5 font-semibold text-slate-600 dark:text-neutral-400 tabular-nums text-[11px]">
+              {safePage} / {totalPages}
             </span>
 
             {/* Desktop Numbered Page Pills */}
@@ -125,7 +122,7 @@ export function TransactionPagination({
             <button
               type="button"
               onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-              className="inline-flex items-center gap-1 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#18181b] px-2.5 py-1.5 font-semibold text-slate-700 dark:text-neutral-200 hover:bg-slate-100 dark:hover:bg-[#222226] disabled:opacity-35 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-[#18181b] transition-all cursor-pointer shadow-xs"
+              className="inline-flex items-center justify-center gap-1 rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#18181b] h-7 w-7 sm:h-auto sm:w-auto sm:px-2.5 sm:py-1.5 font-semibold text-slate-700 dark:text-neutral-200 hover:bg-slate-100 dark:hover:bg-[#222226] disabled:opacity-35 disabled:cursor-not-allowed disabled:hover:bg-white dark:disabled:hover:bg-[#18181b] transition-all cursor-pointer shadow-xs"
               disabled={safePage >= totalPages}
               aria-label="Next page"
             >

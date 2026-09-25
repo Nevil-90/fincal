@@ -211,13 +211,13 @@ export default function AdminTab() {
   const totalSessionPages = Math.ceil(sessions.length / ITEMS_PER_PAGE) || 1
 
   return (
-    <div className="space-y-4 font-sans max-w-[1600px] mx-auto pb-24 md:pb-6">
+    <div className="space-y-4 font-sans max-w-[1600px] w-full min-w-0 mx-auto overflow-x-hidden">
       {/* 1. Header & Command Telemetry Bar */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-blue-500 dark:text-blue-400" />
-            Security & Administration Console
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5 sm:gap-3 min-w-0">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-lg sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+            <ShieldCheck className="w-5 h-5 text-blue-500 dark:text-blue-400 shrink-0" />
+            <span className="truncate sm:overflow-visible sm:whitespace-normal">Security & Administration</span>
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-neutral-400 mt-0.5">
             Identity directory, active session governance, permissions control, and system diagnostics.
@@ -227,52 +227,56 @@ export default function AdminTab() {
         <button
           type="button"
           onClick={() => { fetchUsers(); fetchSessions(); }}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200/90 dark:border-white/[0.08] text-slate-700 dark:text-neutral-300 bg-white dark:bg-[#16161a] hover:bg-slate-50 dark:hover:bg-white/[0.06] hover:text-slate-900 dark:hover:text-white text-xs font-semibold transition-colors cursor-pointer shadow-xs"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200/90 dark:border-white/[0.08] text-slate-700 dark:text-neutral-300 bg-white dark:bg-[#16161a] hover:bg-slate-50 dark:hover:bg-white/[0.06] hover:text-slate-900 dark:hover:text-white text-xs font-semibold transition-colors cursor-pointer shadow-xs shrink-0 self-start sm:self-auto"
         >
           <RefreshCw className="h-3.5 w-3.5" />
           <span>Sync State</span>
         </button>
       </div>
 
-      {/* 2. Operations & Security Telemetry Strip (Administrative, Non-Dashboard Pattern) */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
-        <div className="bg-white dark:bg-[#121215] border border-slate-200/80 dark:border-white/[0.08] rounded-2xl p-3.5 shadow-xs flex flex-col justify-between">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400 flex items-center gap-1.5">
-            <Users className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" /> Identity Directory
+      {/* 2. Operations & Security Telemetry Strip */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5 min-w-0">
+        <div className="bg-white dark:bg-[#121215] border border-slate-200/80 dark:border-white/[0.08] rounded-2xl p-3 sm:p-3.5 shadow-xs flex flex-col justify-between min-w-0">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400 flex items-center gap-1.5 min-w-0 truncate">
+            <Users className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400 shrink-0" />
+            <span className="truncate">Identity Directory</span>
           </span>
-          <div className="mt-1 flex items-baseline gap-2 tabular-nums">
-            <span className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">{users.length}</span>
-            <span className="text-xs text-slate-400 dark:text-neutral-500">accounts registered</span>
+          <div className="mt-1 flex flex-wrap items-baseline gap-1.5 tabular-nums">
+            <span className="text-base sm:text-xl font-bold text-slate-900 dark:text-white">{users.length}</span>
+            <span className="text-[10px] sm:text-xs text-slate-400 dark:text-neutral-500 truncate">accounts</span>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#121215] border border-slate-200/80 dark:border-white/[0.08] rounded-2xl p-3.5 shadow-xs flex flex-col justify-between">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400 flex items-center gap-1.5">
-            <Key className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" /> Active Sessions
+        <div className="bg-white dark:bg-[#121215] border border-slate-200/80 dark:border-white/[0.08] rounded-2xl p-3 sm:p-3.5 shadow-xs flex flex-col justify-between min-w-0">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400 flex items-center gap-1.5 min-w-0 truncate">
+            <Key className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400 shrink-0" />
+            <span className="truncate">Active Sessions</span>
           </span>
-          <div className="mt-1 flex items-baseline gap-2 tabular-nums">
-            <span className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">{sessions.length}</span>
-            <span className="text-xs text-slate-400 dark:text-neutral-500">live device tokens</span>
+          <div className="mt-1 flex flex-wrap items-baseline gap-1.5 tabular-nums">
+            <span className="text-base sm:text-xl font-bold text-slate-900 dark:text-white">{sessions.length}</span>
+            <span className="text-[10px] sm:text-xs text-slate-400 dark:text-neutral-500 truncate">tokens</span>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#121215] border border-slate-200/80 dark:border-white/[0.08] rounded-2xl p-3.5 shadow-xs flex flex-col justify-between">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400 flex items-center gap-1.5">
-            <Mail className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" /> Mail Gateway
+        <div className="bg-white dark:bg-[#121215] border border-slate-200/80 dark:border-white/[0.08] rounded-2xl p-3 sm:p-3.5 shadow-xs flex flex-col justify-between min-w-0">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400 flex items-center gap-1.5 min-w-0 truncate">
+            <Mail className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400 shrink-0" />
+            <span className="truncate">Mail Gateway</span>
           </span>
-          <div className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Ready (smtp.gmail.com)</span>
+          <div className="mt-1 flex items-center gap-1.5 text-[11px] sm:text-xs font-semibold text-emerald-600 dark:text-emerald-400 min-w-0">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0 animate-pulse" />
+            <span className="truncate">Ready (smtp)</span>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#121215] border border-slate-200/80 dark:border-white/[0.08] rounded-2xl p-3.5 shadow-xs flex flex-col justify-between">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400 flex items-center gap-1.5">
-            <Database className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" /> Database Health
+        <div className="bg-white dark:bg-[#121215] border border-slate-200/80 dark:border-white/[0.08] rounded-2xl p-3 sm:p-3.5 shadow-xs flex flex-col justify-between min-w-0">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400 flex items-center gap-1.5 min-w-0 truncate">
+            <Database className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 shrink-0" />
+            <span className="truncate">Database Health</span>
           </span>
-          <div className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-neutral-300">
-            <span className="h-2 w-2 rounded-full bg-emerald-500" />
-            <span>Connected • SQLite WAL</span>
+          <div className="mt-1 flex items-center gap-1.5 text-[11px] sm:text-xs font-semibold text-slate-700 dark:text-neutral-300 min-w-0">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
+            <span className="truncate">SQLite WAL</span>
           </div>
         </div>
       </div>
@@ -293,12 +297,12 @@ export default function AdminTab() {
       )}
 
       {/* 3. Administration Module Switcher */}
-      <div className="rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-slate-100/70 dark:bg-[#121215] p-1 shadow-xs">
-        <div className="flex flex-row items-center gap-1 w-full">
+      <div className="rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-slate-100/70 dark:bg-[#121215] p-1 shadow-xs min-w-0 overflow-x-auto no-scrollbar">
+        <div className="flex flex-row items-center gap-1 w-full min-w-0">
           {[
-            { id: 'users', label: `Identity Directory (${users.length})`, icon: Users },
-            { id: 'sessions', label: `Session Controller (${sessions.length})`, icon: Key },
-            { id: 'system', label: 'System Diagnostics & Ops', icon: Server }
+            { id: 'users', label: `Identity Directory (${users.length})`, shortLabel: `Users (${users.length})`, icon: Users },
+            { id: 'sessions', label: `Session Controller (${sessions.length})`, shortLabel: `Sessions (${sessions.length})`, icon: Key },
+            { id: 'system', label: 'System Diagnostics & Ops', shortLabel: 'System', icon: Server }
           ].map(tab => {
             const Icon = tab.icon
             const isActive = activeSubTab === tab.id
@@ -307,14 +311,15 @@ export default function AdminTab() {
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveSubTab(tab.id as 'users' | 'sessions' | 'system')}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
+                className={`flex-1 min-w-0 flex items-center justify-center gap-1.5 py-1.5 px-2 sm:px-3 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
                   isActive
                     ? 'bg-white dark:bg-white text-slate-900 dark:text-black shadow-xs font-bold'
                     : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-white/[0.04]'
                 }`}
               >
                 <Icon className="w-3.5 h-3.5 shrink-0" />
-                <span className="truncate">{tab.label}</span>
+                <span className="sm:hidden truncate">{tab.shortLabel}</span>
+                <span className="hidden sm:inline truncate">{tab.label}</span>
               </button>
             )
           })}
@@ -325,22 +330,22 @@ export default function AdminTab() {
 
       {/* MODULE 1: Identity & Access Directory */}
       {activeSubTab === 'users' && (
-        <div className="bg-white dark:bg-[#121215] border border-slate-200/80 dark:border-white/[0.08] rounded-2xl shadow-xs overflow-hidden p-4 sm:p-5 space-y-4">
+        <div className="bg-white dark:bg-[#121215] border border-slate-200/80 dark:border-white/[0.08] rounded-2xl shadow-xs overflow-hidden p-3.5 sm:p-5 space-y-4 min-w-0">
           {/* Search & Filter Toolbar */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
-            <div className="flex items-center gap-2.5 w-full sm:max-w-xs border border-slate-200/90 dark:border-white/[0.08] rounded-xl px-3 py-1.5 bg-slate-50 dark:bg-[#16161a]">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 min-w-0">
+            <div className="flex items-center gap-2.5 w-full sm:max-w-xs border border-slate-200/90 dark:border-white/[0.08] rounded-xl px-3 py-1.5 bg-slate-50 dark:bg-[#16161a] min-w-0">
               <Search className="h-3.5 w-3.5 text-slate-400 dark:text-neutral-400 shrink-0" />
               <input
                 type="text"
                 placeholder="Filter users by name or email..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-transparent border-none outline-none text-xs w-full text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-500"
+                className="bg-transparent border-none outline-none text-xs w-full min-w-0 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-500"
               />
             </div>
 
             {/* Role Filter Pills */}
-            <div className="flex items-center bg-slate-100 dark:bg-[#16161a] border border-slate-200/80 dark:border-white/[0.06] p-0.5 rounded-xl shrink-0">
+            <div className="grid grid-cols-4 sm:flex items-center bg-slate-100 dark:bg-[#16161a] border border-slate-200/80 dark:border-white/[0.06] p-0.5 rounded-xl w-full sm:w-auto shrink-0 min-w-0">
               {[
                 { id: 'all', label: 'All' },
                 { id: 'active', label: 'Active' },
@@ -351,7 +356,7 @@ export default function AdminTab() {
                   key={f.id}
                   type="button"
                   onClick={() => setUserFilter(f.id as UserFilter)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  className={`px-2 sm:px-3 py-1 text-xs font-semibold rounded-lg transition-all text-center cursor-pointer ${
                     userFilter === f.id
                       ? 'bg-white text-slate-900 dark:text-black shadow-xs font-bold'
                       : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white'

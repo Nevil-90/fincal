@@ -524,8 +524,9 @@ function CalendarTab({}: CalendarTabProps) {
       {/* Day headers */}
       <div className="grid grid-cols-7 border-b border-slate-200/80 dark:border-white/[0.06] bg-slate-50 dark:bg-white/[0.02]">
         {DAY_LABELS.map(label => (
-          <div key={label} className="px-2 py-3 text-center text-[11px] font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider">
-            {label}
+          <div key={label} className="px-1 sm:px-2 py-2 sm:py-3 text-center text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-neutral-400 uppercase tracking-wider">
+            <span className="hidden sm:inline">{label}</span>
+            <span className="sm:hidden">{label.slice(0, 1)}</span>
           </div>
         ))}
       </div>
@@ -782,9 +783,9 @@ function CalendarTab({}: CalendarTabProps) {
           <p className="text-xs sm:text-sm text-slate-500 dark:text-neutral-400 mt-0.5">Track spending patterns and daily cashflow over time.</p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
           {/* View Switcher */}
-          <div className="flex items-center gap-0.5 rounded-xl border border-slate-200/80 dark:border-white/[0.08] bg-slate-100/80 dark:bg-[#121215] p-1">
+          <div className="grid grid-cols-3 sm:flex items-center gap-0.5 rounded-xl border border-slate-200/80 dark:border-white/[0.08] bg-slate-100/80 dark:bg-[#121215] p-1 w-full sm:w-auto">
             {([
               { key: 'month' as ViewMode, icon: LayoutGrid, label: 'Month' },
               { key: 'week' as ViewMode, icon: CalendarIcon, label: 'Week' },
@@ -793,50 +794,52 @@ function CalendarTab({}: CalendarTabProps) {
               <button
                 key={v.key}
                 onClick={() => setView(v.key)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                   view === v.key
                     ? 'bg-white dark:bg-[#22222a] text-slate-900 dark:text-white shadow-xs border border-slate-200/60 dark:border-white/[0.08]'
                     : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
-                <v.icon className="h-3.5 w-3.5" />
-                {v.label}
+                <v.icon className="h-3.5 w-3.5 shrink-0" />
+                <span>{v.label}</span>
               </button>
             ))}
           </div>
 
-          {/* Date navigation */}
-          <div className="flex items-center gap-1 rounded-xl border border-slate-200/80 dark:border-white/[0.08] bg-slate-100/80 dark:bg-[#121215] p-1">
-            <button onClick={goPrev} className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-white/[0.06] transition-colors text-slate-500 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white">
-              <ChevronLeft className="h-4 w-4" />
+          {/* Date navigation + Today + Filter row */}
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="flex-1 sm:flex-initial flex items-center justify-between sm:justify-center gap-1 rounded-xl border border-slate-200/80 dark:border-white/[0.08] bg-slate-100/80 dark:bg-[#121215] p-1">
+              <button onClick={goPrev} className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-white/[0.06] transition-colors text-slate-500 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white shrink-0">
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <span className="px-2 sm:px-3 text-xs sm:text-sm font-semibold text-slate-900 dark:text-white min-w-0 sm:min-w-[140px] text-center truncate">
+                {headerLabel}
+              </span>
+              <button onClick={goNext} className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-white/[0.06] transition-colors text-slate-500 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white shrink-0">
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+
+            <button
+              onClick={goToday}
+              className="px-3 py-2 sm:py-1.5 text-xs font-semibold rounded-xl border border-slate-200/80 dark:border-white/[0.08] bg-slate-100/80 dark:bg-[#121215] text-slate-700 dark:text-neutral-200 shadow-xs hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-white/[0.06] transition-all shrink-0"
+            >
+              Today
             </button>
-            <span className="px-3 text-xs sm:text-sm font-semibold text-slate-900 dark:text-white min-w-[140px] text-center">
-              {headerLabel}
-            </span>
-            <button onClick={goNext} className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-white/[0.06] transition-colors text-slate-500 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white">
-              <ChevronRight className="h-4 w-4" />
+
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`p-2 rounded-xl border transition-all shrink-0 ${showFilters ? 'bg-blue-600 text-white border-blue-500 shadow-xs ring-2 ring-blue-500/20' : 'border-slate-200/80 dark:border-white/[0.08] bg-slate-100/80 dark:bg-[#121215] text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-white/[0.06]'}`}
+            >
+              <Filter className="h-4 w-4" />
             </button>
           </div>
-
-          <button
-            onClick={goToday}
-            className="px-3 py-1.5 text-xs font-semibold rounded-xl border border-slate-200/80 dark:border-white/[0.08] bg-slate-100/80 dark:bg-[#121215] text-slate-700 dark:text-neutral-200 shadow-xs hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-white/[0.06] transition-all"
-          >
-            Today
-          </button>
-
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className={`p-2 rounded-xl border transition-all ${showFilters ? 'bg-blue-600 text-white border-blue-500 shadow-xs ring-2 ring-blue-500/20' : 'border-slate-200/80 dark:border-white/[0.08] bg-slate-100/80 dark:bg-[#121215] text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-white/[0.06]'}`}
-          >
-            <Filter className="h-4 w-4" />
-          </button>
         </div>
       </div>
 
       {/* ─── Filters Bar (Collapsible) ─── */}
       {showFilters && (
-        <div className={`${CARD} p-3 flex flex-wrap items-center gap-3 animate-fadeIn`}>
+        <div className={`${CARD} p-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 animate-fadeIn`}>
           <div className="flex items-center gap-2 rounded-xl border border-slate-200/80 dark:border-white/[0.08] bg-slate-50 dark:bg-[#18181b] px-3 py-1.5 w-full sm:w-auto">
             <Search className="h-3.5 w-3.5 text-slate-400 dark:text-neutral-400 shrink-0" />
             <input
@@ -847,12 +850,12 @@ function CalendarTab({}: CalendarTabProps) {
             />
           </div>
 
-          <div className="flex items-center gap-1 rounded-xl border border-slate-200/80 dark:border-white/[0.06] bg-slate-100/80 dark:bg-[#18181b] p-0.5">
+          <div className="flex items-center gap-1 rounded-xl border border-slate-200/80 dark:border-white/[0.06] bg-slate-100/80 dark:bg-[#18181b] p-0.5 w-full sm:w-auto overflow-x-auto [scrollbar-width:none]">
             {(['all', 'income', 'expense', 'recurring'] as TypeFilter[]).map(f => (
               <button
                 key={f}
                 onClick={() => setTypeFilter(f)}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all flex-1 sm:flex-initial text-center whitespace-nowrap ${
                   typeFilter === f
                     ? 'bg-white dark:bg-[#25252d] text-slate-900 dark:text-white shadow-xs border border-slate-200/60 dark:border-white/[0.08]'
                     : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white'

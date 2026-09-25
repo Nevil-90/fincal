@@ -181,12 +181,12 @@ export default function GoalHorizonStageView({
             )}
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap self-end sm:self-auto">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             {!goal.isCompleted && (
               <button
                 type="button"
                 onClick={() => onOpenDrawer(goal, 'deposit')}
-                className="px-3 py-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-xs"
+                className="flex-1 sm:flex-initial justify-center px-3 py-2 sm:py-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-xs"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Log Contribution</span>
@@ -196,7 +196,7 @@ export default function GoalHorizonStageView({
             <button
               type="button"
               onClick={() => onOpenDrawer(goal, 'history')}
-              className="px-3 py-1.5 text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-[#16161a] dark:hover:bg-[#202026] text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white border border-slate-200/80 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.16] rounded-xl transition-colors cursor-pointer flex items-center gap-1"
+              className="flex-1 sm:flex-initial justify-center px-3 py-2 sm:py-1.5 text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-[#16161a] dark:hover:bg-[#202026] text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white border border-slate-200/80 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.16] rounded-xl transition-colors cursor-pointer flex items-center gap-1"
             >
               <span>Ledger</span>
               <ChevronRight className="w-3.5 h-3.5" />
