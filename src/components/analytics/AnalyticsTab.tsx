@@ -312,21 +312,9 @@ export default function AnalyticsTab({}: AnalyticsTabProps) {
         </div>
       </div>
 
-      {/* 2. Executive KPI Strip (Compact, High-Density 4 Pillars) */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
-        <div className="bg-white dark:bg-[#121215] border border-slate-200/80 dark:border-white/[0.08] rounded-2xl p-3.5 shadow-xs flex flex-col justify-between">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Net Cashflow</span>
-          <div className="mt-1">
-            <p className={`text-lg sm:text-xl font-bold tabular-nums ${netFlow >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-              {netFlow >= 0 ? '+' : '-'}{formatCompactCurrency(Math.abs(netFlow))}
-            </p>
-            <div className="mt-1 flex items-center gap-1.5">
-              <Delta pct={savingsDelta} />
-              <span className="text-[10px] text-slate-400 dark:text-neutral-500">vs prior period</span>
-            </div>
-          </div>
-        </div>
-
+      {/* 2. Executive KPI Strip (Compact, High-Density 5 Pillars) */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5">
+        {/* Metric 1: Total Outflow */}
         <div className="bg-white dark:bg-[#121215] border border-slate-200/80 dark:border-white/[0.08] rounded-2xl p-3.5 shadow-xs flex flex-col justify-between">
           <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Total Outflow</span>
           <div className="mt-1">
@@ -340,6 +328,35 @@ export default function AnalyticsTab({}: AnalyticsTabProps) {
           </div>
         </div>
 
+        {/* Metric 2: Total Inflow */}
+        <div className="bg-white dark:bg-[#121215] border border-slate-200/80 dark:border-white/[0.08] rounded-2xl p-3.5 shadow-xs flex flex-col justify-between">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Total Inflow</span>
+          <div className="mt-1">
+            <p className="text-lg sm:text-xl font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
+              +{formatCompactCurrency(kpis.income ?? 0)}
+            </p>
+            <div className="mt-1 flex items-center gap-1.5">
+              <Delta pct={incomeDelta} />
+              <span className="text-[10px] text-slate-400 dark:text-neutral-500">income variance</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Metric 3: Net Cashflow */}
+        <div className="bg-white dark:bg-[#121215] border border-slate-200/80 dark:border-white/[0.08] rounded-2xl p-3.5 shadow-xs flex flex-col justify-between">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Net Cashflow</span>
+          <div className="mt-1">
+            <p className={`text-lg sm:text-xl font-bold tabular-nums ${netFlow >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+              {netFlow >= 0 ? '+' : '-'}{formatCompactCurrency(Math.abs(netFlow))}
+            </p>
+            <div className="mt-1 flex items-center gap-1.5">
+              <Delta pct={savingsDelta} />
+              <span className="text-[10px] text-slate-400 dark:text-neutral-500">vs prior period</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Metric 4: Savings Retention */}
         <div className="bg-white dark:bg-[#121215] border border-slate-200/80 dark:border-white/[0.08] rounded-2xl p-3.5 shadow-xs flex flex-col justify-between">
           <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Savings Retention</span>
           <div className="mt-1">
@@ -350,7 +367,8 @@ export default function AnalyticsTab({}: AnalyticsTabProps) {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#121215] border border-slate-200/80 dark:border-white/[0.08] rounded-2xl p-3.5 shadow-xs flex flex-col justify-between">
+        {/* Metric 5: Burn Rate / Day */}
+        <div className="col-span-2 sm:col-span-1 bg-white dark:bg-[#121215] border border-slate-200/80 dark:border-white/[0.08] rounded-2xl p-3.5 shadow-xs flex flex-col justify-between">
           <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400">Burn Rate / Day</span>
           <div className="mt-1">
             <p className="text-lg sm:text-xl font-bold tabular-nums text-blue-600 dark:text-blue-400">

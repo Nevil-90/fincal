@@ -202,7 +202,7 @@ export default function RegularTransactionList({
     viewMode, selectedMonth, selectedYear, sortOption
   ])
 
-  const { transactions: fetchedTransactions, pagination, isLoading, mutate } = useTransactions(
+  const { transactions: fetchedTransactions, summary: apiSummary, pagination, isLoading, mutate } = useTransactions(
     groupBy !== 'none' ? 1 : currentPage,
     groupBy !== 'none' ? 10000 : pageSize,
     apiFilters
@@ -349,13 +349,64 @@ export default function RegularTransactionList({
   const expenseCount = filteredTransactions.filter(t => t.type === 'expense').length
   const avgExpense = expenseCount > 0 ? Math.round(totalExpenses / expenseCount) : 0
 
-  const monthSpend = monthSummary?.period?.expense !== undefined ? monthSummary.period.expense : totalExpenses
-  const monthEarned = monthSummary?.period?.income !== undefined ? monthSummary.period.income : totalIncome
-  const monthBalance = monthSummary?.period?.balance !== undefined ? monthSummary.period.balance : netAmount
+  const effectiveIncome = apiSummary?.income !== undefined ? apiSummary.income : totalIncome
+  const effectiveExpenses = apiSummary?.expense !== undefined ? apiSummary.expense : totalExpenses
+  const effectiveNet = apiSummary?.net !== undefined ? apiSummary.net : netAmount
+
+  const isCustomFiltered = Boolean(
+    startDate || 
+    endDate || 
+    (datePreset && datePreset !== 'all' && datePreset !== 'this-month') || 
+    filterCategory !== 'all' || 
+    filterPaymentMethod !== 'all' || 
+    filterSource !== 'all' || 
+    filterRecurring !== 'all' || 
+    Boolean(minAmount) || 
+    Boolean(maxAmount) || 
+    Boolean(searchTerm)
+  )
+
+  const cashflowSpend = isCustomFiltered
+    ? effectiveExpenses
+    : (monthSummary?.period?.expense !== undefined ? monthSummary.period.expense : effectiveExpenses)
+  const cashflowEarned = isCustomFiltered
+    ? effectiveIncome
+    : (monthSummary?.period?.income !== undefined ? monthSummary.period.income : effectiveIncome)
+  const cashflowBalance = isCustomFiltered
+    ? effectiveNet
+    : (monthSummary?.period?.balance !== undefined ? monthSummary.period.balance : effectiveNet)
+
   const monthLabel = useMemo(() => {
     const d = new Date(activeYearNumber, activeMonthNumber - 1, 1)
     return d.toLocaleDateString('en-US', { month: 'short' })
   }, [activeMonthNumber, activeYearNumber])
+
+  const periodLabel = useMemo(() => {
+    if (startDate && endDate) {
+      return `${formatDateForDisplay(startDate)} – ${formatDateForDisplay(endDate)}`
+    }
+    if (startDate) {
+      return `From ${formatDateForDisplay(startDate)}`
+    }
+    if (endDate) {
+      return `Until ${formatDateForDisplay(endDate)}`
+    }
+    if (datePreset === 'this-month') return `${monthLabel} (This Month)`
+    if (datePreset === 'last-30') return 'Last 30 Days'
+    if (datePreset === 'last-month') return 'Last Month'
+    if (datePreset === 'this-year') return `Year ${activeYearNumber}`
+    if (datePreset === 'all' && (startDate || endDate)) return 'Custom Range'
+    if (datePreset === 'all' && viewMode === 'month' && selectedMonth !== undefined && selectedYear !== undefined) {
+      return `${new Date(selectedYear, selectedMonth).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`
+    }
+    if (viewMode === 'month' && selectedMonth !== undefined && selectedYear !== undefined) {
+      return `${new Date(selectedYear, selectedMonth).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`
+    }
+    if (viewMode === 'year' && selectedYear !== undefined) {
+      return `Year ${selectedYear}`
+    }
+    return `${monthLabel}`
+  }, [startDate, endDate, datePreset, viewMode, selectedMonth, selectedYear, monthLabel, activeYearNumber])
 
   const handleColumnSort = (column: 'date' | 'title' | 'category' | 'amount') => {
     if (column === 'date') {
@@ -957,33 +1008,33 @@ export default function RegularTransactionList({
           <div className="flex items-center gap-2 sm:gap-3 text-xs tabular-nums font-semibold flex-wrap">
             <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-400">
               <span className="text-[10px] uppercase font-bold text-emerald-600/70 dark:text-emerald-400/70">In</span>
-              <span className="font-bold">+{formatCurrency(totalIncome)}</span>
+              <span className="font-bold">+{formatCurrency(effectiveIncome)}</span>
             </div>
             <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-rose-50 dark:bg-rose-950/30 border border-rose-200/60 dark:border-rose-800/40 text-rose-700 dark:text-rose-400">
               <span className="text-[10px] uppercase font-bold text-rose-600/70 dark:text-rose-400/70">Out</span>
-              <span className="font-bold">-{formatCurrency(totalExpenses)}</span>
+              <span className="font-bold">-{formatCurrency(effectiveExpenses)}</span>
             </div>
             <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08]">
               <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-neutral-500">Net</span>
-              <span className={`font-black ${netAmount >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                {netAmount >= 0 ? '+' : ''}{formatCurrency(netAmount)}
+              <span className={`font-black ${effectiveNet >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                {effectiveNet >= 0 ? '+' : ''}{formatCurrency(effectiveNet)}
               </span>
             </div>
           </div>
         </div>
 
-        {/* Mobile Glanceable Monthly Cashflow Card (visible only on mobile) */}
+        {/* Mobile Glanceable Period Cashflow Card (visible only on mobile) */}
         <div className="block md:hidden px-3.5 py-2.5 bg-slate-50/70 dark:bg-[#151518]/70 border-b border-slate-200/70 dark:border-white/[0.06]">
           <div className="flex items-center justify-between pb-1.5 px-0.5">
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 min-w-0 pr-2">
               <span className="h-1.5 w-1.5 rounded-full bg-blue-500 shrink-0" />
-              <span className="text-[11px] font-bold text-slate-700 dark:text-neutral-300 uppercase tracking-wider">
-                {monthLabel} Cashflow
+              <span className="text-[11px] font-bold text-slate-700 dark:text-neutral-300 uppercase tracking-wider truncate">
+                {periodLabel} Cashflow
               </span>
             </div>
-            <div className="text-[11px] font-semibold tabular-nums text-slate-500 dark:text-neutral-400">
-              Net: <span className={`font-bold ${monthBalance >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                {monthBalance >= 0 ? '+' : ''}{formatCurrency(monthBalance)}
+            <div className="text-[11px] font-semibold tabular-nums text-slate-500 dark:text-neutral-400 shrink-0">
+              Net: <span className={`font-bold ${cashflowBalance >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                {cashflowBalance >= 0 ? '+' : ''}{formatCurrency(cashflowBalance)}
               </span>
             </div>
           </div>
@@ -999,7 +1050,7 @@ export default function RegularTransactionList({
                   Spent
                 </div>
                 <div className="text-xs sm:text-[13px] font-bold text-rose-700 dark:text-rose-300 tabular-nums truncate">
-                  {formatCurrency(monthSpend)}
+                  {formatCurrency(cashflowSpend)}
                 </div>
               </div>
             </div>
@@ -1014,7 +1065,7 @@ export default function RegularTransactionList({
                   Earned
                 </div>
                 <div className="text-xs sm:text-[13px] font-bold text-emerald-700 dark:text-emerald-300 tabular-nums truncate">
-                  +{formatCurrency(monthEarned)}
+                  +{formatCurrency(cashflowEarned)}
                 </div>
               </div>
             </div>
@@ -1421,7 +1472,7 @@ export default function RegularTransactionList({
               {paginatedGroups.map(([groupKey, group]) => (
                 <div key={groupKey} className="relative">
                   <div
-                    className="flex items-center justify-between px-4 py-2.5 bg-slate-50/70 dark:bg-white/[0.02] cursor-pointer hover:bg-slate-100/70 dark:hover:bg-[#18181d] transition-colors text-xs font-semibold"
+                    className="flex items-center justify-between px-3.5 sm:px-4 py-2.5 bg-slate-50/70 dark:bg-white/[0.02] cursor-pointer hover:bg-slate-100/70 dark:hover:bg-[#18181d] transition-colors"
                     onClick={() => {
                       const newExpanded = new Set(expandedGroups)
                       if (expandedGroups.has(groupKey)) {
@@ -1432,21 +1483,69 @@ export default function RegularTransactionList({
                       setExpandedGroups(newExpanded)
                     }}
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-slate-900 dark:text-white">{groupKey}</span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-200/70 dark:bg-white/[0.06] text-slate-600 dark:text-neutral-400 font-semibold tabular-nums">
-                        {group.count}
-                      </span>
+                    {/* Mobile 2-line layout (sm:hidden) */}
+                    <div className="flex sm:hidden items-center justify-between w-full">
+                      <div className="min-w-0 flex-1 pr-2">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-bold text-slate-900 dark:text-white text-xs truncate">
+                            {groupKey}
+                          </span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-200/70 dark:bg-white/[0.06] text-slate-600 dark:text-neutral-400 font-semibold tabular-nums shrink-0">
+                            {group.count}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-1 text-[11px] tabular-nums whitespace-nowrap">
+                          <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                            +{formatCurrency(group.income)}
+                          </span>
+                          <span className="text-slate-300 dark:text-neutral-700">•</span>
+                          <span className="text-rose-600 dark:text-rose-400 font-semibold">
+                            -{formatCurrency(group.expenses)}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <div className="text-right">
+                          <div className={`text-xs font-bold tabular-nums whitespace-nowrap ${
+                            group.balance >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+                          }`}>
+                            {group.balance >= 0 ? '+' : ''}{formatCurrency(group.balance)}
+                          </div>
+                          <div className="text-[9px] uppercase font-bold text-slate-400 dark:text-neutral-500">
+                            Net
+                          </div>
+                        </div>
+                        <span className="text-slate-400 dark:text-neutral-500">
+                          {expandedGroups.has(groupKey) ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3 text-xs tabular-nums">
-                      <span className="text-emerald-600 dark:text-emerald-400 font-bold">+{formatCurrency(group.income)}</span>
-                      <span className="text-rose-600 dark:text-rose-400 font-bold">-{formatCurrency(group.expenses)}</span>
-                      <span className={`font-black ${group.balance >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-600 dark:text-neutral-400'}`}>
-                        {formatCurrency(group.balance)}
-                      </span>
-                      <span className="text-slate-400">
-                        {expandedGroups.has(groupKey) ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-                      </span>
+
+                    {/* Desktop single-line layout (hidden sm:flex) */}
+                    <div className="hidden sm:flex items-center justify-between w-full text-xs font-semibold">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-slate-900 dark:text-white">{groupKey}</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-200/70 dark:bg-white/[0.06] text-slate-600 dark:text-neutral-400 font-semibold tabular-nums">
+                          {group.count}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs tabular-nums whitespace-nowrap">
+                        <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                          +{formatCurrency(group.income)}
+                        </span>
+                        <span className="text-rose-600 dark:text-rose-400 font-bold">
+                          -{formatCurrency(group.expenses)}
+                        </span>
+                        <span className={`font-black ${
+                          group.balance >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+                        }`}>
+                          {group.balance >= 0 ? '+' : ''}{formatCurrency(group.balance)}
+                        </span>
+                        <span className="text-slate-400">
+                          {expandedGroups.has(groupKey) ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                        </span>
+                      </div>
                     </div>
                   </div>
 

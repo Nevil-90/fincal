@@ -73,6 +73,7 @@ export function useTransactions(page: number = 1, limit: number = 50, filters: R
 
   return {
     transactions: (data?.transactions || []) as any[],
+    summary: data?.summary as { income: number; expense: number; net: number; totalCount: number } | undefined,
     pagination: data?.pagination,
     monthlyBudget: data?.monthlyBudget,
     isLoading,

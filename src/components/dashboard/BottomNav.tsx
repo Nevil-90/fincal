@@ -70,21 +70,25 @@ export default React.memo(function BottomNav({
                   key={`${tab}-${index}`}
                   data-tour={`bottomnav-${tab}`}
                   onClick={() => onTabChange(tab)}
-                  className={`flex flex-col items-center justify-center gap-0.5 pt-2 pb-1 w-full transition-colors active:scale-95 ${
+                  className={`flex flex-col items-center justify-center pt-2 pb-1 w-full transition-colors active:scale-95 ${
                     isActive ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-neutral-500'
                   }`}
                 >
-                  <div className={`relative flex items-center justify-center w-8 h-8 rounded-xl transition-all ${
+                  <div className={`flex items-center justify-center w-8 h-8 rounded-xl transition-all ${
                     isActive ? 'bg-slate-100 dark:bg-neutral-800 text-blue-600 dark:text-blue-400 font-bold' : ''
                   }`}>
                     <Icon className="h-4 w-4" />
-                    {isActive && (
-                      <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1 rounded-full bg-blue-600 dark:bg-blue-400" />
-                    )}
                   </div>
-                  <span className={`text-[10px] font-semibold leading-tight truncate w-full px-0.5 text-center ${
+                  <span className={`text-[10px] font-semibold leading-tight truncate w-full px-0.5 text-center mt-0.5 ${
                     isActive ? 'font-bold text-slate-900 dark:text-white' : ''
                   }`}>{label}</span>
+                  <div className="h-1 flex items-center justify-center mt-0.5">
+                    {isActive ? (
+                      <span className="w-1.5 h-1 rounded-full bg-blue-600 dark:bg-blue-400" />
+                    ) : (
+                      <span className="w-1.5 h-1 rounded-full bg-transparent" />
+                    )}
+                  </div>
                 </button>
               )
             })}

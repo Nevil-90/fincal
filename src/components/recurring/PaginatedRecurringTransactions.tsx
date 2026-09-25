@@ -90,6 +90,28 @@ export default function PaginatedRecurringTransactions() {
   })
   const [showFilters, setShowFilters] = useState(false)
 
+  const activeFiltersCount = useMemo(() => {
+    return (
+      (filters.status && filters.status !== 'all' ? 1 : 0) +
+      (filters.type && filters.type !== 'all' ? 1 : 0) +
+      (filters.category ? 1 : 0) +
+      (filters.frequency ? 1 : 0)
+    )
+  }, [filters])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const isMobile = window.innerWidth < 768
+    if (showFilters && isMobile) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [showFilters])
+
   // Form state
   const [showAddForm, setShowAddForm] = useState(false)
   const [formLoading, setFormLoading] = useState(false)
@@ -742,15 +764,17 @@ export default function PaginatedRecurringTransactions() {
             type="button"
             onClick={() => setShowFilters(!showFilters)}
             className={`flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl border transition-all cursor-pointer ${
-              showFilters || Object.values(filters).some(v => v && v !== 'all')
+              showFilters || activeFiltersCount > 0
                 ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900/50'
                 : 'bg-white dark:bg-neutral-900 text-slate-700 dark:text-neutral-300 border-slate-200 dark:border-white/[0.08] hover:bg-slate-50 dark:hover:bg-neutral-800'
             }`}
           >
             <Filter className="w-3.5 h-3.5" />
             <span>Filters</span>
-            {Object.values(filters).some(v => v && v !== 'all') && (
-              <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />
+            {activeFiltersCount > 0 && (
+              <span className="px-1.5 py-0.5 rounded-full bg-blue-600 text-white text-[10px] font-bold tabular-nums">
+                {activeFiltersCount}
+              </span>
             )}
           </button>
 
@@ -890,9 +914,9 @@ export default function PaginatedRecurringTransactions() {
         </div>
       </div>
 
-      {/* Filter Panel */}
+      {/* Desktop Filter Panel (hidden on mobile, visible on desktop) */}
       {showFilters && (
-        <div className="bg-white dark:bg-[#121215] p-3.5 rounded-2xl shadow-xs border border-slate-200/80 dark:border-white/[0.08] space-y-3">
+        <div className="hidden md:block bg-white dark:bg-[#121215] p-3.5 rounded-2xl shadow-xs border border-slate-200/80 dark:border-white/[0.08] space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <CustomSelect
               selectSize="sm"
@@ -947,6 +971,162 @@ export default function PaginatedRecurringTransactions() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Mobile Recurring Filters Bottom Sheet Drawer */}
+      {typeof document !== 'undefined' && createPortal(
+        <>
+          {/* Overlay Backdrop */}
+          {showFilters && (
+            <div
+              className="fixed inset-0 bg-slate-950/50 dark:bg-neutral-950/80 backdrop-blur-xs z-[190] md:hidden animate-in fade-in duration-200"
+              onClick={() => setShowFilters(false)}
+            />
+          )}
+
+          {/* Bottom Sheet Drawer */}
+          <div
+            className={`fixed inset-x-0 bottom-0 z-[200] md:hidden bg-white dark:bg-[#18181b] rounded-t-3xl shadow-2xl max-h-[85vh] flex flex-col border-t border-slate-200/80 dark:border-white/[0.08] transition-transform duration-300 ease-out transform pb-safe ${
+              showFilters ? 'translate-y-0' : 'translate-y-full pointer-events-none'
+            }`}
+          >
+            {/* iOS Drag Handle */}
+            <div className="flex justify-center pt-3 pb-1 shrink-0">
+              <div className="w-10 h-1.5 bg-slate-300 dark:bg-neutral-700 rounded-full" />
+            </div>
+
+            {/* Drawer Header */}
+            <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-white/[0.06] shrink-0">
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <h2 className="text-base font-bold text-slate-900 dark:text-white">Recurring Filters</h2>
+                {activeFiltersCount > 0 && (
+                  <span className="px-1.5 py-0.5 rounded-full bg-blue-600 text-white text-[10px] font-bold tabular-nums">
+                    {activeFiltersCount}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-3">
+                {activeFiltersCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={clearFilters}
+                    className="text-xs font-semibold text-rose-600 dark:text-rose-400 hover:underline cursor-pointer"
+                  >
+                    Clear all
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setShowFilters(false)}
+                  className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.05] transition-colors cursor-pointer"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Drawer Body */}
+            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 text-xs">
+              {/* Status Section */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-500 block">
+                  Status
+                </label>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {(['all', 'active', 'inactive'] as const).map((statusOption) => (
+                    <button
+                      key={statusOption}
+                      type="button"
+                      onClick={() => handleFilterChange('status', statusOption)}
+                      className={`py-2 px-2 rounded-xl text-xs font-semibold capitalize text-center transition-colors border cursor-pointer ${
+                        filters.status === statusOption
+                          ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800'
+                          : 'bg-slate-50 dark:bg-[#202024] text-slate-600 dark:text-neutral-400 border-slate-200/80 dark:border-white/[0.06] hover:bg-slate-100'
+                      }`}
+                    >
+                      {statusOption === 'all' ? 'All Status' : statusOption}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Type Section */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-500 block">
+                  Type
+                </label>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {(['all', 'expense', 'income'] as const).map((typeOption) => (
+                    <button
+                      key={typeOption}
+                      type="button"
+                      onClick={() => handleFilterChange('type', typeOption)}
+                      className={`py-2 px-2 rounded-xl text-xs font-semibold capitalize text-center transition-colors border cursor-pointer ${
+                        filters.type === typeOption
+                          ? typeOption === 'expense'
+                            ? 'bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800'
+                            : typeOption === 'income'
+                            ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
+                            : 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800'
+                          : 'bg-slate-50 dark:bg-[#202024] text-slate-600 dark:text-neutral-400 border-slate-200/80 dark:border-white/[0.06] hover:bg-slate-100'
+                      }`}
+                    >
+                      {typeOption === 'all' ? 'All Types' : typeOption === 'expense' ? 'Expenses' : 'Income'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Category Section */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-500 block">
+                  Category
+                </label>
+                <CustomSelect
+                  selectSize="sm"
+                  value={filters.category}
+                  onChange={(e) => handleFilterChange('category', e.target.value)}
+                >
+                  <option value="">All Categories</option>
+                  {recurringData?.filters.categories.map(category => (
+                    <option key={category} value={category}>{category}</option>
+                  ))}
+                </CustomSelect>
+              </div>
+
+              {/* Frequency Section */}
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-500 block">
+                  Frequency
+                </label>
+                <CustomSelect
+                  selectSize="sm"
+                  value={filters.frequency}
+                  onChange={(e) => handleFilterChange('frequency', e.target.value)}
+                >
+                  <option value="">All Frequencies</option>
+                  {recurringData?.filters.frequencies.map(frequency => (
+                    <option key={frequency} value={frequency}>{frequency}</option>
+                  ))}
+                </CustomSelect>
+              </div>
+            </div>
+
+            {/* Pinned Bottom Drawer Footer: Apply Filters Button */}
+            <div className="p-4 bg-white dark:bg-[#18181b] border-t border-slate-100 dark:border-white/[0.06] shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowFilters(false)}
+                className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-bold text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Filter className="h-4 w-4" />
+                <span>Apply Filters</span>
+              </button>
+            </div>
+          </div>
+        </>,
+        document.body
       )}
 
       {/* View Switcher: Recurring Bills vs. One-Time Costs */}

@@ -45,7 +45,7 @@ export default function GoalMilestoneTimeline({ goals, onOpenDrawer }: GoalMiles
       </div>
 
       {/* Timeline track */}
-      <div className="relative pl-6 sm:pl-8 space-y-4 before:absolute before:left-2 sm:before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200 dark:before:bg-white/[0.08]">
+      <div className="relative space-y-4">
         {sortedGoals.map((goal, idx) => {
           const pace = getGoalPace(goal)
           const countdown = formatTimeRemaining(goal.deadline)
@@ -54,23 +54,44 @@ export default function GoalMilestoneTimeline({ goals, onOpenDrawer }: GoalMiles
           const progressPct = Math.min(100, Math.round((current / target) * 100))
           const remainingAmount = Math.max(0, target - current)
           const monthly = calculateMonthlyRequired(goal)
+          const isFirst = idx === 0
+          const isLast = idx === sortedGoals.length - 1
 
           return (
-            <div
-              key={goal.id}
-              onClick={() => onOpenDrawer(goal, 'history')}
-              className="relative group bg-slate-50/80 dark:bg-[#16161a] border border-slate-200/70 dark:border-white/[0.06] hover:border-slate-300 dark:hover:border-white/[0.14] rounded-xl p-3 sm:p-3.5 transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs"
-            >
-              {/* Timeline pin indicator */}
+            <div key={goal.id} className="relative flex items-stretch gap-2.5 sm:gap-3 group">
+              {/* Timeline Track Rail */}
+              <div className="relative flex flex-col items-center shrink-0 w-4 sm:w-5">
+                {/* Connecting line from previous milestone */}
+                {sortedGoals.length > 1 && !isFirst && (
+                  <div
+                    className="absolute -top-4 bottom-[calc(100%-23px)] sm:bottom-[calc(100%-25px)] left-1/2 -translate-x-1/2 w-0.5 bg-slate-200 dark:bg-white/[0.08]"
+                  />
+                )}
+
+                {/* Milestone Node */}
+                <div
+                  className={`relative z-10 mt-[16.5px] sm:mt-[18px] w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full border-2 border-white dark:border-[#121215] shrink-0 transition-transform group-hover:scale-125 ${
+                    goal.isCompleted || progressPct >= 100
+                      ? 'bg-emerald-500 ring-2 ring-emerald-500/30'
+                      : pace.status === 'overdue'
+                      ? 'bg-rose-500 ring-2 ring-rose-500/30'
+                      : 'bg-blue-500 ring-2 ring-blue-500/30'
+                  }`}
+                />
+
+                {/* Connecting line to next milestone */}
+                {sortedGoals.length > 1 && !isLast && (
+                  <div
+                    className="absolute top-[23px] sm:top-[25px] -bottom-4 left-1/2 -translate-x-1/2 w-0.5 bg-slate-200 dark:bg-white/[0.08]"
+                  />
+                )}
+              </div>
+
+              {/* Goal metadata & progress card */}
               <div
-                className={`absolute -left-6 sm:-left-8 top-4 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-[#121215] transition-transform group-hover:scale-125 ${
-                  goal.isCompleted || progressPct >= 100
-                    ? 'bg-emerald-500 ring-2 ring-emerald-500/30'
-                    : pace.status === 'overdue'
-                    ? 'bg-rose-500 ring-2 ring-rose-500/30'
-                    : 'bg-blue-500 ring-2 ring-blue-500/30'
-                }`}
-              />
+                onClick={() => onOpenDrawer(goal, 'history')}
+                className="flex-1 min-w-0 bg-slate-50/80 dark:bg-[#16161a] border border-slate-200/70 dark:border-white/[0.06] hover:border-slate-300 dark:hover:border-white/[0.14] rounded-xl p-3 sm:p-3.5 transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs"
+              >
 
               {/* Goal metadata */}
               <div className="min-w-0 flex-1">
@@ -134,7 +155,8 @@ export default function GoalMilestoneTimeline({ goals, onOpenDrawer }: GoalMiles
                 </div>
               </div>
             </div>
-          )
+          </div>
+        )
         })}
       </div>
     </div>
