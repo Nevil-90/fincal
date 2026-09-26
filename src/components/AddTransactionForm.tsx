@@ -123,7 +123,11 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, onBack
     ? staticData.incomeSources.filter(c => c.isActive).map(c => c.name)
     : staticData.expensePurposes.filter(c => c.isActive).map(c => c.name)))
 
-  const paymentMethods = Array.from(new Set(staticData.paymentMethods.filter(c => c.isActive).map(c => c.name)))
+  const paymentMethods = Array.from(new Set(
+    staticData.paymentMethods.filter(c => c.isActive).map(c => c.name).length > 0
+      ? staticData.paymentMethods.filter(c => c.isActive).map(c => c.name)
+      : ['Cash', 'Bank Transfer', 'Credit Card', 'Debit Card', 'UPI']
+  ))
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

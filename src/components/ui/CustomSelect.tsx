@@ -26,9 +26,9 @@ export const CustomSelect = forwardRef<HTMLSelectElement, CustomSelectProps>(fun
   ref
 ) {
   const sizeStyles = {
-    xs: 'h-7 pl-2.5 pr-7 text-xs',
-    sm: 'h-8 pl-3 pr-8 text-xs',
-    md: 'h-10 pl-3.5 pr-8 text-xs'
+    xs: 'h-7 pl-2.5 pr-7 text-xs leading-none',
+    sm: 'h-8 pl-3 pr-8 text-xs leading-none',
+    md: 'h-10 pl-3.5 pr-8 text-xs leading-none'
   }
 
   const iconLeftPad = leftIcon ? (selectSize === 'xs' ? 'pl-7' : selectSize === 'sm' ? 'pl-8' : 'pl-9') : ''
@@ -46,7 +46,7 @@ export const CustomSelect = forwardRef<HTMLSelectElement, CustomSelectProps>(fun
       )}
       <div className="relative flex items-center w-full">
         {leftIcon && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500 pointer-events-none flex items-center shrink-0">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500 pointer-events-none flex items-center shrink-0 z-10">
             {leftIcon}
           </div>
         )}
@@ -55,13 +55,14 @@ export const CustomSelect = forwardRef<HTMLSelectElement, CustomSelectProps>(fun
           id={id}
           required={required}
           disabled={disabled}
-          className={`w-full appearance-none [-webkit-appearance:none] [-moz-appearance:none] font-medium rounded-xl border border-slate-200/90 dark:border-white/[0.08] bg-slate-50/80 dark:bg-[#16161a] text-slate-900 dark:text-white transition-all cursor-pointer outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/40 hover:border-slate-300 dark:hover:border-white/[0.15] disabled:opacity-40 disabled:cursor-not-allowed flex items-center ${sizeStyles[selectSize]} ${iconLeftPad} ${className}`}
+          autoComplete="off"
+          className={`w-full appearance-none block font-medium rounded-xl border border-slate-200/90 dark:border-white/[0.08] bg-slate-50/80 dark:bg-[#16161a] text-slate-900 dark:text-white transition-all cursor-pointer outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/40 focus:bg-slate-50 dark:focus:bg-[#16161a] active:bg-slate-50 dark:active:bg-[#16161a] focus:text-slate-900 dark:focus:text-white hover:border-slate-300 dark:hover:border-white/[0.15] disabled:opacity-40 disabled:cursor-not-allowed [color-scheme:light] dark:[color-scheme:dark] ${sizeStyles[selectSize]} ${iconLeftPad} ${className}`}
           {...rest}
         >
           {children}
         </select>
         <ChevronDown
-          className={`absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 dark:text-zinc-500 transition-colors shrink-0 ${
+          className={`absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 dark:text-zinc-500 transition-colors shrink-0 z-10 ${
             selectSize === 'xs' ? 'h-3 w-3' : selectSize === 'sm' ? 'h-3.5 w-3.5' : 'h-4 w-4'
           }`}
         />
