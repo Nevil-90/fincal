@@ -37,11 +37,11 @@ export function AddGoalModal({
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-[200] bg-black/60 dark:bg-black/80 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden animate-in fade-in duration-150"
+      className="fixed inset-0 z-[200] bg-black/75 dark:bg-black/90 backdrop-blur-sm sm:backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden animate-in fade-in duration-150"
     >
       <div
         onClick={e => e.stopPropagation()}
-        className="bg-white dark:bg-[#121215] border border-slate-200/90 dark:border-white/[0.08] rounded-t-3xl sm:rounded-2xl shadow-2xl w-full max-w-md max-h-[92vh] sm:max-h-[85vh] flex flex-col overflow-hidden transform transition-all text-slate-900 dark:text-zinc-100"
+        className="bg-white dark:bg-[#121215] border border-slate-200/90 dark:border-white/[0.08] rounded-t-3xl sm:rounded-2xl shadow-2xl w-full max-w-md max-h-[90dvh] sm:max-h-[85vh] flex flex-col overflow-hidden transform transition-all text-slate-900 dark:text-zinc-100"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200/80 dark:border-white/[0.06] bg-slate-50/80 dark:bg-[#16161a]/60 shrink-0">

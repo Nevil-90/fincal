@@ -82,11 +82,12 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, onBack
   }, [])
 
   useEffect(() => {
-    if (!title.trim()) {
+    const trimmedTitle = title.trim()
+    if (!trimmedTitle || trimmedTitle.length < 4) {
       setSuggestion(null)
       return
     }
-    const key = title.toLowerCase().trim()
+    const key = trimmedTitle.toLowerCase()
     const rules = getLocalRules()
     const match = rules[key] || Object.entries(rules).find(([k]) => key.startsWith(k) || k.startsWith(key))?.[1]
     if (match) {

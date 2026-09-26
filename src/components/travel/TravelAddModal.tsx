@@ -59,11 +59,11 @@ export default function TravelAddModal({
       onClick={e => {
         if (e.target === e.currentTarget) onClose()
       }}
-      className="fixed inset-0 z-[200] bg-black/60 dark:bg-black/80 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden animate-in fade-in duration-150"
+      className="fixed inset-0 z-[200] bg-black/75 dark:bg-black/90 backdrop-blur-sm sm:backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden animate-in fade-in duration-150"
     >
       <div
         onClick={e => e.stopPropagation()}
-        className="w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border-t sm:border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#121215] shadow-2xl flex flex-col max-h-[92vh] sm:max-h-[85vh] overflow-hidden"
+        className="w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border-t sm:border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#121215] shadow-2xl flex flex-col max-h-[90dvh] sm:max-h-[85vh] overflow-hidden"
       >
         {/* Mobile handle pull bar */}
         <div className="flex sm:hidden justify-center pt-2.5 pb-1 shrink-0">

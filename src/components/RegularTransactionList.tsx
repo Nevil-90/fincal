@@ -1931,8 +1931,8 @@ export default function RegularTransactionList({
 
       {/* Edit Transaction Modal */}
       {editingTransaction && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-xs z-[200] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden animate-in fade-in duration-150" onClick={() => setEditingTransaction(null)}>
-          <div className="bg-white dark:bg-[#121215] rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md flex flex-col max-h-[92vh] sm:max-h-[85vh] overflow-hidden border-t sm:border border-slate-200/90 dark:border-white/[0.08]" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/75 dark:bg-black/90 backdrop-blur-sm sm:backdrop-blur-md z-[200] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden animate-in fade-in duration-150" onClick={() => setEditingTransaction(null)}>
+          <div className="bg-white dark:bg-[#121215] rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md flex flex-col max-h-[90dvh] sm:max-h-[85vh] overflow-hidden border-t sm:border border-slate-200/90 dark:border-white/[0.08]" onClick={(e) => e.stopPropagation()}>
             <AddTransactionForm
               initialData={{
                 id: editingTransaction.id,
