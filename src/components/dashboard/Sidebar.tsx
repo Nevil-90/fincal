@@ -159,6 +159,7 @@ export default React.memo(function Sidebar({
                   return (
                     <button
                       key={item.id}
+                      data-tour={`sidebar-${item.id}`}
                       onClick={() => handleTabClick(item.id)}
                       title={!sidebarOpen ? item.label : undefined}
                       className={`w-full flex items-center rounded-xl transition-all duration-150 ${

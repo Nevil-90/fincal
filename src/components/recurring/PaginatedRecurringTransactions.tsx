@@ -14,7 +14,7 @@ import type { RecurringTransaction, RecurringFormData } from './types'
 import CustomSelect from '@/components/ui/CustomSelect'
 import { getCategoryVisual } from '@/lib/category-icons'
 import { useEnhancedStaticData } from '@/lib/enhanced-static-data-manager'
-import { formatDateForDisplay } from '@/lib/dateUtils'
+import { formatDateForDisplay, parseLocalDate } from '@/lib/dateUtils'
 import { SkeletonRecurring } from '@/components/ui/SkeletonCard'
 import CustomDateField from '@/components/ui/CustomDateField'
 
@@ -653,7 +653,7 @@ export default function PaginatedRecurringTransactions() {
 
       const itemsOnDay = recurringData.data.filter(item => {
         if (!item.isActive || item.isPaused) return false
-        const itemDue = new Date(item.nextDue)
+        const itemDue = parseLocalDate(item.nextDue) || new Date(item.nextDue)
         return itemDue.getFullYear() === d.getFullYear() &&
                itemDue.getMonth() === d.getMonth() &&
                itemDue.getDate() === d.getDate()
@@ -684,10 +684,10 @@ export default function PaginatedRecurringTransactions() {
       badge: string
       items: typeof recurringData.data
     }[] = [
+      { id: 'overdue', title: 'Action Required (Past Due)', badge: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20', items: [] },
       { id: 'week', title: 'Due in Next 7 Days', badge: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20', items: [] },
       { id: 'month', title: 'Due Later This Month', badge: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20', items: [] },
       { id: 'upcoming', title: 'Upcoming Subscriptions', badge: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20', items: [] },
-      { id: 'overdue', title: 'Action Required (Past Due)', badge: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20', items: [] },
       { id: 'paused', title: 'Paused Subscriptions', badge: 'bg-neutral-500/10 text-neutral-500 border border-neutral-500/20', items: [] },
     ]
 
@@ -696,19 +696,30 @@ export default function PaginatedRecurringTransactions() {
         groups[4].items.push(item)
         return
       }
-      const due = new Date(item.nextDue)
+      const due = parseLocalDate(item.nextDue) || new Date(item.nextDue)
       due.setHours(0, 0, 0, 0)
       const diffDays = Math.round((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
 
+      const isCurrentMonth = due.getFullYear() === now.getFullYear() && due.getMonth() === now.getMonth()
+
       if (diffDays < 0) {
-        groups[3].items.push(item)
-      } else if (diffDays <= 7) {
         groups[0].items.push(item)
-      } else if (diffDays <= 30) {
+      } else if (diffDays <= 7) {
         groups[1].items.push(item)
-      } else {
+      } else if (isCurrentMonth) {
         groups[2].items.push(item)
+      } else {
+        groups[3].items.push(item)
       }
+    })
+
+    // Sort items chronologically within each group by nextDue
+    groups.forEach(g => {
+      g.items.sort((a, b) => {
+        const dateA = (parseLocalDate(a.nextDue) || new Date(a.nextDue)).getTime()
+        const dateB = (parseLocalDate(b.nextDue) || new Date(b.nextDue)).getTime()
+        return dateA - dateB
+      })
     })
 
     return groups.filter(g => g.items.length > 0)
@@ -720,7 +731,7 @@ export default function PaginatedRecurringTransactions() {
     }
     const now = new Date()
     now.setHours(0, 0, 0, 0)
-    const due = new Date(nextDueDateStr)
+    const due = parseLocalDate(nextDueDateStr) || new Date(nextDueDateStr)
     due.setHours(0, 0, 0, 0)
     const diffDays = Math.round((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
 

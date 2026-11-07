@@ -82,7 +82,7 @@ interface RegularTransactionListProps {
   viewMode?: 'month' | 'year' | 'all'
   onTransactionDeleted?: () => void
   onYearChange?: (year: number | undefined) => void
-  onMonthChange?: (month: number | undefined) => void
+  onMonthChange?: (month: number | undefined, year?: number) => void
   availableYears?: number[]
 }
 
@@ -190,7 +190,7 @@ export default function RegularTransactionList({
 
     if (viewMode === 'month' && !startDate && !endDate) {
       if (selectedMonth !== undefined) filters.month = selectedMonth + 1
-      if (selectedYear !== undefined) filters.year = selectedYear
+      filters.year = selectedYear !== undefined ? selectedYear : new Date().getFullYear()
     } else if (viewMode === 'year' && !startDate && !endDate) {
       if (selectedYear !== undefined) filters.year = selectedYear
     }

@@ -13,6 +13,7 @@ export function useScrollLock(isLocked: boolean) {
     lockCount++
     if (lockCount === 1) {
       scrollPosition = window.pageYOffset || document.documentElement.scrollTop
+      document.documentElement.style.overflow = 'hidden'
       document.body.style.position = 'fixed'
       document.body.style.top = `-${scrollPosition}px`
       document.body.style.left = '0'
@@ -24,6 +25,7 @@ export function useScrollLock(isLocked: boolean) {
     return () => {
       lockCount = Math.max(0, lockCount - 1)
       if (lockCount === 0) {
+        document.documentElement.style.overflow = ''
         document.body.style.position = ''
         document.body.style.top = ''
         document.body.style.left = ''

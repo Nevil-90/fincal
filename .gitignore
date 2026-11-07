@@ -77,3 +77,9 @@ playwright-report/
 test-results/
 qa_test_plan.md
 
+# Exports & Local Snapshots
+/exports/
+
+# Cache & Local Tooling
+/.sf/
+

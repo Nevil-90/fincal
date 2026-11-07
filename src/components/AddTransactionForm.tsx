@@ -216,7 +216,7 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, onBack
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 bg-white dark:bg-[#121215]">
-        <div className="flex-1 overflow-y-auto px-5 py-3.5 no-scrollbar">
+        <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-5 py-3.5 no-scrollbar">
           <div className="grid grid-cols-2 gap-x-4 gap-y-3">
         <div className="col-span-2">
           <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400 mb-1.5">
@@ -282,7 +282,7 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, onBack
             rows={2}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="w-full px-3 py-2 border border-slate-200 dark:border-neutral-700 rounded-xl focus:border-blue-500 focus:bg-white dark:focus:bg-neutral-900 focus:outline-none focus:ring-4 focus:ring-blue-50/50 dark:focus:ring-blue-500/20 text-slate-900 dark:text-white bg-slate-50/70 dark:bg-neutral-950 text-sm transition-all resize-y min-h-[56px]"
+            className="w-full px-3 py-2 border border-slate-200 dark:border-neutral-700 rounded-xl focus:border-blue-500 focus:bg-white dark:focus:bg-neutral-900 focus:outline-none focus:ring-4 focus:ring-blue-50/50 dark:focus:ring-blue-500/20 text-slate-900 dark:text-white bg-slate-50/70 dark:bg-neutral-950 text-sm transition-all resize-none min-h-[56px]"
             placeholder="Add detailed notes, items list, or transaction remarks..."
           />
         </div>

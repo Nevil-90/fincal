@@ -9,6 +9,7 @@ import TravelAddModal from './travel/TravelAddModal'
 import RecurringForm from './recurring/RecurringForm'
 import type { RecurringFormData } from './recurring/types'
 import { AddGoalModal } from './goals/AddGoalModal'
+import { useScrollLock } from '@/hooks/useScrollLock'
 
 type EntryType = 'select' | 'regular' | 'fuel' | 'recurring' | 'goal'
 
@@ -25,6 +26,8 @@ export default function AddEntryDispatcherModal({
 }: AddEntryDispatcherModalProps) {
   const [activeModal, setActiveModal] = useState<EntryType>('select')
   const [selectedRadio, setSelectedRadio] = useState<'regular' | 'fuel' | 'recurring' | 'goal'>('regular')
+
+  useScrollLock(isOpen)
 
   const { data: staticData, manager: staticManager } = useEnhancedStaticData()
 
@@ -113,7 +116,7 @@ export default function AddEntryDispatcherModal({
   const [recFormData, setRecFormData] = useState<RecurringFormData>({
     type: 'expense',
     amount: '',
-    category: '',
+    category: 'Subscriptions',
     description: '',
     paymentMethod: '',
     source: '',
@@ -261,11 +264,13 @@ export default function AddEntryDispatcherModal({
     return (
       <div
         onClick={onClose}
-        className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/75 dark:bg-black/90 backdrop-blur-sm sm:backdrop-blur-md p-0 sm:p-4 overflow-hidden animate-in fade-in duration-150"
+        style={{ paddingBottom: 'var(--keyboard-height, 0px)' }}
+        className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/80 dark:bg-black/90 backdrop-blur-sm sm:backdrop-blur-md p-0 sm:p-4 overflow-hidden touch-none animate-in fade-in duration-150"
       >
         <div
+          data-modal-drawer
           onClick={e => e.stopPropagation()}
-          className="w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border-t sm:border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#121215] shadow-2xl flex flex-col max-h-[90dvh] sm:max-h-[85vh] overflow-hidden"
+          className="w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border-t sm:border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#121215] shadow-2xl flex flex-col max-h-[calc(var(--vv-height,100dvh)-1rem)] sm:max-h-[85vh] overflow-hidden touch-auto"
         >
           <AddTransactionForm
             onClose={onClose}
@@ -321,11 +326,13 @@ export default function AddEntryDispatcherModal({
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/75 dark:bg-black/90 backdrop-blur-sm sm:backdrop-blur-md p-0 sm:p-4 overflow-hidden animate-in fade-in duration-150"
+      style={{ paddingBottom: 'var(--keyboard-height, 0px)' }}
+      className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/80 dark:bg-black/90 backdrop-blur-sm sm:backdrop-blur-md p-0 sm:p-4 overflow-hidden touch-none animate-in fade-in duration-150"
     >
       <div
+        data-modal-drawer
         onClick={e => e.stopPropagation()}
-        className="w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border-t sm:border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#121215] shadow-2xl flex flex-col max-h-[90dvh] sm:max-h-[85vh] overflow-hidden"
+        className="w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border-t sm:border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#121215] shadow-2xl flex flex-col max-h-[calc(var(--vv-height,100dvh)-1rem)] sm:max-h-[85vh] overflow-hidden touch-auto"
       >
         {/* Mobile drag handle */}
         <div className="flex sm:hidden justify-center pt-2.5 pb-1 shrink-0">

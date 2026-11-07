@@ -27,6 +27,7 @@ export const viewport: Viewport = {
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { SwrProvider } from "@/components/providers/SwrProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { VisualViewportHandler } from "@/components/providers/VisualViewportHandler";
 import { Toaster } from "sonner";
 
 export default function RootLayout({
@@ -40,6 +41,7 @@ export default function RootLayout({
       <body
         className={`${geist.variable} font-sans antialiased overflow-x-hidden`}
       >
+        <VisualViewportHandler />
         <ThemeProvider>
           <SwrProvider>
             <ErrorBoundary>

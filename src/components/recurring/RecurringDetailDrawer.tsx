@@ -17,7 +17,7 @@ import {
 } from 'lucide-react'
 import { formatCurrency } from '@/lib/financial-utils'
 import { getCategoryVisual } from '@/lib/category-icons'
-import { formatDateForDisplay } from '@/lib/dateUtils'
+import { formatDateForDisplay, parseLocalDate } from '@/lib/dateUtils'
 
 interface RecurringTransaction {
   id: string
@@ -72,7 +72,7 @@ export default function RecurringDetailDrawer({
   // Calculate days until next due
   const now = new Date()
   now.setHours(0, 0, 0, 0)
-  const dueDate = new Date(recurring.nextDue)
+  const dueDate = parseLocalDate(recurring.nextDue) || new Date(recurring.nextDue)
   dueDate.setHours(0, 0, 0, 0)
   const diffDays = Math.round((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
 

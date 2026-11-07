@@ -13,7 +13,11 @@ import {
   SlidersHorizontal,
   Filter,
   AlignJustify,
-  Menu
+  Menu,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  Calendar as CalendarIcon
 } from 'lucide-react'
 import CustomSelect from '@/components/ui/CustomSelect'
 import CustomDateField from '@/components/ui/CustomDateField'
@@ -68,7 +72,7 @@ export interface TransactionFiltersProps {
   selectedYear?: number
   selectedMonth?: number
   onYearChange?: (year: number | undefined) => void
-  onMonthChange?: (month: number | undefined) => void
+  onMonthChange?: (month: number | undefined, year?: number) => void
   availableYears?: number[]
   datePreset: DatePresetType
   setDatePreset: (preset: DatePresetType) => void
@@ -212,6 +216,225 @@ export function TransactionFilters({
     }
   }
 
+  const MONTH_NAMES = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ]
+  const SHORT_MONTH_NAMES = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+  ]
+
+  const now = new Date()
+  const displayYear = selectedYear ?? now.getFullYear()
+  const isMonthActive = selectedMonth !== undefined
+  const isYearActive = selectedYear !== undefined
+
+  const yearsList = useMemo(() => {
+    const currentYear = new Date().getFullYear()
+    const set = new Set<number>([currentYear - 2, currentYear - 1, currentYear, currentYear + 1])
+    if (availableYears && availableYears.length > 0) {
+      availableYears.forEach(y => set.add(y))
+    }
+    return Array.from(set).sort((a, b) => b - a)
+  }, [availableYears])
+
+  const handlePrevMonth = () => {
+    setDatePreset('all')
+    setStartDate('')
+    setEndDate('')
+    setCurrentPage(1)
+
+    if (selectedMonth !== undefined) {
+      if (selectedMonth === 0) {
+        const prevYear = displayYear - 1
+        onMonthChange?.(11, prevYear)
+        onYearChange?.(prevYear)
+      } else {
+        onMonthChange?.(selectedMonth - 1, displayYear)
+        onYearChange?.(displayYear)
+      }
+    } else {
+      const prevMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1
+      const prevYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()
+      onMonthChange?.(prevMonth, prevYear)
+      onYearChange?.(prevYear)
+    }
+  }
+
+  const handleNextMonth = () => {
+    setDatePreset('all')
+    setStartDate('')
+    setEndDate('')
+    setCurrentPage(1)
+
+    if (selectedMonth !== undefined) {
+      if (selectedMonth === 11) {
+        const nextYear = displayYear + 1
+        onMonthChange?.(0, nextYear)
+        onYearChange?.(nextYear)
+      } else {
+        onMonthChange?.(selectedMonth + 1, displayYear)
+        onYearChange?.(displayYear)
+      }
+    } else {
+      onMonthChange?.(now.getMonth(), now.getFullYear())
+      onYearChange?.(now.getFullYear())
+    }
+  }
+
+  const handleMonthSelect = (val: string) => {
+    setDatePreset('all')
+    setStartDate('')
+    setEndDate('')
+    setCurrentPage(1)
+
+    if (val === 'all') {
+      onMonthChange?.(undefined, selectedYear)
+    } else {
+      const m = parseInt(val, 10)
+      onMonthChange?.(m, displayYear)
+      if (selectedYear === undefined) {
+        onYearChange?.(displayYear)
+      }
+    }
+  }
+
+  const handleYearSelect = (val: string) => {
+    setDatePreset('all')
+    setStartDate('')
+    setEndDate('')
+    setCurrentPage(1)
+
+    if (val === 'all') {
+      onYearChange?.(undefined)
+      onMonthChange?.(undefined, undefined)
+    } else {
+      const y = parseInt(val, 10)
+      onYearChange?.(y)
+      if (selectedMonth !== undefined) {
+        onMonthChange?.(selectedMonth, y)
+      }
+    }
+  }
+
+  const handleResetToAllTime = () => {
+    setDatePreset('all')
+    setStartDate('')
+    setEndDate('')
+    setCurrentPage(1)
+    onMonthChange?.(undefined, undefined)
+    onYearChange?.(undefined)
+  }
+
+  const handleSnapToCurrentMonth = () => {
+    setDatePreset('all')
+    setStartDate('')
+    setEndDate('')
+    setCurrentPage(1)
+    onMonthChange?.(now.getMonth(), now.getFullYear())
+    onYearChange?.(now.getFullYear())
+  }
+
+  const renderMonthNavigator = (compact = false) => (
+    <div className="flex items-center gap-1.5 shrink-0 select-none">
+      {/* Month Stepper Pill */}
+      <div className="flex items-center h-8 p-0.5 rounded-xl border border-slate-200/80 dark:border-white/[0.08] bg-slate-100/70 dark:bg-white/[0.03] text-xs">
+        {/* Previous Month Chevron */}
+        <button
+          type="button"
+          onClick={handlePrevMonth}
+          className="h-full px-1.5 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+          title="Previous month"
+        >
+          <ChevronLeft className="h-3.5 w-3.5" />
+        </button>
+
+        {/* Month Selector Dropdown with Native Overlay */}
+        <div className="relative flex items-center px-1.5 h-full">
+          <div className="flex items-center gap-1 text-xs font-bold text-slate-800 dark:text-neutral-200 tabular-nums">
+            <span>
+              {isMonthActive
+                ? SHORT_MONTH_NAMES[selectedMonth!]
+                : (compact ? 'All' : 'All Months')}
+            </span>
+            <ChevronDown className="h-3 w-3 text-slate-400 dark:text-neutral-500" />
+          </div>
+          <select
+            value={selectedMonth !== undefined ? selectedMonth : 'all'}
+            onChange={(e) => handleMonthSelect(e.target.value)}
+            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full font-sans text-xs"
+            title="Select month"
+          >
+            <option value="all">All Months</option>
+            {MONTH_NAMES.map((name, idx) => (
+              <option key={idx} value={idx}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Vertical divider */}
+        <div className="w-px h-3.5 bg-slate-200 dark:bg-white/[0.08] my-auto" />
+
+        {/* Year Selector Dropdown with Native Overlay */}
+        <div className="relative flex items-center px-1.5 h-full">
+          <div className="flex items-center gap-1 text-xs font-bold text-slate-800 dark:text-neutral-200 tabular-nums">
+            <span>{isYearActive ? selectedYear : 'All Years'}</span>
+            <ChevronDown className="h-3 w-3 text-slate-400 dark:text-neutral-500" />
+          </div>
+          <select
+            value={selectedYear !== undefined ? selectedYear : 'all'}
+            onChange={(e) => handleYearSelect(e.target.value)}
+            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full font-sans text-xs"
+            title="Select year"
+          >
+            <option value="all">All Years</option>
+            {yearsList.map((yr) => (
+              <option key={yr} value={yr}>
+                {yr}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Next Month Chevron */}
+        <button
+          type="button"
+          onClick={handleNextMonth}
+          className="h-full px-1.5 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+          title="Next month"
+        >
+          <ChevronRight className="h-3.5 w-3.5" />
+        </button>
+      </div>
+
+      {/* Quick All Time / This Month Toggle Button */}
+      {isMonthActive || isYearActive ? (
+        <button
+          type="button"
+          onClick={handleResetToAllTime}
+          className="h-8 px-2.5 rounded-xl border border-slate-200/80 dark:border-white/[0.08] bg-white dark:bg-[#121215] hover:bg-slate-50 dark:hover:bg-[#202024] text-[11px] font-bold text-slate-600 dark:text-neutral-300 hover:text-rose-600 dark:hover:text-rose-400 transition-colors flex items-center gap-1 cursor-pointer shrink-0"
+          title="Clear month filter and view all transactions"
+        >
+          <span>All Time</span>
+          <X className="h-3 w-3" />
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={handleSnapToCurrentMonth}
+          className="h-8 px-2.5 rounded-xl border border-blue-200/70 dark:border-blue-900/40 bg-blue-50/60 dark:bg-blue-950/30 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-[11px] font-bold text-blue-600 dark:text-blue-400 transition-colors flex items-center gap-1 cursor-pointer shrink-0"
+          title="Jump to current month"
+        >
+          <CalendarIcon className="h-3 w-3" />
+          <span>This Month</span>
+        </button>
+      )}
+    </div>
+  )
+
   return (
     <>
       <div className={
@@ -318,6 +541,11 @@ export function TransactionFilters({
             )}
           </div>
 
+          {/* Row 3: Dedicated Month & Year Quick Navigator (Mobile) */}
+          <div className="flex items-center justify-between gap-1.5 pt-0.5">
+            {renderMonthNavigator(true)}
+          </div>
+
           {/* Active Criteria Pills on Mobile (Horizontal scrollable, only when active) */}
           {activeFiltersCount > 0 && (
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar pt-0.5">
@@ -415,10 +643,10 @@ export function TransactionFilters({
         {/* DESKTOP WORKFLOW COMMAND ROW (hidden md:flex)            */}
         {/* Remains 100% intact for laptop power user workflow       */}
         {/* ======================================================== */}
-        <div className="hidden md:flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5">
+        <div className="hidden md:flex items-center justify-between gap-2.5">
           {/* Left: Search & Segmented Type Scope */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1 min-w-0">
-            <div className="relative w-full sm:w-60 md:w-64 lg:w-72 shrink-0">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <div className="relative flex-1 min-w-[130px] max-w-[280px]">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 dark:text-neutral-500" />
               <input
                 type="text"
@@ -441,7 +669,7 @@ export function TransactionFilters({
               )}
             </div>
 
-            <div className="grid grid-cols-3 sm:flex items-center p-0.5 rounded-xl border border-slate-200/80 dark:border-white/[0.08] bg-slate-100/70 dark:bg-white/[0.03] text-xs w-full sm:w-auto shrink-0 select-none">
+            <div className="flex items-center p-0.5 rounded-xl border border-slate-200/80 dark:border-white/[0.08] bg-slate-100/70 dark:bg-white/[0.03] text-xs shrink-0 select-none">
               <button
                 type="button"
                 onClick={() => { setFilterType('all'); setCurrentPage(1) }}
@@ -479,7 +707,7 @@ export function TransactionFilters({
           </div>
 
           {/* Right: Desktop Actions */}
-          <div className="flex items-center gap-1.5 w-full sm:w-auto justify-between sm:justify-end shrink-0">
+          <div className="flex items-center gap-1.5 shrink-0">
             <button
               type="button"
               onClick={() => setDensity(density === 'comfortable' ? 'compact' : 'comfortable')}
@@ -666,9 +894,10 @@ export function TransactionFilters({
         )}
 
         {/* Desktop Refinements & Filter Dimensions Bar (hidden on mobile, visible on desktop) */}
-        <div className="hidden md:flex items-center justify-between gap-2.5 flex-wrap pt-2 border-t border-slate-100 dark:border-white/[0.04]">
-          <div className="flex items-center gap-2 flex-wrap min-w-0">
-            <div className="w-36 min-w-[130px]">
+        <div className="hidden md:flex items-center justify-between gap-3 pt-2.5 border-t border-slate-100 dark:border-white/[0.04]">
+          {/* Left: Filter Dimensions & Quick Presets */}
+          <div className="flex items-center gap-2 min-w-0 flex-wrap">
+            <div className="w-32 sm:w-36 min-w-[120px] shrink-0">
               <CustomSelect
                 selectSize="xs"
                 value={filterCategory}
@@ -687,7 +916,7 @@ export function TransactionFilters({
             </div>
 
             {filterCategory === 'Goals' && (
-              <div className="w-40 min-w-[135px] animate-in fade-in zoom-in-95 duration-150">
+              <div className="w-36 min-w-[125px] shrink-0 animate-in fade-in zoom-in-95 duration-150">
                 <CustomSelect
                   selectSize="xs"
                   value={filterGoalCategory}
@@ -704,7 +933,7 @@ export function TransactionFilters({
               </div>
             )}
 
-            <div className="w-32 min-w-[115px]">
+            <div className="w-28 sm:w-32 min-w-[105px] shrink-0">
               <CustomSelect
                 selectSize="xs"
                 value={datePreset}
@@ -719,16 +948,16 @@ export function TransactionFilters({
               </CustomSelect>
             </div>
 
-            <div className="h-4 w-px bg-slate-200 dark:bg-white/[0.08] hidden sm:block mx-0.5" />
+            <div className="h-4 w-px bg-slate-200 dark:bg-white/[0.08] hidden xl:block mx-0.5 shrink-0" />
 
-            <div className="flex items-center gap-1.5 flex-wrap">
+            <div className="hidden xl:flex items-center gap-1.5 shrink-0 select-none">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-neutral-500 mr-0.5">
                 Quick:
               </span>
               <button
                 type="button"
                 onClick={() => handleQuickPresetChange('all')}
-                className={`px-2.5 py-0.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${
+                className={`px-2.5 py-0.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer whitespace-nowrap ${
                   quickPreset === 'all' && !minAmount && filterRecurring === 'all'
                     ? 'bg-blue-600 text-white shadow-xs'
                     : 'bg-slate-100 dark:bg-white/[0.04] text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
@@ -739,7 +968,7 @@ export function TransactionFilters({
               <button
                 type="button"
                 onClick={() => handleQuickPresetChange('high-value')}
-                className={`px-2.5 py-0.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${
+                className={`px-2.5 py-0.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer whitespace-nowrap ${
                   minAmount === '1000'
                     ? 'bg-blue-600 text-white shadow-xs'
                     : 'bg-slate-100 dark:bg-white/[0.04] text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
@@ -750,7 +979,7 @@ export function TransactionFilters({
               <button
                 type="button"
                 onClick={() => handleQuickPresetChange('recurring')}
-                className={`px-2.5 py-0.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${
+                className={`px-2.5 py-0.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer whitespace-nowrap ${
                   filterRecurring === 'recurring'
                     ? 'bg-blue-600 text-white shadow-xs'
                     : 'bg-slate-100 dark:bg-white/[0.04] text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
@@ -759,98 +988,104 @@ export function TransactionFilters({
                 Recurring
               </button>
             </div>
+
+            {/* Active Criteria Pills on Desktop */}
+            {activeFiltersCount > 0 && (
+              <div className="flex items-center gap-1.5 flex-wrap ml-1">
+                {filterCategory !== 'all' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40">
+                    {filterCategory}
+                    <button type="button" onClick={() => { setFilterCategory('all'); setFilterGoalCategory?.('all'); }} className="hover:text-rose-500 cursor-pointer">
+                      <X className="h-2.5 w-2.5" />
+                    </button>
+                  </span>
+                )}
+                {filterCategory === 'Goals' && filterGoalCategory !== 'all' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
+                    Goal: {filterGoalCategory}
+                    <button type="button" onClick={() => setFilterGoalCategory?.('all')} className="hover:text-rose-500 cursor-pointer">
+                      <X className="h-2.5 w-2.5" />
+                    </button>
+                  </span>
+                )}
+                {datePreset !== 'all' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40">
+                    Date: {datePreset === 'custom' ? `${startDate || 'Start'} to ${endDate || 'End'}` : datePreset}
+                    <button type="button" onClick={() => handleDatePresetChange('all')} className="hover:text-rose-500 cursor-pointer">
+                      <X className="h-2.5 w-2.5" />
+                    </button>
+                  </span>
+                )}
+                {minAmount && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40">
+                    Min: ₹{minAmount}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMinAmount('')
+                        if (quickPreset === 'high-value') setQuickPreset('all')
+                      }}
+                      className="hover:text-rose-500 cursor-pointer"
+                    >
+                      <X className="h-2.5 w-2.5" />
+                    </button>
+                  </span>
+                )}
+                {maxAmount && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40">
+                    Max: ₹{maxAmount}
+                    <button type="button" onClick={() => setMaxAmount('')} className="hover:text-rose-500 cursor-pointer">
+                      <X className="h-2.5 w-2.5" />
+                    </button>
+                  </span>
+                )}
+                {groupBy !== 'none' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40">
+                    Group: {groupBy}
+                    <button type="button" onClick={() => setGroupBy('none')} className="hover:text-rose-500 cursor-pointer">
+                      <X className="h-2.5 w-2.5" />
+                    </button>
+                  </span>
+                )}
+                {filterPaymentMethod !== 'all' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40">
+                    {filterPaymentMethod}
+                    <button type="button" onClick={() => setFilterPaymentMethod('all')} className="hover:text-rose-500 cursor-pointer">
+                      <X className="h-2.5 w-2.5" />
+                    </button>
+                  </span>
+                )}
+                {filterRecurring !== 'all' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40">
+                    {filterRecurring === 'recurring' ? 'Recurring' : 'One-time'}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFilterRecurring('all')
+                        if (quickPreset === 'recurring') setQuickPreset('all')
+                      }}
+                      className="hover:text-rose-500 cursor-pointer"
+                    >
+                      <X className="h-2.5 w-2.5" />
+                    </button>
+                  </span>
+                )}
+                {filterSource !== 'all' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40">
+                    Source: {filterSource}
+                    <button type="button" onClick={() => setFilterSource('all')} className="hover:text-rose-500 cursor-pointer">
+                      <X className="h-2.5 w-2.5" />
+                    </button>
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
-          {activeFiltersCount > 0 && (
-            <div className="flex items-center gap-1.5 flex-wrap justify-end">
-              {filterCategory !== 'all' && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40">
-                  {filterCategory}
-                  <button type="button" onClick={() => { setFilterCategory('all'); setFilterGoalCategory?.('all'); }} className="hover:text-rose-500 cursor-pointer">
-                    <X className="h-2.5 w-2.5" />
-                  </button>
-                </span>
-              )}
-              {filterCategory === 'Goals' && filterGoalCategory !== 'all' && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
-                  Goal: {filterGoalCategory}
-                  <button type="button" onClick={() => setFilterGoalCategory?.('all')} className="hover:text-rose-500 cursor-pointer">
-                    <X className="h-2.5 w-2.5" />
-                  </button>
-                </span>
-              )}
-              {datePreset !== 'all' && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40">
-                  Date: {datePreset === 'custom' ? `${startDate || 'Start'} to ${endDate || 'End'}` : datePreset}
-                  <button type="button" onClick={() => handleDatePresetChange('all')} className="hover:text-rose-500 cursor-pointer">
-                    <X className="h-2.5 w-2.5" />
-                  </button>
-                </span>
-              )}
-              {minAmount && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40">
-                  Min: ₹{minAmount}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMinAmount('')
-                      if (quickPreset === 'high-value') setQuickPreset('all')
-                    }}
-                    className="hover:text-rose-500 cursor-pointer"
-                  >
-                    <X className="h-2.5 w-2.5" />
-                  </button>
-                </span>
-              )}
-              {maxAmount && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40">
-                  Max: ₹{maxAmount}
-                  <button type="button" onClick={() => setMaxAmount('')} className="hover:text-rose-500 cursor-pointer">
-                    <X className="h-2.5 w-2.5" />
-                  </button>
-                </span>
-              )}
-              {groupBy !== 'none' && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40">
-                  Group: {groupBy}
-                  <button type="button" onClick={() => setGroupBy('none')} className="hover:text-rose-500 cursor-pointer">
-                    <X className="h-2.5 w-2.5" />
-                  </button>
-                </span>
-              )}
-              {filterPaymentMethod !== 'all' && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40">
-                  {filterPaymentMethod}
-                  <button type="button" onClick={() => setFilterPaymentMethod('all')} className="hover:text-rose-500 cursor-pointer">
-                    <X className="h-2.5 w-2.5" />
-                  </button>
-                </span>
-              )}
-              {filterRecurring !== 'all' && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40">
-                  {filterRecurring === 'recurring' ? 'Recurring' : 'One-time'}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setFilterRecurring('all')
-                      if (quickPreset === 'recurring') setQuickPreset('all')
-                    }}
-                    className="hover:text-rose-500 cursor-pointer"
-                  >
-                    <X className="h-2.5 w-2.5" />
-                  </button>
-                </span>
-              )}
-              {filterSource !== 'all' && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40">
-                  Source: {filterSource}
-                  <button type="button" onClick={() => setFilterSource('all')} className="hover:text-rose-500 cursor-pointer">
-                    <X className="h-2.5 w-2.5" />
-                  </button>
-                </span>
-              )}
-            </div>
-          )}
+          {/* Right: Dedicated Month & Year Quick Navigator */}
+          <div className="flex items-center gap-2 shrink-0">
+            {renderMonthNavigator(false)}
+          </div>
         </div>
       </div>
 

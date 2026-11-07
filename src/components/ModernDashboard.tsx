@@ -555,8 +555,12 @@ function ModernDashboardContent() {
                   selectedYear={advancedFilters.year}
                   viewMode={advancedFilters.month !== undefined ? 'month' : (advancedFilters.year ? 'year' : 'all')}
                   onTransactionDeleted={onTransactionDeleted}
-                  onYearChange={(year) => setAdvancedFilters(prev => ({ ...prev, year, month: undefined }))}
-                  onMonthChange={(month) => setAdvancedFilters(prev => ({ ...prev, month }))}
+                  onYearChange={(year) => setAdvancedFilters(prev => ({ ...prev, year, month: year === undefined ? undefined : prev.month }))}
+                  onMonthChange={(month, year) => setAdvancedFilters(prev => ({
+                    ...prev,
+                    month,
+                    year: year !== undefined ? year : (month !== undefined ? (prev.year || new Date().getFullYear()) : prev.year)
+                  }))}
                   availableYears={availableYears}
                 />
               </motion.div>

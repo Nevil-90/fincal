@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react'
 import { X, Compass, Plus, ArrowLeft } from 'lucide-react'
 import CustomDateField from '@/components/ui/CustomDateField'
+import { useScrollLock } from '@/hooks/useScrollLock'
 
 interface TravelAddModalProps {
   isOpen: boolean
@@ -59,11 +60,13 @@ export default function TravelAddModal({
       onClick={e => {
         if (e.target === e.currentTarget) onClose()
       }}
-      className="fixed inset-0 z-[200] bg-black/75 dark:bg-black/90 backdrop-blur-sm sm:backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden animate-in fade-in duration-150"
+      style={{ paddingBottom: 'var(--keyboard-height, 0px)' }}
+      className="fixed inset-0 z-[200] bg-black/80 dark:bg-black/90 backdrop-blur-sm sm:backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden touch-none animate-in fade-in duration-150"
     >
       <div
+        data-modal-drawer
         onClick={e => e.stopPropagation()}
-        className="w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border-t sm:border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#121215] shadow-2xl flex flex-col max-h-[90dvh] sm:max-h-[85vh] overflow-hidden"
+        className="w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border-t sm:border border-slate-200/90 dark:border-white/[0.08] bg-white dark:bg-[#121215] shadow-2xl flex flex-col max-h-[calc(var(--vv-height,100dvh)-1rem)] sm:max-h-[85vh] overflow-hidden touch-auto"
       >
         {/* Mobile handle pull bar */}
         <div className="flex sm:hidden justify-center pt-2.5 pb-1 shrink-0">
@@ -107,7 +110,7 @@ export default function TravelAddModal({
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 bg-white dark:bg-[#121215]">
-          <div className="flex-1 overflow-y-auto px-4 sm:px-5 py-3.5 sm:py-4 no-scrollbar space-y-3 sm:space-y-3.5">
+          <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-4 sm:px-5 py-3.5 sm:py-4 no-scrollbar space-y-3 sm:space-y-3.5">
             {/* Start Date & End Date */}
             <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
               <div>

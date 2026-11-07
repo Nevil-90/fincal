@@ -32,9 +32,10 @@ export function formatDateForDisplay(
   const trimmed = dateInput.trim()
 
   try {
-    // If format is YYYY-MM-DD, parse year, month, day explicitly as local numbers
-    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
-      const [year, month, day] = trimmed.split('-').map(Number)
+    // If format is YYYY-MM-DD or starts with YYYY-MM-DD (e.g. ISO string like YYYY-MM-DDTHH:mm:ss.sssZ),
+    // parse year, month, day explicitly as local numbers to prevent UTC midnight shifts
+    if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) {
+      const [year, month, day] = trimmed.substring(0, 10).split('-').map(Number)
       const localDate = new Date(year, month - 1, day)
       if (isNaN(localDate.getTime())) return fallback
       return localDate.toLocaleDateString('en-GB', options)
@@ -73,8 +74,8 @@ export function formatShortDate(
 export function parseLocalDate(dateStr: string | null | undefined): Date | null {
   if (!dateStr || typeof dateStr !== 'string' || !dateStr.trim()) return null
   const trimmed = dateStr.trim()
-  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
-    const [year, month, day] = trimmed.split('-').map(Number)
+  if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) {
+    const [year, month, day] = trimmed.substring(0, 10).split('-').map(Number)
     const localDate = new Date(year, month - 1, day)
     return isNaN(localDate.getTime()) ? null : localDate
   }

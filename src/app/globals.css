@@ -9,6 +9,9 @@
   --surface: #ffffff;
   --surface-hover: #f4f4f5;
   --border: rgba(0, 0, 0, 0.08);
+  --vv-height: 100dvh;
+  --keyboard-height: 0px;
+  --vv-top: 0px;
   color-scheme: light;
 }
 
@@ -47,6 +50,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   -webkit-text-size-adjust: 100%;
+  overscroll-behavior-y: none;
 }
 
 /* Ensure all typography elements inherit the unified Geist font stack */
@@ -62,6 +66,15 @@ button,
 optgroup {
   font-family: inherit !important;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent iOS Safari from zooming in on inputs/textareas when tapped */
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
 }
 
 /* Ensure all numbers, monospace, and code elements use the exact same Geist font */
