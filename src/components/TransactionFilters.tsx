@@ -232,11 +232,12 @@ export function TransactionFilters({
 
   const yearsList = useMemo(() => {
     const currentYear = new Date().getFullYear()
-    const set = new Set<number>([currentYear - 2, currentYear - 1, currentYear, currentYear + 1])
     if (availableYears && availableYears.length > 0) {
-      availableYears.forEach(y => set.add(y))
+      const set = new Set<number>(availableYears)
+      set.add(currentYear)
+      return Array.from(set).sort((a, b) => b - a)
     }
-    return Array.from(set).sort((a, b) => b - a)
+    return [currentYear, currentYear - 1, currentYear - 2]
   }, [availableYears])
 
   const handlePrevMonth = () => {

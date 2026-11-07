@@ -209,11 +209,12 @@ function ModernDashboardContent() {
   const availableBalance = summary?.global?.balance || 0
   const availableYears = useMemo(() => {
     const currentYear = new Date().getFullYear()
-    const yearsSet = new Set<number>([currentYear - 2, currentYear - 1, currentYear, currentYear + 1])
-    if (summary?.availableYears) {
-      summary.availableYears.forEach((y: number) => yearsSet.add(y))
+    if (summary?.availableYears && summary.availableYears.length > 0) {
+      const yearsSet = new Set<number>(summary.availableYears)
+      yearsSet.add(currentYear)
+      return Array.from(yearsSet).sort((a, b) => b - a)
     }
-    return Array.from(yearsSet).sort((a, b) => b - a)
+    return [currentYear, currentYear - 1, currentYear - 2]
   }, [summary?.availableYears])
 
   const getFilteredTourSteps = useCallback(() => {
