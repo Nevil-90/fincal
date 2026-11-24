@@ -336,7 +336,7 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, onBack
           }}
           required
         >
-          <option value="">Select…</option>
+          <option value="">Select a category</option>
           {categories.map((cat) => (
             <option key={cat} value={cat}>{cat}</option>
           ))}
@@ -367,7 +367,7 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, onBack
           value={source}
           onChange={(e) => setSource(e.target.value)}
         >
-          <option value="">Select…</option>
+          <option value="">{type === 'income' ? 'Select source' : 'Select purpose'}</option>
           {sourcesOrPurposes.map((option) => (
             <option key={option} value={option}>{option}</option>
           ))}
@@ -380,7 +380,7 @@ export default function AddTransactionForm({ onClose, onTransactionAdded, onBack
           value={paymentMethod}
           onChange={(e) => setPaymentMethod(e.target.value)}
         >
-          <option value="">Select…</option>
+          <option value="">Select payment method</option>
           {paymentMethods.map((method) => (
             <option key={method} value={method}>{method}</option>
           ))}

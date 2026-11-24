@@ -48,8 +48,7 @@ export async function runRestore(targetDir, isDryRun = true) {
     'userSession',
     'otpVerification',
     'passwordReset',
-    'adminAuditLog',
-    'walletEntry'
+    'adminAuditLog'
   ];
 
   if (isDryRun) {

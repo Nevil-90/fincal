@@ -320,7 +320,6 @@ model User {
   adminLogs             AdminAuditLog[]
   autoCategorizeRules   AutoCategorizeRule[]
   userSettings          UserSetting[]
-  walletEntries         WalletEntry[]
 
   @@index([email])
   @@map("users")
@@ -337,33 +336,6 @@ model UserSetting {
 
   @@unique([key, userId])
   @@map("user_settings")
-}
-
-// Cash / Online wallet movements. Kept OUT of the transactions table on purpose,
-// so these entries can never be counted as income or expense anywhere.
-//   kind 'convert': money moved between wallets (fromWallet -> toWallet), e.g. ATM withdrawal,
-//                   friends repaying a UPI-paid bill in cash.
-//   kind 'set':     "I actually have <amount> in <wallet> right now". Becomes the new
-//                   starting point for that wallet; previousBalance keeps what the app had computed.
-model WalletEntry {
-  id              String    @id @default(cuid())
-  userId          String
-  kind            String // 'convert' | 'set'
-  fromWallet      String? // 'cash' | 'online' (convert only)
-  toWallet        String? // 'cash' | 'online' (convert only)
-  wallet          String? // 'cash' | 'online' (set only)
-  amount          Decimal
-  previousBalance Decimal? // set only: computed balance just before this reset
-  date            DateTime
-  note            String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  deletedAt       DateTime?
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId, deletedAt])
-  @@index([userId, createdAt])
-  @@map("wallet_entries")
 }
 
 model AutoCategorizeRule {

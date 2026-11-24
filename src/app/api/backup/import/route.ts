@@ -32,36 +32,6 @@ export async function POST(request: NextRequest) {
       await tx.budgetAmount.deleteMany({ where: { userId: user.id } })
       await tx.userSetting.deleteMany({ where: { userId: user.id } })
       await tx.autoCategorizeRule.deleteMany({ where: { userId: user.id } })
-      // Wallet (Cash / Online) entries are only replaced when the backup contains them,
-      // so restoring an older backup never wipes balances set up after it was taken.
-      const hasWalletEntries = Array.isArray(data.walletEntries)
-      if (hasWalletEntries) await tx.walletEntry.deleteMany({ where: { userId: user.id } })
-
-      // Payment-method spelling: compare case/space-insensitively and keep ONE spelling per
-      // method (cash is always "Cash"), so "CASH" / "cash " in old files can't create duplicates.
-      const pmKey = (s: string) => s.trim().replace(/\s+/g, ' ').toLowerCase()
-      const pmCanonical = new Map<string, string>()
-      const registerPm = (name: unknown) => {
-        if (typeof name !== 'string') return
-        const k = pmKey(name)
-        if (k && !pmCanonical.has(k)) pmCanonical.set(k, k === 'cash' ? 'Cash' : name.trim().replace(/\s+/g, ' '))
-      }
-      const canonPm = (value: unknown) => {
-        if (typeof value !== 'string' || !value.trim()) return value ?? null
-        registerPm(value)
-        return pmCanonical.get(pmKey(value))
-      }
-      ;(data.staticDataCategories || []).forEach((c: any) => { if (c?.type === 'payment_methods') registerPm(c.name) })
-
-      const seenStatic = new Set<string>()
-      const staticCategories = (data.staticDataCategories || [])
-        .map((c: any) => (c?.type === 'payment_methods' ? { ...c, name: canonPm(c.name) } : c))
-        .filter((c: any) => {
-          const key = `${c?.type}|${c?.name}`
-          if (seenStatic.has(key)) return false
-          seenStatic.add(key)
-          return true
-        })
 
       // Helper to clean up data before insert (remove user-specific IDs to prevent cross-user pollution if restored by someone else, though we rely on unique IDs in the backup)
       // Since it's the SAME user's backup, we can safely insert with original IDs to maintain relations.
@@ -76,11 +46,12 @@ export async function POST(request: NextRequest) {
       }
 
       // 2. Insert data in topological order
-      if (staticCategories.length) await chunkInsert(tx.staticDataCategory, insertWithUserId(staticCategories))
+      if (data.staticDataCategories?.length) await chunkInsert(tx.staticDataCategory, insertWithUserId(data.staticDataCategories))
       if (data.budgetAmounts?.length) await chunkInsert(tx.budgetAmount, insertWithUserId(data.budgetAmounts))
       if (data.userSettings?.length) await chunkInsert(tx.userSetting, insertWithUserId(data.userSettings))
       if (data.autoCategorizeRules?.length) await chunkInsert(tx.autoCategorizeRule, insertWithUserId(data.autoCategorizeRules))
       if (data.monthlyBudgets?.length) await chunkInsert(tx.monthlyBudget, insertWithUserId(data.monthlyBudgets))
+      if (data.travelEntries?.length) await chunkInsert(tx.travelEntry, insertWithUserId(data.travelEntries))
       
       if (data.savingsGoals?.length) {
         const savingsGoalsToInsert = data.savingsGoals.map(({ id, ...rest }: any) => ({
@@ -98,7 +69,6 @@ export async function POST(request: NextRequest) {
           ...rest,
           startDate: rest.startDate ? localToUtcMidnight(new Date(rest.startDate)) : undefined,
           nextDue: rest.nextDue ? localToUtcMidnight(new Date(rest.nextDue)) : undefined,
-          paymentMethod: canonPm(rest.paymentMethod),
           userId: user.id
         }))
         await chunkInsert(tx.recurringTransaction, recurringToInsert)
@@ -120,16 +90,12 @@ export async function POST(request: NextRequest) {
           title: rest.title || description || 'Untitled Transaction',
           notes: rest.notes || null,
           date: rest.date ? localToUtcMidnight(new Date(rest.date)) : undefined,
-          paymentMethod: canonPm(rest.paymentMethod),
           userId: user.id
         }))
         await chunkInsert(tx.transaction, transactionsToInsert)
       }
 
-      // Travel entries reference transactions (transactionId FK), so they must be inserted after them.
-      if (data.travelEntries?.length) await chunkInsert(tx.travelEntry, insertWithUserId(data.travelEntries))
       if (data.goalContributions?.length) await chunkInsert(tx.goalContribution, data.goalContributions)
-      if (hasWalletEntries && data.walletEntries.length) await chunkInsert(tx.walletEntry, insertWithUserId(data.walletEntries))
 
       const allTransactions = [...(data.transactions || []), ...(data.recurringTransactions || [])]
       if (allTransactions.length > 0) {
@@ -144,10 +110,9 @@ export async function POST(request: NextRequest) {
             }
           }
           if (t.paymentMethod) {
-            const pmName = canonPm(t.paymentMethod) as string
-            const key = `payment_methods-${pmName}`
+            const key = `payment_methods-${t.paymentMethod}`
             if (!uniqueCategories.has(key)) {
-              uniqueCategories.set(key, { type: 'payment_methods', name: pmName })
+              uniqueCategories.set(key, { type: 'payment_methods', name: t.paymentMethod })
             }
           }
           if (t.source) {

@@ -23,8 +23,7 @@ export async function GET(request: NextRequest) {
       staticDataCategories,
       budgetAmounts,
       userSettings,
-      autoCategorizeRules,
-      walletEntries
+      autoCategorizeRules
     ] = await Promise.all([
       prisma.transaction.findMany({ where: { userId: user.id } }),
       prisma.savingsGoal.findMany({ where: { userId: user.id } }),
@@ -36,8 +35,7 @@ export async function GET(request: NextRequest) {
       prisma.staticDataCategory.findMany({ where: { userId: user.id } }),
       prisma.budgetAmount.findMany({ where: { userId: user.id } }),
       prisma.userSetting.findMany({ where: { userId: user.id } }),
-      prisma.autoCategorizeRule.findMany({ where: { userId: user.id } }),
-      prisma.walletEntry.findMany({ where: { userId: user.id, deletedAt: null } })
+      prisma.autoCategorizeRule.findMany({ where: { userId: user.id } })
     ])
 
     const backupData = {
@@ -57,8 +55,7 @@ export async function GET(request: NextRequest) {
         staticDataCategories,
         budgetAmounts,
         userSettings,
-        autoCategorizeRules,
-        walletEntries
+        autoCategorizeRules
       }
     }
 

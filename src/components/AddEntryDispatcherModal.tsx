@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
-import { X, Receipt, Fuel, Repeat, Target, ArrowRight, ArrowLeftRight } from 'lucide-react'
+import { X, Receipt, Fuel, Repeat, Target, ArrowRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { useEnhancedStaticData } from '@/lib/enhanced-static-data-manager'
 import AddTransactionForm from './AddTransactionForm'
@@ -10,11 +10,8 @@ import RecurringForm from './recurring/RecurringForm'
 import type { RecurringFormData } from './recurring/types'
 import { AddGoalModal } from './goals/AddGoalModal'
 import { useScrollLock } from '@/hooks/useScrollLock'
-import { useWallet } from '@/hooks/useApi'
-import WalletEntryModal from './wallet/WalletEntryModal'
 
-type EntryType = 'select' | 'regular' | 'fuel' | 'recurring' | 'goal' | 'wallet'
-type EntryChoice = Exclude<EntryType, 'select'>
+type EntryType = 'select' | 'regular' | 'fuel' | 'recurring' | 'goal'
 
 interface AddEntryDispatcherModalProps {
   isOpen: boolean
@@ -28,12 +25,11 @@ export default function AddEntryDispatcherModal({
   onSuccess,
 }: AddEntryDispatcherModalProps) {
   const [activeModal, setActiveModal] = useState<EntryType>('select')
-  const [selectedRadio, setSelectedRadio] = useState<EntryChoice>('regular')
+  const [selectedRadio, setSelectedRadio] = useState<'regular' | 'fuel' | 'recurring' | 'goal'>('regular')
 
   useScrollLock(isOpen)
 
   const { data: staticData, manager: staticManager } = useEnhancedStaticData()
-  const { wallet, mutate: mutateWallet } = useWallet()
 
   // Reset to selector when opened
   useEffect(() => {
@@ -240,22 +236,6 @@ export default function AddEntryDispatcherModal({
     )
   }
 
-  if (activeModal === 'wallet') {
-    return (
-      <WalletEntryModal
-        isOpen={true}
-        mode="convert"
-        wallet={wallet}
-        onClose={onClose}
-        onBack={() => setActiveModal('select')}
-        onSaved={(data) => {
-          mutateWallet(data, { revalidate: false })
-          onSuccess()
-        }}
-      />
-    )
-  }
-
   if (activeModal === 'recurring') {
     return (
       <RecurringForm
@@ -337,16 +317,9 @@ export default function AddEntryDispatcherModal({
       icon: Target,
       iconColor: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
     },
-    {
-      id: 'wallet' as const,
-      title: 'Cash ↔ Online',
-      description: 'ATM withdrawal or cash payback',
-      icon: ArrowLeftRight,
-      iconColor: 'text-violet-600 dark:text-violet-400 bg-violet-500/10 border-violet-500/20'
-    },
   ]
 
-  const handleSelectRadio = (type: EntryChoice) => {
+  const handleSelectRadio = (type: 'regular' | 'fuel' | 'recurring' | 'goal') => {
     setSelectedRadio(type)
     // Redirect directly to that specific modal
     setActiveModal(type)
