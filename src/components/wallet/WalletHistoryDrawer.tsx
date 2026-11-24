@@ -4,7 +4,7 @@
 // with edit (converts) and delete (both).
 
 import React, { useEffect, useMemo, useState } from 'react'
-import { X, ArrowLeftRight, Scale, Pencil, Trash2, Check, ArrowRight, Info, Loader2 } from 'lucide-react'
+import { X, ArrowLeftRight, Scale, Pencil, Trash2, ArrowRight, Info, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatCurrency } from '@/lib/financial-utils'
 import { formatDateForDisplay } from '@/lib/dateUtils'
@@ -227,7 +227,7 @@ export default function WalletHistoryDrawer({
                                       className="h-8 px-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-[11px] font-bold flex items-center gap-1 cursor-pointer disabled:opacity-60"
                                       title="Confirm delete"
                                     >
-                                      {deleting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                                      {deleting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
                                       Delete
                                     </button>
                                     <button

@@ -260,7 +260,7 @@ export default function WalletEntryModal({
             </div>
             <div className="min-w-0">
               <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight truncate">{title}</h3>
-              <p className="text-[11px] text-slate-500 dark:text-zinc-400 truncate">{subtitle}</p>
+              <p className="text-[11px] leading-snug text-slate-500 dark:text-zinc-400 line-clamp-2 sm:truncate">{subtitle}</p>
             </div>
           </div>
           <button

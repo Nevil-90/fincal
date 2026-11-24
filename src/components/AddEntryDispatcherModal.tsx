@@ -340,7 +340,7 @@ export default function AddEntryDispatcherModal({
     {
       id: 'wallet' as const,
       title: 'Cash ↔ Online',
-      description: 'ATM withdrawal, cash payback. Not income or expense',
+      description: 'ATM withdrawal or cash payback',
       icon: ArrowLeftRight,
       iconColor: 'text-violet-600 dark:text-violet-400 bg-violet-500/10 border-violet-500/20'
     },

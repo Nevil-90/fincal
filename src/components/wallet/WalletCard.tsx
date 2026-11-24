@@ -168,7 +168,7 @@ export default function WalletCard() {
           <button
             type="button"
             onClick={() => setHistoryOpen(true)}
-            className="h-8 px-2 sm:px-2.5 rounded-lg text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] text-[11px] font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
+            className="h-11 -my-1.5 sm:my-0 sm:h-8 px-3 sm:px-2.5 rounded-lg text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] text-[11px] font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
             title="History"
           >
             <History className="h-3.5 w-3.5" />
