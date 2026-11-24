@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react'
-import { Layers, PieChart as PieChartIcon, Clock } from 'lucide-react'
+import { Layers, PieChart as PieChartIcon, Clock, LayoutDashboard, Wallet } from 'lucide-react'
 import { useEnhancedStaticData } from '@/lib/enhanced-static-data-manager'
 import MonthlyInsights from './MonthlyInsights'
 import OverviewHero from './overview/OverviewHero'
@@ -9,7 +9,7 @@ import CategoryBudgetList from './overview/CategoryBudgetList'
 import CategoryDonutCard from './overview/CategoryDonutCard'
 import RecentActivityCard from './overview/RecentActivityCard'
 import CategoryDetailDrawer from './overview/CategoryDetailDrawer'
-import WalletCard from '../wallet/WalletCard'
+import WalletPanel from '../wallet/WalletPanel'
 
 interface Transaction {
   id: string
@@ -52,6 +52,20 @@ export default React.memo(function OverviewTab({
   const now = new Date()
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
+
+  // Overview sub-tabs: keep the page short instead of stacking every card.
+  const SUBTAB_KEY = 'fincal_overview_subtab'
+  const [subTab, setSubTab] = useState<'summary' | 'wallet'>('summary')
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(SUBTAB_KEY)
+      if (saved === 'wallet' || saved === 'summary') setSubTab(saved)
+    } catch {}
+  }, [])
+  const changeSubTab = useCallback((tab: 'summary' | 'wallet') => {
+    setSubTab(tab)
+    try { localStorage.setItem(SUBTAB_KEY, tab) } catch {}
+  }, [])
 
   const activeYear = overviewPeriod.year
   const activeMonth = overviewPeriod.month ?? (now.getMonth() + 1)
@@ -146,6 +160,40 @@ export default React.memo(function OverviewTab({
 
   return (
     <div className="space-y-2.5 pb-16 md:pb-0 font-sans">
+      {/* Sub-tab switcher (same style as the Travel tab) */}
+      <div className="rounded-2xl border border-slate-200/80 dark:border-white/[0.08] bg-slate-100 dark:bg-[#121215] p-1 shadow-xs" role="tablist" aria-label="Overview sections">
+        <div className="flex flex-row items-center gap-1 w-full">
+          {([
+            { id: 'summary', label: 'Summary', icon: LayoutDashboard },
+            { id: 'wallet', label: 'Cash & Online', icon: Wallet },
+          ] as const).map(tab => {
+            const Icon = tab.icon
+            const isActive = subTab === tab.id
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => changeSubTab(tab.id)}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 sm:py-1.5 px-3 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
+                  isActive
+                    ? 'bg-white text-slate-900 dark:bg-white dark:text-black shadow-xs font-bold'
+                    : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-white/[0.04]'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5 shrink-0" />
+                <span>{tab.label}</span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {subTab === 'wallet' ? (
+        <WalletPanel />
+      ) : (
+      <>
       {/* 1. Main Executive Command Center Hero (Ultra-Compact) */}
       <OverviewHero
         balanceInfo={balanceInfo}
@@ -170,9 +218,6 @@ export default React.memo(function OverviewTab({
           }
         }}
       />
-
-      {/* Cash & Online balances (live, independent of the selected period) */}
-      <WalletCard />
 
       {/* 2. Mobile View Switcher (Only visible below lg breakpoint) */}
       <div className="flex lg:hidden items-center bg-slate-100 dark:bg-[#121215] border border-slate-200/80 dark:border-white/[0.08] p-1 rounded-xl gap-1">
@@ -249,6 +294,9 @@ export default React.memo(function OverviewTab({
           </div>
         </div>
       </div>
+
+      </>
+      )}
 
       {/* Slide-over Detail Drawers (Slide from right without vertical page disruption) */}
       <CategoryDetailDrawer
