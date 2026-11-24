@@ -69,7 +69,8 @@ async function main() {
       'userSession',
       'otpVerification',
       'passwordReset',
-      'adminAuditLog'
+      'adminAuditLog',
+      'walletEntry'
     ];
 
     for (const t of tables) {

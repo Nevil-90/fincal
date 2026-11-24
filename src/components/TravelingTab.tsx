@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Plus, Trash2, Fuel, Navigation, BarChart3, ListFilter } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatCurrency } from '@/lib/financial-utils'
@@ -61,32 +61,44 @@ export default function TravelingTab() {
     description: 'Traveling'
   })
 
-  const latestEntry = useMemo(() => {
-    if (!travelEntries || travelEntries.length === 0) return null
-    return [...travelEntries].sort((a: TravelEntry, b: TravelEntry) => {
-      return new Date(b.endDate).getTime() - new Date(a.endDate).getTime()
-    })[0]
-  }, [travelEntries])
-
-  const formatDateForInput = (dateString: string) => {
-    const date = new Date(dateString)
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
-    return `${year}-${month}-${day}`
-  }
-
+  // Every time "Add" opens: clean form, then prefill from the user's most recent trip overall
+  // (not just the page / sort currently on screen): its end date -> new start date and its
+  // end KM -> new start KM. End date / end KM stay empty for the user to fill.
   useEffect(() => {
-    if (!showAddForm || !latestEntry) return
+    if (!showAddForm) return
+    let cancelled = false
 
-    setFormData(prev => ({
-      ...prev,
-      startDate: latestEntry.endDate ? formatDateForInput(latestEntry.endDate) : prev.startDate,
-      startKm: latestEntry.endKm ? String(latestEntry.endKm) : prev.startKm,
+    setFormData({
+      startDate: '',
+      endDate: '',
+      startKm: '',
+      endKm: '',
       amount: '',
-      liters: ''
-    }))
-  }, [showAddForm, latestEntry])
+      liters: '',
+      description: 'Traveling'
+    })
+
+    const fetchLatest = async () => {
+      try {
+        const res = await fetch('/api/travel?page=1&limit=1&sortBy=date-desc')
+        if (!res.ok || cancelled) return
+        const data = await res.json()
+        const latest: TravelEntry | undefined = Array.isArray(data?.travelEntries) ? data.travelEntries[0] : undefined
+        if (!latest || cancelled) return
+        setFormData(prev => ({
+          ...prev,
+          // Stored as UTC midnight of the trip day: take the date part as-is (no timezone shift).
+          startDate: latest.endDate ? String(latest.endDate).slice(0, 10) : prev.startDate,
+          startKm: latest.endKm != null ? String(Number(latest.endKm)) : prev.startKm,
+        }))
+      } catch {
+        // Keep the empty form on network errors
+      }
+    }
+
+    fetchLatest()
+    return () => { cancelled = true }
+  }, [showAddForm])
 
   const refreshAnalytics = useCallback(async () => {
     mutateAnalytics()

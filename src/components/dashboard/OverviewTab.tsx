@@ -9,6 +9,7 @@ import CategoryBudgetList from './overview/CategoryBudgetList'
 import CategoryDonutCard from './overview/CategoryDonutCard'
 import RecentActivityCard from './overview/RecentActivityCard'
 import CategoryDetailDrawer from './overview/CategoryDetailDrawer'
+import WalletCard from '../wallet/WalletCard'
 
 interface Transaction {
   id: string
@@ -169,6 +170,9 @@ export default React.memo(function OverviewTab({
           }
         }}
       />
+
+      {/* Cash & Online balances (live, independent of the selected period) */}
+      <WalletCard />
 
       {/* 2. Mobile View Switcher (Only visible below lg breakpoint) */}
       <div className="flex lg:hidden items-center bg-slate-100 dark:bg-[#121215] border border-slate-200/80 dark:border-white/[0.08] p-1 rounded-xl gap-1">

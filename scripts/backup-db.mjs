@@ -26,7 +26,8 @@ const MODELS = [
   'userSession',
   'otpVerification',
   'passwordReset',
-  'adminAuditLog'
+  'adminAuditLog',
+  'walletEntry'
 ];
 
 export async function runBackup(customBackupDir) {

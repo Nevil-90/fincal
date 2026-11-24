@@ -62,6 +62,7 @@ data.json
 !/scripts/safe-migrate.mjs
 !/scripts/inspect-db.mjs
 !/scripts/restore-db.mjs
+!/scripts/normalize-cash.mjs
 PROJECT
 /features.md
 /prisma/backup.json

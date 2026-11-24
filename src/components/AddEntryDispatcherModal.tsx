@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
-import { X, Receipt, Fuel, Repeat, Target, ArrowRight } from 'lucide-react'
+import { X, Receipt, Fuel, Repeat, Target, ArrowRight, ArrowLeftRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { useEnhancedStaticData } from '@/lib/enhanced-static-data-manager'
 import AddTransactionForm from './AddTransactionForm'
@@ -10,8 +10,11 @@ import RecurringForm from './recurring/RecurringForm'
 import type { RecurringFormData } from './recurring/types'
 import { AddGoalModal } from './goals/AddGoalModal'
 import { useScrollLock } from '@/hooks/useScrollLock'
+import { useWallet } from '@/hooks/useApi'
+import WalletEntryModal from './wallet/WalletEntryModal'
 
-type EntryType = 'select' | 'regular' | 'fuel' | 'recurring' | 'goal'
+type EntryType = 'select' | 'regular' | 'fuel' | 'recurring' | 'goal' | 'wallet'
+type EntryChoice = Exclude<EntryType, 'select'>
 
 interface AddEntryDispatcherModalProps {
   isOpen: boolean
@@ -25,11 +28,12 @@ export default function AddEntryDispatcherModal({
   onSuccess,
 }: AddEntryDispatcherModalProps) {
   const [activeModal, setActiveModal] = useState<EntryType>('select')
-  const [selectedRadio, setSelectedRadio] = useState<'regular' | 'fuel' | 'recurring' | 'goal'>('regular')
+  const [selectedRadio, setSelectedRadio] = useState<EntryChoice>('regular')
 
   useScrollLock(isOpen)
 
   const { data: staticData, manager: staticManager } = useEnhancedStaticData()
+  const { wallet, mutate: mutateWallet } = useWallet()
 
   // Reset to selector when opened
   useEffect(() => {
@@ -45,7 +49,7 @@ export default function AddEntryDispatcherModal({
 
   const [fuelFormData, setFuelFormData] = useState({
     startDate: '',
-    endDate: new Date().toISOString().split('T')[0],
+    endDate: '',
     startKm: '',
     endKm: '',
     amount: '',
@@ -53,41 +57,43 @@ export default function AddEntryDispatcherModal({
     description: 'Traveling'
   })
 
-  // Pre-fetch latest fuel log to map previous endDate -> startDate and endKm -> startKm
+  // Every time the fuel form opens: start from a clean form, then prefill from the latest
+  // trip -> its end date becomes the new start date and its end KM the new start KM.
+  // End date / end KM are intentionally left empty for the user to fill.
   useEffect(() => {
     if (!isOpen || activeModal !== 'fuel') return
+    let cancelled = false
+
+    setFuelFormData({
+      startDate: '',
+      endDate: '',
+      startKm: '',
+      endKm: '',
+      amount: '',
+      liters: '',
+      description: 'Traveling'
+    })
 
     const fetchLatestFuel = async () => {
       try {
-        const res = await fetch('/api/travel?limit=1&sortBy=date-desc')
-        if (res.ok) {
-          const data = await res.json()
-          const entries = data.entries || data || []
-          if (Array.isArray(entries) && entries.length > 0) {
-            const latest = entries[0]
-            const formatDate = (dateStr: string) => {
-              const d = new Date(dateStr)
-              const y = d.getFullYear()
-              const m = String(d.getMonth() + 1).padStart(2, '0')
-              const day = String(d.getDate()).padStart(2, '0')
-              return `${y}-${m}-${day}`
-            }
-
-            setFuelFormData(prev => ({
-              ...prev,
-              startDate: latest.endDate ? formatDate(latest.endDate) : prev.startDate,
-              startKm: latest.endKm != null ? String(latest.endKm) : prev.startKm,
-              amount: '',
-              liters: ''
-            }))
-          }
-        }
+        const res = await fetch('/api/travel?page=1&limit=1&sortBy=date-desc')
+        if (!res.ok || cancelled) return
+        const data = await res.json()
+        const latest = Array.isArray(data?.travelEntries) ? data.travelEntries[0] : null
+        if (!latest || cancelled) return
+        setFuelFormData(prev => ({
+          ...prev,
+          // Stored as UTC midnight of the trip day: take the date part as-is (no timezone shift).
+          startDate: latest.endDate ? String(latest.endDate).slice(0, 10) : prev.startDate,
+          startKm: latest.endKm != null ? String(Number(latest.endKm)) : prev.startKm,
+        }))
       } catch {
-        // Ignore fetch errors, keep defaults
+        // Ignore fetch errors, keep the empty form
       }
     }
 
     fetchLatestFuel()
+    return () => { cancelled = true }
   }, [isOpen, activeModal])
 
   const handleFuelSubmit = async (e: React.FormEvent) => {
@@ -234,6 +240,22 @@ export default function AddEntryDispatcherModal({
     )
   }
 
+  if (activeModal === 'wallet') {
+    return (
+      <WalletEntryModal
+        isOpen={true}
+        mode="convert"
+        wallet={wallet}
+        onClose={onClose}
+        onBack={() => setActiveModal('select')}
+        onSaved={(data) => {
+          mutateWallet(data, { revalidate: false })
+          onSuccess()
+        }}
+      />
+    )
+  }
+
   if (activeModal === 'recurring') {
     return (
       <RecurringForm
@@ -315,9 +337,16 @@ export default function AddEntryDispatcherModal({
       icon: Target,
       iconColor: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
     },
+    {
+      id: 'wallet' as const,
+      title: 'Cash ↔ Online',
+      description: 'ATM withdrawal, cash payback. Not income or expense',
+      icon: ArrowLeftRight,
+      iconColor: 'text-violet-600 dark:text-violet-400 bg-violet-500/10 border-violet-500/20'
+    },
   ]
 
-  const handleSelectRadio = (type: 'regular' | 'fuel' | 'recurring' | 'goal') => {
+  const handleSelectRadio = (type: EntryChoice) => {
     setSelectedRadio(type)
     // Redirect directly to that specific modal
     setActiveModal(type)

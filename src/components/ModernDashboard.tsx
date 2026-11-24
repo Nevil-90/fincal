@@ -395,6 +395,8 @@ function ModernDashboardContent() {
       mutatePeriodTxns(undefined, { revalidate: true }),
       mutateGoals(undefined, { revalidate: true }),
       mutate((key: any) => typeof key === 'string' && key.startsWith('/api/transactions'), undefined, { revalidate: true }),
+      // Cash / Online balances depend on every transaction write
+      mutate((key: any) => typeof key === 'string' && key.startsWith('/api/wallet'), undefined, { revalidate: true }),
     ])
   }
 
